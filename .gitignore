@@ -3,3 +3,5 @@ node_modules/
 .planning/
 .claude/
 .superpowers/
+.DS_Store
+managed/.DS_Store
