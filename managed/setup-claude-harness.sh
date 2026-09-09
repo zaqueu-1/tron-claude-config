@@ -87,7 +87,7 @@ log "🔍 Checking required tools..."
 
 MISSING=()
 
-if command -v gsd &>/dev/null || npx --yes -p @opengsd/gsd-pi gsd --version &>/dev/null; then
+if command -v gsd &>/dev/null || npx @opengsd/gsd-pi --version &>/dev/null 2>&1; then
   log "   ✓ gsd"
 else
   log "   ✗ gsd — MISSING"

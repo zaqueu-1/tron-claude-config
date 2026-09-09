@@ -22,7 +22,27 @@ Agents MUST explore the codebase actively before acting. Use the full tool stack
 
 **Then**: read raw files only when editing or when the graph doesn't have the answer.
 
-The `codebase-memory-mcp` server is registered globally in `~/.claude/.mcp.json` — harness postinstall / setup / bootstrap **guarantee** install on macOS, Linux, and Windows ([DeusData/codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp)). Available to every agent automatically.
+The `codebase-memory-mcp` server, when installed, registers itself globally in
+`~/.claude/.mcp.json` ([DeusData/codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp)).
+
+**It is NOT guaranteed to be present — verify before relying on it.** This paragraph used to
+claim that postinstall, setup and bootstrap guaranteed the install on every platform. That
+claim was false, and was observed failing on 2026-09-04: neither `~/.claude/.mcp.json` nor the
+`gsd` binary existed on a machine that had run all three, because `setup-claude-harness.sh`
+does not install anything — it only prints the commands. An agent that took the guarantee at
+face value would go looking for tools that are not there.
+
+So: if `~/.claude/.mcp.json` is missing or the graph tools are unavailable, **read raw files
+directly and say so in your report**, rather than treating the graph as a prerequisite you
+failed to meet. The query order below is a preference, not a gate.
+
+To install (both paths execute a remote script from a third-party repository, and install
+globally — an operator decision, not an agent one):
+
+```bash
+npm install -g @opengsd/gsd-pi
+curl -fsSL https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.sh | bash
+```
 
 Business rules, domain logic, and architectural decisions live in the codebase. Your task context tells you WHAT to do; the codebase tells you HOW it fits. Always query before acting.
 

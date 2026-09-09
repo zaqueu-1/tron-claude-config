@@ -38,6 +38,23 @@ if [ "$SHOULD_UPDATE" = true ]; then
   PACKAGE_NAME="@tron/claude-config"
   PKG_JSON="node_modules/${PACKAGE_NAME}/package.json"
 
+  # A consumer that pinned an exact commit opted OUT of auto-update, and this
+  # block cannot honour that by accident: `bun add` / `npm install --save-dev`
+  # re-resolve to the repository's default branch, so updating here would
+  # rewrite the pin in the consumer's package.json — the precise opposite of
+  # what pinning asks for. Detect the pin in the consumer's own manifest and
+  # leave it alone; a pinned harness moves only when someone bumps the spec.
+  PINNED=false
+  if [ -f package.json ] && node -e "
+    const fs = require('fs');
+    const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+    const spec = (pkg.dependencies || {})['${PACKAGE_NAME}']
+              || (pkg.devDependencies || {})['${PACKAGE_NAME}'] || '';
+    process.exit(/#[0-9a-f]{40}\$/.test(spec) ? 0 : 1);
+  " 2>/dev/null; then
+    PINNED=true
+  fi
+
   if [ -f "$PKG_JSON" ]; then
     INSTALLED_VERSION=$(node -e "
       try { process.stdout.write(require('./${PKG_JSON}').version || ''); }
@@ -67,7 +84,9 @@ if [ "$SHOULD_UPDATE" = true ]; then
       NEEDS_UPDATE=true
     fi
 
-    if [ "$NEEDS_UPDATE" = true ]; then
+    if [ "$NEEDS_UPDATE" = true ] && [ "$PINNED" = true ]; then
+      echo "[harness] update available ($INSTALLED_VERSION → latest), skipped: package.json pins an exact commit"
+    elif [ "$NEEDS_UPDATE" = true ]; then
       echo "[harness] update available ($INSTALLED_VERSION → latest), applying..."
       # Use detected package manager — never hardcode npm
       case "$PM" in
@@ -99,25 +118,48 @@ echo "  pm:     $PM"
 MISSING=()
 
 # Check gsd
-if ! command -v gsd &>/dev/null && ! npx --yes -p @opengsd/gsd-pi gsd --version &>/dev/null; then
+if ! command -v gsd &>/dev/null && ! npx --yes @opengsd/gsd-pi --version &>/dev/null 2>&1; then
   MISSING+=("gsd")
 fi
 
-# Ensure codebase-memory-mcp (auto-install if missing; never blocks the prompt)
-ENSURE_CBM="node_modules/@tron/claude-config/scripts/lib/ensure-codebase-memory.js"
-if [ -f "$ENSURE_CBM" ]; then
-  if ! node "$ENSURE_CBM" >/dev/null 2>&1; then
-    MISSING+=("codebase-memory-mcp")
-  fi
-elif ! node -e "
+# Ensure codebase-memory-mcp (auto-install if missing; never blocks the prompt).
+#
+# The registration check honours CLAUDE_CONFIG_DIR and every file the official
+# installer may write to. Hardcoding ~/.claude/.mcp.json produced a permanent
+# false negative on machines where CLAUDE_CONFIG_DIR points elsewhere: the
+# installer registered the server in $CLAUDE_CONFIG_DIR/.claude.json and the
+# hook still reported the tool as missing on every prompt.
+CBM_REGISTERED=0
+if node -e "
   const fs = require('fs');
   const os = require('os');
-  const p = require('path').join(os.homedir(), '.claude', '.mcp.json');
-  if (!fs.existsSync(p)) process.exit(1);
-  const d = JSON.parse(fs.readFileSync(p, 'utf8'));
-  const keys = Object.keys(d.mcpServers || {});
-  if (!keys.some(k => k.includes('codebase-memory'))) process.exit(1);
+  const path = require('path');
+  const home = os.homedir();
+  const dirs = [process.env.CLAUDE_CONFIG_DIR, path.join(home, '.claude')].filter(Boolean);
+  const files = [];
+  for (const d of dirs) files.push(path.join(d, '.mcp.json'), path.join(d, '.claude.json'));
+  files.push(path.join(home, '.claude.json'));
+  for (const f of files) {
+    try {
+      if (!fs.existsSync(f)) continue;
+      const d = JSON.parse(fs.readFileSync(f, 'utf8'));
+      const keys = Object.keys(d.mcpServers || {});
+      if (keys.some(k => k.includes('codebase-memory'))) process.exit(0);
+    } catch { /* unreadable or malformed: try the next candidate */ }
+  }
+  process.exit(1);
 " 2>/dev/null; then
+  CBM_REGISTERED=1
+fi
+
+if [ "$CBM_REGISTERED" -eq 0 ]; then
+  ENSURE_CBM="node_modules/@tron/claude-config/scripts/lib/ensure-codebase-memory.js"
+  if [ -f "$ENSURE_CBM" ] && node "$ENSURE_CBM" >/dev/null 2>&1; then
+    CBM_REGISTERED=1
+  fi
+fi
+
+if [ "$CBM_REGISTERED" -eq 0 ]; then
   MISSING+=("codebase-memory-mcp")
 fi
 
