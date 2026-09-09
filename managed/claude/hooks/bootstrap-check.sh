@@ -38,6 +38,23 @@ if [ "$SHOULD_UPDATE" = true ]; then
   PACKAGE_NAME="@tron/claude-config"
   PKG_JSON="node_modules/${PACKAGE_NAME}/package.json"
 
+  # A consumer that pinned an exact commit opted OUT of auto-update, and this
+  # block cannot honour that by accident: `bun add` / `npm install --save-dev`
+  # re-resolve to the repository's default branch, so updating here would
+  # rewrite the pin in the consumer's package.json — the precise opposite of
+  # what pinning asks for. Detect the pin in the consumer's own manifest and
+  # leave it alone; a pinned harness moves only when someone bumps the spec.
+  PINNED=false
+  if [ -f package.json ] && node -e "
+    const fs = require('fs');
+    const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+    const spec = (pkg.dependencies || {})['${PACKAGE_NAME}']
+              || (pkg.devDependencies || {})['${PACKAGE_NAME}'] || '';
+    process.exit(/#[0-9a-f]{40}\$/.test(spec) ? 0 : 1);
+  " 2>/dev/null; then
+    PINNED=true
+  fi
+
   if [ -f "$PKG_JSON" ]; then
     INSTALLED_VERSION=$(node -e "
       try { process.stdout.write(require('./${PKG_JSON}').version || ''); }
@@ -67,7 +84,9 @@ if [ "$SHOULD_UPDATE" = true ]; then
       NEEDS_UPDATE=true
     fi
 
-    if [ "$NEEDS_UPDATE" = true ]; then
+    if [ "$NEEDS_UPDATE" = true ] && [ "$PINNED" = true ]; then
+      echo "[harness] update available ($INSTALLED_VERSION → latest), skipped: package.json pins an exact commit"
+    elif [ "$NEEDS_UPDATE" = true ]; then
       echo "[harness] update available ($INSTALLED_VERSION → latest), applying..."
       # Use detected package manager — never hardcode npm
       case "$PM" in
