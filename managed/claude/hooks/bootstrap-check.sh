@@ -99,7 +99,7 @@ echo "  pm:     $PM"
 MISSING=()
 
 # Check gsd
-if ! npx --yes gsd-core --version &>/dev/null 2>&1 && ! command -v gsd &>/dev/null; then
+if ! command -v gsd &>/dev/null && ! npx --yes -p @opengsd/gsd-pi gsd --version &>/dev/null; then
   MISSING+=("gsd")
 fi
 
@@ -128,7 +128,7 @@ if [ ${#MISSING[@]} -gt 0 ]; then
   for tool in "${MISSING[@]}"; do
     case "$tool" in
       gsd)
-        echo "  gsd: npm install -g gsd-core"
+        echo "  gsd: npm install -g @opengsd/gsd-pi"
         ;;
       codebase-memory-mcp)
         echo "  macOS/Linux: curl -fsSL https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.sh | bash"

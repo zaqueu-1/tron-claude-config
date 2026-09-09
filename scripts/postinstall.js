@@ -169,12 +169,12 @@ function installGsd() {
   // Already available?
   const alreadyInstalled =
     (() => { try { execSync('gsd --version', { stdio: 'ignore' }); return true; } catch { return false; } })() ||
-    (() => { try { execSync('npx --yes gsd-core --version', { stdio: 'ignore', timeout: 8000 }); return true; } catch { return false; } })();
+    (() => { try { execSync('npx --yes -p @opengsd/gsd-pi gsd --version', { stdio: 'ignore', timeout: 8000 }); return true; } catch { return false; } })();
 
   if (alreadyInstalled) return;
 
   const pm = detectPackageManager();
-  const cmd = globalInstallCmd(pm, 'gsd-core');
+  const cmd = globalInstallCmd(pm, '@opengsd/gsd-pi');
   try {
     execSync(cmd, { stdio: 'ignore', timeout: 60000 });
     log(`gsd installed globally (${cmd})`);
