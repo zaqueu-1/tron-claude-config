@@ -99,25 +99,48 @@ echo "  pm:     $PM"
 MISSING=()
 
 # Check gsd
-if ! npx --yes gsd-core --version &>/dev/null 2>&1 && ! command -v gsd &>/dev/null; then
+if ! command -v gsd &>/dev/null && ! npx --yes @opengsd/gsd-pi --version &>/dev/null 2>&1; then
   MISSING+=("gsd")
 fi
 
-# Ensure codebase-memory-mcp (auto-install if missing; never blocks the prompt)
-ENSURE_CBM="node_modules/@tron/claude-config/scripts/lib/ensure-codebase-memory.js"
-if [ -f "$ENSURE_CBM" ]; then
-  if ! node "$ENSURE_CBM" >/dev/null 2>&1; then
-    MISSING+=("codebase-memory-mcp")
-  fi
-elif ! node -e "
+# Ensure codebase-memory-mcp (auto-install if missing; never blocks the prompt).
+#
+# The registration check honours CLAUDE_CONFIG_DIR and every file the official
+# installer may write to. Hardcoding ~/.claude/.mcp.json produced a permanent
+# false negative on machines where CLAUDE_CONFIG_DIR points elsewhere: the
+# installer registered the server in $CLAUDE_CONFIG_DIR/.claude.json and the
+# hook still reported the tool as missing on every prompt.
+CBM_REGISTERED=0
+if node -e "
   const fs = require('fs');
   const os = require('os');
-  const p = require('path').join(os.homedir(), '.claude', '.mcp.json');
-  if (!fs.existsSync(p)) process.exit(1);
-  const d = JSON.parse(fs.readFileSync(p, 'utf8'));
-  const keys = Object.keys(d.mcpServers || {});
-  if (!keys.some(k => k.includes('codebase-memory'))) process.exit(1);
+  const path = require('path');
+  const home = os.homedir();
+  const dirs = [process.env.CLAUDE_CONFIG_DIR, path.join(home, '.claude')].filter(Boolean);
+  const files = [];
+  for (const d of dirs) files.push(path.join(d, '.mcp.json'), path.join(d, '.claude.json'));
+  files.push(path.join(home, '.claude.json'));
+  for (const f of files) {
+    try {
+      if (!fs.existsSync(f)) continue;
+      const d = JSON.parse(fs.readFileSync(f, 'utf8'));
+      const keys = Object.keys(d.mcpServers || {});
+      if (keys.some(k => k.includes('codebase-memory'))) process.exit(0);
+    } catch { /* unreadable or malformed: try the next candidate */ }
+  }
+  process.exit(1);
 " 2>/dev/null; then
+  CBM_REGISTERED=1
+fi
+
+if [ "$CBM_REGISTERED" -eq 0 ]; then
+  ENSURE_CBM="node_modules/@tron/claude-config/scripts/lib/ensure-codebase-memory.js"
+  if [ -f "$ENSURE_CBM" ] && node "$ENSURE_CBM" >/dev/null 2>&1; then
+    CBM_REGISTERED=1
+  fi
+fi
+
+if [ "$CBM_REGISTERED" -eq 0 ]; then
   MISSING+=("codebase-memory-mcp")
 fi
 
@@ -128,7 +151,7 @@ if [ ${#MISSING[@]} -gt 0 ]; then
   for tool in "${MISSING[@]}"; do
     case "$tool" in
       gsd)
-        echo "  gsd: npm install -g gsd-core"
+        echo "  gsd: npm install -g @opengsd/gsd-pi"
         ;;
       codebase-memory-mcp)
         echo "  macOS/Linux: curl -fsSL https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.sh | bash"

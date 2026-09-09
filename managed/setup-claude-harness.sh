@@ -87,7 +87,7 @@ log "🔍 Checking required tools..."
 
 MISSING=()
 
-if npx gsd-core --version &>/dev/null 2>&1 || command -v gsd &>/dev/null; then
+if command -v gsd &>/dev/null || npx @opengsd/gsd-pi --version &>/dev/null 2>&1; then
   log "   ✓ gsd"
 else
   log "   ✗ gsd — MISSING"
@@ -124,9 +124,9 @@ if [ ${#MISSING[@]} -gt 0 ]; then
     case "$tool" in
       gsd)
         case "$PM" in
-          bun)  log "   gsd:  bun add -g gsd-core" ;;
-          pnpm) log "   gsd:  pnpm add -g gsd-core" ;;
-          *)    log "   gsd:  npm install -g gsd-core" ;;
+          bun)  log "   gsd:  bun add -g @opengsd/gsd-pi" ;;
+          pnpm) log "   gsd:  pnpm add -g @opengsd/gsd-pi" ;;
+          *)    log "   gsd:  npm install -g @opengsd/gsd-pi" ;;
         esac
         ;;
       codebase-memory-mcp)

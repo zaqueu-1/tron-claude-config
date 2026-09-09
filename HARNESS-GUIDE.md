@@ -52,7 +52,7 @@
 | Karpathy skill | `~/.claude/skills/andrej-karpathy-skills/` | Copied from package |
 | frontend-design | `~/.claude/skills/frontend-design/` | install-if-missing; mandatory on UI |
 | ui-ux-pro-max | `~/.claude/skills/ui-ux-pro-max/` | CLI full install, SKILL.md fallback |
-| gsd | global `$PATH` | `npm install -g gsd-core` (or bun/pnpm) |
+| gsd | global `$PATH` | `npm install -g @opengsd/gsd-pi` (or bun/pnpm) |
 | caveman skill/plugin | `~/.claude/skills/caveman/` (or plugin) | Official install script |
 | **Caveman rule (enforced)** | `~/.claude/rules/caveman.md` | Always overwritten from package — terse replies mandatory |
 | codebase-memory-mcp | `~/.claude/.mcp.json` | **Required** — `ensure-codebase-memory.js` (official install.sh / install.ps1 + Unblock-File on Windows; npm fallback; postinstall exits 1 if missing) |
