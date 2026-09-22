@@ -74,6 +74,232 @@ function copyFile(src, destRel) {
   }
 }
 
+function copyTree(srcAbs, destAbs, { exclude = ['__pycache__', '.DS_Store'] } = {}) {
+  if (!fs.existsSync(srcAbs)) {
+    log(`WARN: copyTree source not found: ${srcAbs}`);
+    return;
+  }
+  if (DRY) {
+    log(`DRY: would copyTree ${srcAbs} → ${destAbs}`);
+    return;
+  }
+  fs.mkdirSync(destAbs, { recursive: true });
+  for (const entry of fs.readdirSync(srcAbs, { withFileTypes: true })) {
+    if (exclude.includes(entry.name)) continue;
+    const srcPath = path.join(srcAbs, entry.name);
+    const destPath = path.join(destAbs, entry.name);
+    if (entry.isDirectory()) {
+      copyTree(srcPath, destPath, { exclude });
+    } else if (entry.isFile()) {
+      fs.mkdirSync(path.dirname(destPath), { recursive: true });
+      fs.copyFileSync(srcPath, destPath);
+      const ext = path.extname(entry.name);
+      if (!ext || ext === '.sh' || ext === '.cmd') {
+        try {
+          fs.chmodSync(destPath, 0o755);
+        } catch {
+          // chmod may fail on some platforms/files — non-fatal
+        }
+      }
+    }
+  }
+}
+
+const EMIL_SKILL_NAMES = [
+  'animate',
+  'animate-expo',
+  'animation-vocabulary',
+  'apple-design',
+  'ask-sonner',
+  'emil-design-eng',
+  'find-animation-opportunities',
+  'improve-animations',
+  'mobile-native',
+  'pick-ui-library',
+  'prototype',
+  'review-animations',
+  'write-swift',
+];
+
+const TASTE_SKILL_NAMES = [
+  'brandkit',
+  'design-taste-frontend',
+  'design-taste-frontend-v1',
+  'full-output-enforcement',
+  'gpt-taste',
+  'high-end-visual-design',
+  'image-to-code',
+  'imagegen-frontend-mobile',
+  'imagegen-frontend-web',
+  'industrial-brutalist-ui',
+  'minimalist-ui',
+  'redesign-existing-projects',
+  'stitch-design-taste',
+];
+
+function ensureSymlinkOrCopy(targetAbs, linkAbs) {
+  if (fs.existsSync(linkAbs)) {
+    try {
+      const stat = fs.lstatSync(linkAbs);
+      if (stat.isSymbolicLink()) {
+        const resolved = fs.realpathSync(linkAbs);
+        if (resolved === fs.realpathSync(targetAbs)) return;
+      } else if (stat.isDirectory()) {
+        return;
+      }
+    } catch {
+      // fall through to recreate
+    }
+  }
+  if (DRY) {
+    log(`DRY: would symlink ${linkAbs} → ${targetAbs}`);
+    return;
+  }
+  fs.mkdirSync(path.dirname(linkAbs), { recursive: true });
+  try {
+    if (fs.existsSync(linkAbs)) fs.rmSync(linkAbs, { recursive: true, force: true });
+    fs.symlinkSync(targetAbs, linkAbs, 'dir');
+  } catch {
+    copyTree(targetAbs, linkAbs);
+  }
+}
+
+function installEmilSkills() {
+  const home = os.homedir();
+  const srcBase = path.join(PACKAGE_ROOT, 'managed', 'skills', 'emilkowalski');
+  for (const name of EMIL_SKILL_NAMES) {
+    const src = path.join(srcBase, name);
+    const agentsDest = path.join(home, '.agents', 'skills', name);
+    copyTree(src, agentsDest);
+    ensureSymlinkOrCopy(agentsDest, path.join(home, '.claude', 'skills', name));
+    ensureSymlinkOrCopy(agentsDest, path.join(home, '.cursor', 'skills', name));
+  }
+  log('Emil skills installed → ~/.agents/skills/ (+ symlinks to ~/.claude/skills/ and ~/.cursor/skills/)');
+}
+
+function installTasteSkills() {
+  const home = os.homedir();
+  const srcBase = path.join(PACKAGE_ROOT, 'managed', 'skills', 'leonxlnx');
+  for (const name of TASTE_SKILL_NAMES) {
+    const src = path.join(srcBase, name);
+    const agentsDest = path.join(home, '.agents', 'skills', name);
+    copyTree(src, agentsDest);
+    ensureSymlinkOrCopy(agentsDest, path.join(home, '.claude', 'skills', name));
+    ensureSymlinkOrCopy(agentsDest, path.join(home, '.cursor', 'skills', name));
+  }
+  log('Taste skills installed → ~/.agents/skills/ (+ symlinks to ~/.claude/skills/ and ~/.cursor/skills/)');
+}
+
+function installImpeccable() {
+  const home = os.homedir();
+  const src = path.join(PACKAGE_ROOT, 'managed', 'skills', 'impeccable');
+  const skillTargets = [
+    path.join(home, '.claude', 'skills', 'impeccable'),
+    path.join(home, '.cursor', 'skills', 'impeccable'),
+    path.join(home, '.github', 'skills', 'impeccable'),
+  ];
+  for (const dest of skillTargets) {
+    copyTree(src, dest);
+  }
+
+  const agentsSrc = path.join(PACKAGE_ROOT, 'managed', 'agents');
+  if (fs.existsSync(agentsSrc)) {
+    for (const agentFile of fs.readdirSync(agentsSrc).filter((f) => f.startsWith('impeccable-') && f.endsWith('.md'))) {
+      for (const agentsDir of [path.join(home, '.claude', 'agents'), path.join(home, '.cursor', 'agents')]) {
+        if (DRY) {
+          log(`DRY: would copy ${agentFile} → ${agentsDir}/`);
+          continue;
+        }
+        fs.mkdirSync(agentsDir, { recursive: true });
+        fs.copyFileSync(path.join(agentsSrc, agentFile), path.join(agentsDir, agentFile));
+      }
+    }
+  }
+
+  if (!DRY) {
+    for (const base of skillTargets) {
+      const launcher = path.join(base, 'scripts', 'impeccable');
+      const bin = path.join(base, 'scripts', 'bin', 'darwin-arm64', 'impeccable');
+      for (const p of [launcher, bin]) {
+        if (fs.existsSync(p)) fs.chmodSync(p, 0o755);
+      }
+    }
+  }
+  log('impeccable installed → ~/.claude/skills/, ~/.cursor/skills/, ~/.github/skills/ (+ agents)');
+}
+
+function installImpeccableHooks(consumerRoot) {
+  const home = os.homedir();
+  const hookSpecs = [
+    {
+      template: 'managed/hooks/cursor/hooks.json',
+      dest: path.join(consumerRoot, '.cursor', 'hooks.json'),
+      bin: path.join(home, '.cursor', 'skills', 'impeccable', 'scripts', 'impeccable'),
+    },
+    {
+      template: 'managed/hooks/github/impeccable.json',
+      dest: path.join(consumerRoot, '.github', 'hooks', 'impeccable.json'),
+      bin: path.join(home, '.github', 'skills', 'impeccable', 'scripts', 'impeccable'),
+    },
+  ];
+
+  for (const { template, dest, bin } of hookSpecs) {
+    if (fs.existsSync(dest)) {
+      const existing = fs.readFileSync(dest, 'utf8');
+      if (existing.includes('impeccable')) {
+        log(`impeccable hooks skipped (already present): ${path.relative(consumerRoot, dest)}`);
+        continue;
+      }
+    }
+    const templateAbs = path.join(PACKAGE_ROOT, template);
+    if (!fs.existsSync(templateAbs)) {
+      log(`WARN: hook template not found: ${template}`);
+      continue;
+    }
+    const content = fs.readFileSync(templateAbs, 'utf8').replaceAll('__IMPECCABLE_BIN__', bin);
+    if (DRY) {
+      log(`DRY: would write impeccable hooks → ${path.relative(consumerRoot, dest)}`);
+      continue;
+    }
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.writeFileSync(dest, content, 'utf8');
+    log(`impeccable hooks installed → ${path.relative(consumerRoot, dest)}`);
+  }
+}
+
+function installFrontendDesignLicense() {
+  const destDir = path.join(os.homedir(), '.claude', 'skills', 'frontend-design');
+  const dest = path.join(destDir, 'LICENSE.txt');
+  const src = path.join(PACKAGE_ROOT, 'managed', 'skills', 'frontend-design', 'LICENSE.txt');
+  if (!fs.existsSync(src)) {
+    log('WARN: frontend-design LICENSE.txt not found in managed/');
+    return;
+  }
+  if (DRY) {
+    log('DRY: would copy frontend-design LICENSE.txt → ~/.claude/skills/frontend-design/');
+    return;
+  }
+  fs.mkdirSync(destDir, { recursive: true });
+  fs.copyFileSync(src, dest);
+  log('frontend-design LICENSE.txt installed → ~/.claude/skills/frontend-design/');
+}
+
+function installFrontendSkillsRule() {
+  const dest = path.join(os.homedir(), '.cursor', 'rules', 'frontend-skills.mdc');
+  const src = path.join(PACKAGE_ROOT, 'managed', 'cursor', 'rules', 'frontend-skills.mdc');
+  if (!fs.existsSync(src)) {
+    log('WARN: frontend-skills.mdc not found in managed/');
+    return;
+  }
+  if (DRY) {
+    log('DRY: would sync frontend-skills.mdc → ~/.cursor/rules/');
+    return;
+  }
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.copyFileSync(src, dest);
+  log('frontend-skills rule synced → ~/.cursor/rules/frontend-skills.mdc');
+}
+
 function git(...args) {
   return execFileSync('git', args, {
     cwd: CONSUMER_ROOT,
@@ -271,13 +497,44 @@ function installMakePrSkill() {
 }
 
 function installSessionHandoffSkill() {
+  // Always sync the code files so fixes reach everyone; never touch config.json,
+  // which holds each person's sessions vault path.
   const destDir = path.join(os.homedir(), '.claude', 'skills', 'session-handoff');
-  const dest = path.join(destDir, 'SKILL.md');
-  if (fs.existsSync(dest)) return;
+  const srcDir = path.join(PACKAGE_ROOT, 'managed', 'skills', 'session-handoff');
+  const existing = path.join(destDir, 'SKILL.md');
+  if (fs.existsSync(existing) && !/^name: session-handoff\r?$/m.test(fs.readFileSync(existing, 'utf8'))) {
+    log('WARN: ~/.claude/skills/session-handoff/ holds a different skill — left untouched');
+    return;
+  }
+  if (DRY) {
+    log('DRY: would sync session-handoff skill → ~/.claude/skills/session-handoff/');
+    return;
+  }
+  try {
+    fs.mkdirSync(destDir, { recursive: true });
+    for (const file of ['SKILL.md', 'config.example.json']) {
+      const src = path.join(srcDir, file);
+      if (fs.existsSync(src)) {
+        fs.copyFileSync(src, path.join(destDir, file));
+      }
+    }
+    log('session-handoff skill synced → ~/.claude/skills/session-handoff/ (vault set in config.json on first use)');
+  } catch (err) {
+    log(`WARN: session-handoff skill not synced: ${err.message}`);
+  }
+}
+
+function installSessionHandoffCommand() {
+  // Always sync — `/session-handoff` replaces legacy `/save-session` and `/retomar`.
+  const dest = path.join(os.homedir(), '.claude', 'commands', 'session-handoff.md');
   const src = path.join(PACKAGE_ROOT, 'managed', 'skills', 'session-handoff', 'SKILL.md');
-  fs.mkdirSync(destDir, { recursive: true });
+  if (DRY) {
+    log('DRY: would sync session-handoff command → ~/.claude/commands/session-handoff.md');
+    return;
+  }
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
   fs.copyFileSync(src, dest);
-  log('session-handoff skill installed → ~/.claude/skills/session-handoff/ (set sessionsVault in config.json on first use)');
+  log('session-handoff command synced → ~/.claude/commands/session-handoff.md');
 }
 
 function installFrontendDesignSkill() {
@@ -318,32 +575,17 @@ function installIssueBoardSkill() {
 
 function installUiUxProMaxSkill() {
   const skillDir = path.join(os.homedir(), '.claude', 'skills', 'ui-ux-pro-max');
-  const skillMd = path.join(skillDir, 'SKILL.md');
+  const searchPy = path.join(skillDir, 'scripts', 'search.py');
+  if (fs.existsSync(searchPy)) return;
 
-  // If full skill already installed (has scripts/ directory), skip
-  if (fs.existsSync(path.join(skillDir, 'scripts', 'search.py'))) return;
+  const src = path.join(PACKAGE_ROOT, 'managed', 'skills', 'ui-ux-pro-max');
+  copyTree(src, skillDir);
 
-  // Try full install via uipro CLI (installs SKILL.md + scripts + data)
-  if (!fs.existsSync(skillMd)) {
-    try {
-      execSync(
-        'npx --yes ui-ux-pro-max-cli init --ai claude --global --force',
-        { stdio: 'ignore', shell: true, timeout: 60000 }
-      );
-      log('ui-ux-pro-max skill installed (full) → ~/.claude/skills/ui-ux-pro-max/');
-      return;
-    } catch {
-      // CLI failed — fall back to local SKILL.md only
-    }
+  if (!DRY && !fs.existsSync(searchPy)) {
+    log('WARN: ui-ux-pro-max search.py missing after install — check managed/skills/ui-ux-pro-max/');
+    return;
   }
-
-  // Fallback: install vendored SKILL.md only (scripts won't be available)
-  if (!fs.existsSync(skillMd)) {
-    const src = path.join(PACKAGE_ROOT, 'managed', 'skills', 'ui-ux-pro-max', 'SKILL.md');
-    fs.mkdirSync(skillDir, { recursive: true });
-    fs.copyFileSync(src, skillMd);
-    log('ui-ux-pro-max skill installed (SKILL.md only — run `npx ui-ux-pro-max-cli init --ai claude --global` for full features)');
-  }
+  log('ui-ux-pro-max skill installed → ~/.claude/skills/ui-ux-pro-max/');
 }
 
 function installDocSkill() {
@@ -418,6 +660,7 @@ if (isConsumerRepo && !isSelfInstall) {
 
   installGitHooks();
   installGitIgnoreEntries();
+  installImpeccableHooks(CONSUMER_ROOT);
 }
 
 // Machine-level tools: install for developers, skip in CI
@@ -431,9 +674,14 @@ if (!IS_CI) {
   installSecurityReviewSkill();
   installMakePrSkill();
   installSessionHandoffSkill();
+  installEmilSkills();
+  installImpeccable();
+  installTasteSkills();
   installFrontendDesignSkill();
+  installFrontendDesignLicense();
   installIssueBoardSkill();
   installUiUxProMaxSkill();
+  installFrontendSkillsRule();
   installEnforcementRule();
   installAgentIsolationRule();
   installHarnessPatterns();
