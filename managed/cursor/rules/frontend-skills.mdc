@@ -1,0 +1,29 @@
+---
+description: Mandatory Emil + Impeccable + Taste (primary DESIGN authority) + ui-ux-pro-max for UI work
+alwaysApply: true
+---
+
+# Frontend Skills (mandatory)
+
+On ANY frontend/UI task — pages, components, styling, layout, redesign, polish, landing, dashboard, CSS/Tailwind, React/Next/Vue UI:
+
+**Maximum source of truth for DESIGN** = combo:
+
+1. **Emil Kowalski** — `~/.agents/skills/<name>/SKILL.md` (symlinked to `~/.claude/skills/` and `~/.cursor/skills/`). Start with `emil-design-eng`, then task-specific skills (`animate`, `mobile-native`, `prototype`, etc.).
+2. **Impeccable** — `~/.cursor/skills/impeccable/SKILL.md` — design direction, quality bar, and hook-enforced edit discipline.
+3. **Taste** (`design-taste-frontend` + task-matched variants) — `~/.agents/skills/<name>/SKILL.md` (symlinked to `~/.claude/skills/` and `~/.cursor/skills/`). Use `design-taste-frontend` for landing/portfolio/marketing/redesign; `redesign-existing-projects` on brownfield; other leonxlnx variants and image skills only when the brief matches. **Not** for pure dashboards.
+
+Then:
+
+4. **`ui-ux-pro-max`** (important but subordinate) — **after the combo sets direction**, run the design-system generator:
+   `python3 ~/.cursor/skills/ui-ux-pro-max/scripts/search.py "<product-type>" --design-system -p "<project-name>"`
+   (fallback: `~/.agents/skills/ui-ux-pro-max/scripts/search.py`)
+5. **`frontend-design`** (optional supporting guardrail) — anti-generic AI look only; never outranks the combo.
+
+**On conflict between ui-ux-pro-max (or frontend-design) and the Emil+Impeccable+Taste combo, ALWAYS prefer the combo.**
+
+Announce: `Using Emil + Impeccable + Taste (+ ui-ux-pro-max) for [purpose]`
+
+Follow stack guidelines (React/Next.js/shadcn when relevant) and the ui-ux-pro-max pre-delivery checklist (cursor-pointer, hover, contrast, focus, responsive).
+
+Skip only for pure backend/infra with zero UI surface. Existing project design systems still win for tokens/components — skills guide quality and direction, not invent a second system.
