@@ -1,6 +1,7 @@
 ---
 name: session-handoff
 description: Resume a sessão atual numa nota acionável dentro de um vault Obsidian central de sessões, para o próximo agente ler e sair executando; também retoma a partir da última nota. Use quando o usuário pedir "handoff", "resume a sessão", "salva a sessão no obsidian", "retoma a última sessão" ou antes de /compact ou /clear.
+model: sonnet
 ---
 
 # Session Handoff
