@@ -3,7 +3,7 @@
 > Quick reference: what the harness installs, what it enforces, and how to operate it day to day.  
 > Consumer pitch + install story: [README.md](README.md) · Releases: [MAINTAINER.md](MAINTAINER.md)
 
-**Current package version:** `1.6.5`
+**Current package version:** `1.7.0`
 
 ---
 
@@ -50,10 +50,14 @@
 | Karpathy enforcement rule | `~/.claude/rules/harness-enforcement.md` | Copied from package |
 | Agent isolation / harness patterns | `~/.claude/rules/` | Copied from package |
 | Karpathy skill | `~/.claude/skills/andrej-karpathy-skills/` | Copied from package |
-| frontend-design | `~/.claude/skills/frontend-design/` | install-if-missing; mandatory on UI |
+| Emil Kowalski skills | `~/.agents/skills/<name>/` (symlinked → `~/.claude/skills/`, `~/.cursor/skills/`) | Vendored from `managed/skills/emilkowalski/`; **primary DESIGN authority** |
+| Impeccable | `~/.claude/skills/impeccable/`, `~/.cursor/skills/impeccable/`, `~/.github/skills/impeccable/` (+ `impeccable-*` agents in `~/.claude/agents/`, `~/.cursor/agents/`) | Vendored from `managed/skills/impeccable/`; **primary DESIGN authority**; `darwin-arm64` binary in-tree, other platforms fetch checksum-verified binary on first run |
+| Taste (leonxlnx) skills | `~/.agents/skills/<name>/` (symlinked → `~/.claude/skills/`, `~/.cursor/skills/`) | Vendored from `managed/skills/leonxlnx/`; **primary DESIGN authority** |
+| frontend-design | `~/.claude/skills/frontend-design/` | install-if-missing; optional supporting guardrail (never outranks the combo) |
+| frontend-skills rule | `~/.cursor/rules/frontend-skills.mdc` | Always synced from `managed/cursor/rules/`; encodes the design authority order |
 | session-handoff | `~/.claude/skills/session-handoff/` | install-if-missing; session notes go to a central Obsidian vault set in `config.json` |
 | issue-board | `~/.claude/skills/issue-board/` | always synced (`SKILL.md`, `board.mjs`, `render.py`, `config.example.json`); `config.json` and `data/` stay per person |
-| ui-ux-pro-max | `~/.claude/skills/ui-ux-pro-max/` | CLI full install, SKILL.md fallback |
+| ui-ux-pro-max | `~/.claude/skills/ui-ux-pro-max/` | install-if-missing (full tree); **subordinate** to the combo — run its generator after the combo sets direction |
 | gsd | global `$PATH` | `npm install -g @opengsd/gsd-pi` (or bun/pnpm) |
 | doc | `~/.claude/skills/doc/` | always synced (`SKILL.md`, `doc.mjs`); no per-person state |
 | caveman skill/plugin | `~/.claude/skills/caveman/` (or plugin) | Official install script |
@@ -77,6 +81,35 @@ Referenced by `AGENTS.md` / `agent-isolation.md` as the first layer of codebase 
 | Repair | `npm run ensure:codebase-memory` |
 
 Skipped only when `CI` / `GITHUB_ACTIONS` / `CONTINUOUS_INTEGRATION` is set.
+
+---
+
+## Frontend design skills (MAX DESIGN authority)
+
+On ANY frontend/UI task, the harness enforces one design stack in strict priority order (full contract in `managed/AGENTS.md`):
+
+| Priority | Layer | Role |
+|----------|-------|------|
+| 1 | **Emil Kowalski + Impeccable + Taste** | **Maximum source of truth for DESIGN.** Emil = interaction/animation craft; Impeccable = direction, quality bar, hook-enforced edit discipline; Taste = high-end visual / landing / redesign direction |
+| 2 | **ui-ux-pro-max** | Important but **subordinate** — run the design-system generator only *after* the combo sets direction, then apply stack CSVs + pre-delivery checklist |
+| 3 | **frontend-design** | Optional supporting guardrail (anti-generic-AI look only) |
+
+**Conflict rule:** when ui-ux-pro-max (or frontend-design) disagrees with the Emil + Impeccable + Taste combo, **the combo always wins.**
+
+**Announce on every UI task:** `Using Emil + Impeccable + Taste (+ ui-ux-pro-max) for [purpose]`
+
+### Where the skills are vendored and installed
+
+| Skill set | Vendored under | Installed to |
+|-----------|----------------|--------------|
+| Emil Kowalski | `managed/skills/emilkowalski/` | `~/.agents/skills/<name>/`, symlinked into `~/.claude/skills/` and `~/.cursor/skills/` |
+| Taste (leonxlnx) | `managed/skills/leonxlnx/` | `~/.agents/skills/<name>/`, symlinked into `~/.claude/skills/` and `~/.cursor/skills/` |
+| Impeccable | `managed/skills/impeccable/` (+ `managed/agents/impeccable-*.md`, `managed/hooks/{cursor,github}/`) | `~/.claude/skills/impeccable/`, `~/.cursor/skills/impeccable/`, `~/.github/skills/impeccable/`; `impeccable-*` agents → `~/.claude/agents/` + `~/.cursor/agents/`; hooks → consumer `.cursor/hooks.json` + `.github/hooks/impeccable.json` |
+| ui-ux-pro-max | `managed/skills/ui-ux-pro-max/` | `~/.claude/skills/ui-ux-pro-max/` (install-if-missing, full tree) |
+| frontend-design | `managed/skills/frontend-design/` | `~/.claude/skills/frontend-design/` (install-if-missing, + `LICENSE.txt`) |
+| frontend-skills rule | `managed/cursor/rules/frontend-skills.mdc` | `~/.cursor/rules/frontend-skills.mdc` (always synced) |
+
+Emil and Taste land in `~/.agents/skills/` first, then symlink into the Claude and Cursor skill dirs (falling back to a copy when symlinks are unavailable). Impeccable is copied directly into all three tool dirs. Its engine ships as a vendored `darwin-arm64` binary under `scripts/bin/`; on other platforms the launcher downloads the pinned, checksum-verified binary on first run and caches it under `~/.impeccable/bin/<version>/`.
 
 ---
 
@@ -191,7 +224,7 @@ rm .git/hooks/pre-commit .git/hooks/pre-push
 
 ```
 tron-claude-config/
-├── package.json                              # v1.6.5
+├── package.json                              # v1.7.0
 ├── scripts/
 │   ├── postinstall.js                        # orchestrator
 │   ├── sync-ecc-rules.js                     # ECC re-sync CLI
@@ -202,6 +235,9 @@ tron-claude-config/
 ├── managed/
 │   ├── AGENTS.md
 │   ├── setup-claude-harness.sh
+│   ├── agents/                               # impeccable-* subagents
+│   ├── cursor/rules/frontend-skills.mdc      # design authority rule
+│   ├── hooks/                                # cursor/ + github/ impeccable hook templates
 │   ├── claude/
 │   │   ├── settings.json
 │   │   ├── hooks/
@@ -221,9 +257,12 @@ tron-claude-config/
 │       ├── code-review/SKILL.md
 │       ├── security-review/SKILL.md
 │       ├── make-pr/SKILL.md
-│       ├── frontend-design/SKILL.md
+│       ├── emilkowalski/<name>/SKILL.md      # Emil — design authority
+│       ├── impeccable/{SKILL.md,reference/,scripts/}  # Impeccable — design authority
+│       ├── leonxlnx/<name>/SKILL.md          # Taste — design authority
+│       ├── frontend-design/{SKILL.md,LICENSE.txt}
 │       ├── issue-board/{SKILL.md,board.mjs,render.py,config.example.json}
-│       ├── ui-ux-pro-max/SKILL.md
+│       ├── ui-ux-pro-max/{SKILL.md,scripts/,data/,references/}
 │       └── andrej-karpathy-skills/.../SKILL.md
 ├── docs/assets/                              # README visuals
 ├── HARNESS-GUIDE.md

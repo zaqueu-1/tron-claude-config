@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img alt="version" src="https://img.shields.io/badge/version-1.6.5-0F766E?style=for-the-badge"/>
+  <img alt="version" src="https://img.shields.io/badge/version-1.7.0-0F766E?style=for-the-badge"/>
   <img alt="node" src="https://img.shields.io/badge/node-%3E%3D18-38BDF8?style=for-the-badge&logo=node.js&logoColor=white"/>
   <img alt="pm" src="https://img.shields.io/badge/npm%20%7C%20pnpm%20%7C%20bun-ready-A78BFA?style=for-the-badge"/>
   <img alt="license" src="https://img.shields.io/badge/private-Tron-1E293B?style=for-the-badge"/>
@@ -98,7 +98,7 @@ your-project/
 Also installed:
 
 - Karpathy guidelines skill + always-on rules under `~/.claude/rules/`
-- **frontend-design** + **ui-ux-pro-max** skills (install-if-missing) — mandatory on any UI task; see `AGENTS.md`
+- **Emil Kowalski** + **Impeccable** + **Taste** skills (primary DESIGN authority) + **ui-ux-pro-max** (subordinate) + **frontend-design** (supporting guardrail) — mandatory on any UI task; see `AGENTS.md`
 - **session-handoff** skill (install-if-missing) — writes the session context as an actionable note in a central Obsidian vault (one folder per repo, never inside a repository) and reads it back to resume; the vault path lives in `~/.claude/skills/session-handoff/config.json`, asked once on first use
 - **issue-board** skill (always synced) — shows the open issues of any GitHub Project (v2) as terminal tables, split by type, priority, difficulty, status or a board field; the agent classifies what the board leaves empty. `render.py` draws the tables with Python `rich` when it is installed and falls back to the plain Node render otherwise. Requires `gh auth login -s read:project`. The board lives in `~/.claude/skills/issue-board/config.json`, asked once on first use, and is never overwritten
 - **Caveman** (`caveman.md`): terse replies enforced every session ([JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman)) — always overwritten from the package
@@ -106,6 +106,23 @@ Also installed:
 - **doc** skill (always synced) — `/doc` finds the repo's Obsidian documentation vault (any folder with `.obsidian/`), reads the latest session note or the current conversation, flags notes whose `file:line` references broke or point to changed code, and applies only the doc changes the user approves (never commits). No vault: warns and offers a minimal one. Works in any project
 
 Existing customized commands are **never overwritten**.
+
+### Frontend design skills — MAX DESIGN authority
+
+On any frontend/UI task the harness enforces a single design stack, in strict priority order:
+
+1. **Emil Kowalski + Impeccable + Taste** — the **maximum source of truth for design**. Emil covers interaction and animation craft (`emil-design-eng`, `animate`, `mobile-native`, …), Impeccable sets design direction, the quality bar, and hook-enforced edit discipline, and Taste (`design-taste-frontend` + variants) drives high-end visual, landing, and redesign direction.
+2. **ui-ux-pro-max** — important but **subordinate**: run its design-system generator *after* the combo sets direction, then apply its stack CSVs, UX guidance, and pre-delivery checklist.
+3. **frontend-design** — optional supporting guardrail (anti-generic-AI look only).
+
+**On any conflict, the Emil + Impeccable + Taste combo always wins over ui-ux-pro-max and frontend-design.** Agents announce `Using Emil + Impeccable + Taste (+ ui-ux-pro-max) for [purpose]`. Full contract: [AGENTS.md](managed/AGENTS.md).
+
+Where they land on the developer machine:
+
+- **Emil** and **Taste** are vendored under `managed/skills/{emilkowalski,leonxlnx}/`, installed to `~/.agents/skills/`, then symlinked into `~/.claude/skills/` and `~/.cursor/skills/`.
+- **Impeccable** is vendored under `managed/skills/impeccable/` and copied to `~/.claude/skills/`, `~/.cursor/skills/`, **and** `~/.github/skills/impeccable/`. Its `impeccable-*` subagents copy to `~/.claude/agents/` + `~/.cursor/agents/`, and edit-discipline hooks are written into the consumer repo's `.cursor/hooks.json` and `.github/hooks/impeccable.json`. The `darwin-arm64` engine binary ships in-tree; other platforms fetch the pinned, checksum-verified binary on first run and cache it under `~/.impeccable/`.
+- **ui-ux-pro-max** and **frontend-design** install (if missing) under `~/.claude/skills/`.
+- The `frontend-skills.mdc` rule (always synced to `~/.cursor/rules/`) encodes this authority order for every UI task.
 
 ---
 
@@ -204,7 +221,7 @@ npm uninstall @tron/claude-config
 
 ```
 tron-claude-config/
-├── package.json                 # v1.6.5 · postinstall entry
+├── package.json                 # v1.7.0 · postinstall entry
 ├── scripts/
 │   ├── postinstall.js           # install orchestrator
 │   ├── sync-ecc-rules.js        # manual ECC re-sync CLI
@@ -215,12 +232,15 @@ tron-claude-config/
 ├── managed/
 │   ├── AGENTS.md
 │   ├── setup-claude-harness.sh
+│   ├── agents/                  # impeccable-* subagents
 │   ├── claude/                  # settings, hooks, rules (incl. caveman)
+│   ├── cursor/rules/            # frontend-skills.mdc (design authority)
 │   ├── git-hooks/               # pre-commit, pre-push
-│   └── skills/                  # commit-changes, code-review,
-│                                # security-review, make-pr, karpathy,
-│                                # frontend-design, ui-ux-pro-max,
-│                                # issue-board
+│   ├── hooks/                   # cursor + github impeccable hook templates
+│   └── skills/                  # commit-changes, code-review, security-review,
+│                                # make-pr, karpathy, session-handoff, doc,
+│                                # issue-board, emilkowalski (Emil), impeccable,
+│                                # leonxlnx (Taste), frontend-design, ui-ux-pro-max
 ├── docs/assets/                 # README visuals
 ├── HARNESS-GUIDE.md
 ├── MAINTAINER.md

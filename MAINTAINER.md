@@ -1,6 +1,6 @@
 # tron-claude-config — Maintainer Guide
 
-Owner playbook for the shared Claude enforcement harness (`@tron/claude-config` **v1.6.5**).
+Owner playbook for the shared Claude enforcement harness (`@tron/claude-config` **v1.7.0**).
 
 Consumer docs: [README.md](README.md) · Operator cheat sheet: [HARNESS-GUIDE.md](HARNESS-GUIDE.md)
 
@@ -15,9 +15,33 @@ On consumer `npm install` / `bun install` / `pnpm install`, `scripts/postinstall
 3. Installs git `pre-commit` / `pre-push` hooks (via `git rev-parse --git-path hooks`, respects `core.hooksPath`)
 4. Syncs **scoped** ECC rules into `.claude/rules/ecc/` (detect stack → copy matching folders → prune stale ones)
 5. On developer machines (not CI): install-if-missing skills + Karpathy rules, gsd, caveman; **attempt** codebase-memory-mcp via `scripts/lib/ensure-codebase-memory.js` (retries + npm fallback on Windows/WSL; warns instead of aborting postinstall if still missing)
-6. Thereafter, `bootstrap-check.sh` self-updates the package about once per day
+6. On developer machines (not CI): installs the **frontend design skill harness** — the **Emil + Impeccable + Taste** combo (maximum DESIGN source of truth), with **ui-ux-pro-max** subordinate and **frontend-design** as an optional guardrail (see [Frontend design skills](#frontend-design-skills-max-design-authority))
+7. Thereafter, `bootstrap-check.sh` self-updates the package about once per day
 
 Non-technical users get gates without extra setup. Engineers get them on install.
+
+---
+
+## Frontend design skills (MAX DESIGN authority)
+
+The harness ships a full frontend design stack, vendored in-repo and installed on developer machines. Authority order (enforced by `managed/AGENTS.md` and `managed/cursor/rules/frontend-skills.mdc`):
+
+1. **Emil Kowalski + Impeccable + Taste** — the **maximum source of truth for DESIGN**.
+2. **ui-ux-pro-max** — important but **subordinate**; runs after the combo sets direction.
+3. **frontend-design** — optional supporting guardrail only.
+
+**On conflict, the Emil + Impeccable + Taste combo always wins.** Do not weaken this rule when editing skill docs. Agents announce `Using Emil + Impeccable + Taste (+ ui-ux-pro-max) for [purpose]`.
+
+| Skill set | Vendored under | Install behavior |
+|-----------|----------------|------------------|
+| Emil Kowalski | `managed/skills/emilkowalski/` | `installEmilSkills()` → `~/.agents/skills/<name>/` + symlinks into `~/.claude/skills/` and `~/.cursor/skills/` (copy fallback) |
+| Taste (leonxlnx) | `managed/skills/leonxlnx/` | `installTasteSkills()` → `~/.agents/skills/<name>/` + symlinks into `~/.claude/skills/` and `~/.cursor/skills/` (copy fallback) |
+| Impeccable | `managed/skills/impeccable/` (+ `managed/agents/impeccable-*.md`, `managed/hooks/{cursor,github}/`) | `installImpeccable()` copies into `~/.claude/skills/`, `~/.cursor/skills/`, `~/.github/skills/impeccable/`; `impeccable-*` agents → `~/.claude/agents/` + `~/.cursor/agents/`. `installImpeccableHooks()` templates hooks into consumer `.cursor/hooks.json` + `.github/hooks/impeccable.json`. The `darwin-arm64` engine binary is vendored under `scripts/bin/`; other platforms download the pinned, checksum-verified binary on first run |
+| ui-ux-pro-max | `managed/skills/ui-ux-pro-max/` | `installUiUxProMaxSkill()` → `~/.claude/skills/ui-ux-pro-max/` (install-if-missing, full tree) |
+| frontend-design | `managed/skills/frontend-design/` | `installFrontendDesignSkill()` + `installFrontendDesignLicense()` → `~/.claude/skills/frontend-design/` (install-if-missing) |
+| frontend-skills rule | `managed/cursor/rules/frontend-skills.mdc` | `installFrontendSkillsRule()` → `~/.cursor/rules/frontend-skills.mdc` (always synced) |
+
+To add or update a design skill, edit the vendored source under `managed/skills/{emilkowalski,leonxlnx,impeccable,ui-ux-pro-max,frontend-design}/`, keep the install function in `postinstall.js` in sync, and bump the version (`minor` for a new skill).
 
 ---
 
@@ -36,6 +60,9 @@ tron-claude-config/
 ├── managed/
 │   ├── AGENTS.md
 │   ├── setup-claude-harness.sh        # also re-syncs ECC on auto-update
+│   ├── agents/                        # impeccable-* subagents → ~/.claude/agents/, ~/.cursor/agents/
+│   ├── cursor/rules/                  # frontend-skills.mdc → ~/.cursor/rules/
+│   ├── hooks/                         # cursor/ + github/ impeccable hook templates
 │   ├── claude/
 │   │   ├── settings.json
 │   │   ├── hooks/
@@ -54,8 +81,11 @@ tron-claude-config/
 │       ├── code-review/SKILL.md       # → ~/.claude/commands/code-review.md
 │       ├── security-review/SKILL.md   # → ~/.claude/commands/security-review.md
 │       ├── make-pr/SKILL.md           # → ~/.claude/commands/make-pr.md
-│       ├── frontend-design/SKILL.md   # → ~/.claude/skills/frontend-design/
-│       ├── ui-ux-pro-max/SKILL.md     # → ~/.claude/skills/ui-ux-pro-max/ (full via CLI)
+│       ├── emilkowalski/<name>/       # Emil — → ~/.agents/skills/ (+ symlinks)
+│       ├── impeccable/                # Impeccable — → ~/.claude, ~/.cursor, ~/.github + agents + hooks
+│       ├── leonxlnx/<name>/           # Taste — → ~/.agents/skills/ (+ symlinks)
+│       ├── frontend-design/SKILL.md   # → ~/.claude/skills/frontend-design/ (guardrail)
+│       ├── ui-ux-pro-max/             # → ~/.claude/skills/ui-ux-pro-max/ (subordinate)
 │       └── andrej-karpathy-skills/... # → ~/.claude/skills/...
 ├── docs/assets/                       # README banner / diagrams
 ├── MAINTAINER.md
@@ -78,6 +108,11 @@ tron-claude-config/
 | `~/.claude/commands/code-review.md` | **Package** (install-if-missing) | Required by `/commit-changes` |
 | `~/.claude/commands/security-review.md` | **Package** (install-if-missing) | Required by `/commit-changes` |
 | `~/.claude/commands/make-pr.md` | **Package** (always synced) | PT-BR PR template; overwrites stale English skills |
+| `~/.agents/skills/<emil/taste>/` + `~/.claude` + `~/.cursor` symlinks | **Package** (vendored, symlink/copy) | Emil + Taste = primary DESIGN authority |
+| `~/.claude` + `~/.cursor` + `~/.github/skills/impeccable/` (+ agents + repo hooks) | **Package** (vendored, copied) | Impeccable = primary DESIGN authority; darwin-arm64 binary in-tree, others fetch on first run |
+| `~/.claude/skills/ui-ux-pro-max/` | **Package** (install-if-missing) | Subordinate to the combo |
+| `~/.claude/skills/frontend-design/` | **Package** (install-if-missing) | Optional guardrail; never outranks the combo |
+| `~/.cursor/rules/frontend-skills.mdc` | **Package** (always synced) | Encodes the design authority order |
 | `~/.claude/rules/caveman.md` | **Package** (always overwrite) | Caveman communication — mandatory every session |
 | `~/.claude/.mcp.json` (`codebase-memory*`) | **Package** (ensure on install) | Required MCP — setup script warns if missing; postinstall no longer aborts |
 | `.claude/PR-TEMPLATE.md` | **Package** | Canonical PT-BR PR body scaffold |
@@ -245,7 +280,7 @@ git push origin main
 "@tron/claude-config": "git+https://github.com/quanthubbr/tron-claude-config.git"
 ```
 
-Pin versions with tags: `#v1.6.5`
+Pin versions with tags: `#v1.7.0`
 
 ---
 
@@ -260,7 +295,7 @@ git push && git push --tags
 Pin a consumer in an emergency:
 
 ```json
-"@tron/claude-config": "git+https://github.com/zaqueu-1/tron-claude-config.git#v1.6.5"
+"@tron/claude-config": "git+https://github.com/zaqueu-1/tron-claude-config.git#v1.7.0"
 ```
 
 ---

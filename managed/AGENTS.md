@@ -74,9 +74,22 @@ Full contract: `~/.claude/rules/caveman.md`.
 
 On ANY frontend/UI task (pages, components, styling, layout, redesign, landing, dashboard):
 
-1. **Load the `frontend-design` skill** (`~/.claude/skills/frontend-design/SKILL.md`) — guides aesthetic direction, typography, layout, and deliberate design choices that avoid templated defaults.
-2. **Load the `ui-ux-pro-max` skill** (`~/.claude/skills/ui-ux-pro-max/SKILL.md`) — run the design system generator before building: `python3 ~/.claude/skills/ui-ux-pro-max/scripts/search.py "<product_type> <keywords>" --design-system -p "Project Name"`. Use the search tool for style, color, typography, UX, and stack-specific guidance.
-3. **Both skills are mandatory.** Do not skip either. The frontend-design skill governs creative direction; ui-ux-pro-max governs design system generation, accessibility, and technical UI quality.
+**Maximum source of truth for DESIGN** = combo:
+
+1. **Emil Kowalski** — `~/.agents/skills/<name>/SKILL.md` (symlinked to `~/.claude/skills/` and `~/.cursor/skills/`). Start with `emil-design-eng`, then task-specific skills (`animate`, `mobile-native`, `prototype`, `review-animations`, etc.).
+2. **Impeccable** — `~/.claude/skills/impeccable/SKILL.md` — design direction, quality bar, and hook-enforced edit discipline.
+3. **Taste** (`design-taste-frontend` + task-matched variants) — `~/.agents/skills/<name>/SKILL.md` (symlinked to `~/.claude/skills/` and `~/.cursor/skills/`). Use `design-taste-frontend` for landing/portfolio/marketing/redesign; `redesign-existing-projects` on brownfield; other leonxlnx variants and image skills when the brief matches. **Not** for pure dashboards.
+
+Then:
+
+4. **`ui-ux-pro-max`** (important but subordinate) — **after the combo sets direction**, run the design-system generator: `python3 ~/.claude/skills/ui-ux-pro-max/scripts/search.py "<product_type> <keywords>" --design-system -p "Project Name"`. Use stack CSVs, UX guidance, and the pre-delivery checklist.
+5. **`frontend-design`** (optional supporting guardrail) — anti-generic AI look only; never outranks the combo.
+
+**On conflict between ui-ux-pro-max (or frontend-design) and the Emil+Impeccable+Taste combo, ALWAYS prefer the combo.**
+
+Announce: `Using Emil + Impeccable + Taste (+ ui-ux-pro-max) for [purpose]`
+
+**Emil + Impeccable + Taste are mandatory for UI work.** ui-ux-pro-max is mandatory but subordinate — run only after the combo establishes design direction. frontend-design is optional support.
 
 **When these skills apply:**
 - Creating new pages, components, or views

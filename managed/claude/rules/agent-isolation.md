@@ -68,7 +68,7 @@ The orchestrator passes you a task. You query the codebase yourself to understan
 
 **Caveman:** reply terse by default. Code/commits/PR bodies stay normal. See `~/.claude/rules/caveman.md`.
 
-**Frontend skills:** mandatory on any UI task — load `frontend-design` + `ui-ux-pro-max` skills before building. See `AGENTS.md` § Frontend skills.
+**Frontend skills:** mandatory on any UI task. **Maximum source of truth for DESIGN** = combo: (1) Emil Kowalski, (2) Impeccable, (3) Taste (`design-taste-frontend` + task-matched variants); then (4) ui-ux-pro-max (subordinate), (5) frontend-design (optional guardrail). **On conflict between ui-ux-pro-max (or frontend-design) and the Emil+Impeccable+Taste combo, ALWAYS prefer the combo.** Load in that order. Announce: `Using Emil + Impeccable + Taste (+ ui-ux-pro-max) for [purpose]`. See `AGENTS.md` § Frontend skills.
 
 ## Karpathy principles — mandatory for all write/edit/refactor tasks
 
