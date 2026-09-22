@@ -174,7 +174,7 @@ npm install   # or bun / pnpm
 - Installs git hooks  
 - Syncs scoped ECC rules into `.claude/rules/ecc/`  
 - Copies `AGENTS.md`  
-- Adds token/draft paths to `.gitignore`  
+- Adds token/draft paths plus `.cursor/` and `.omc/` (local harness/session state) to `.gitignore`  
 - On developer machines: installs skills, Karpathy rules, gsd, caveman; **guarantees** codebase-memory-mcp (Win + macOS/Linux)  
 
 ---

@@ -74,7 +74,7 @@ fi
 
 # 2. Ensure .claude directory and token files are gitignored
 GITIGNORE="$REPO_ROOT/.gitignore"
-for entry in ".claude/.commit-authorized" ".claude/.pr-authorized" ".claude/.pr-body-draft.md"; do
+for entry in ".claude/.commit-authorized" ".claude/.pr-authorized" ".claude/.pr-body-draft.md" ".claude/.harness-last-update" ".cursor/" ".omc/"; do
   if ! grep -qF "$entry" "$GITIGNORE" 2>/dev/null; then
     echo "$entry" >> "$GITIGNORE"
     log "   ✓ Added $entry to .gitignore"

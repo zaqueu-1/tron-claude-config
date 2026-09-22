@@ -119,6 +119,9 @@ tron-claude-config/
 | `.claude/hooks/lib/pr-template-validate.cjs` | **Package** | PR body + `gh pr create` command validation |
 | `.claude/.pr-body-draft.md` | **Ephemeral** (gitignored) | Written by `/make-pr`, validated by hook |
 | `.claude/.commit-authorized` / `.pr-authorized` | **Ephemeral** (gitignored) | One-shot bypass tokens |
+| `.claude/.harness-last-update` | **Ephemeral** (gitignored) | Last harness sync timestamp |
+| `.cursor/` | **Ephemeral** (gitignored) | Machine-local Cursor hooks (`.cursor/hooks.json`); team-shared hooks stay under `.github/hooks/` |
+| `.omc/` | **Ephemeral** (gitignored) | OMC session/runtime state (`.omc/state/`, handoffs, notepad, etc.) |
 | Repo-local `.claude/commands/*` (other) | **Repo** | Never overwritten |
 | `CLAUDE.md` | **Repo** | Never overwritten |
 | `.claude/settings.local.json` | **Repo** | Never touched |

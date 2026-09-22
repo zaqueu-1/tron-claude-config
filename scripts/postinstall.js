@@ -44,6 +44,8 @@ const GITIGNORE_ENTRIES = [
   '.claude/.pr-authorized',
   '.claude/.pr-body-draft.md',
   '.claude/.harness-last-update',
+  '.cursor/',
+  '.omc/',
 ];
 
 function log(msg) {
