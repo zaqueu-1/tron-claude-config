@@ -71,21 +71,22 @@ Full contract: `~/.claude/rules/terse.md`.
 
 On ANY frontend/UI task (pages, components, styling, layout, redesign, landing, dashboard):
 
-**Maximum source of truth for DESIGN** = combo:
+**Source of truth for DESIGN** = the tron design stack (`~/.agents/skills/<name>/SKILL.md`, symlinked into `~/.claude/skills/` and `~/.cursor/skills/`):
 
-1. **Emil Kowalski** — `~/.agents/skills/<name>/SKILL.md` (symlinked to `~/.claude/skills/` and `~/.cursor/skills/`). Start with `emil-design-eng`, then task-specific skills (`animate`, `mobile-native`, `prototype`, `review-animations`, etc.).
-2. **Impeccable** — `~/.claude/skills/impeccable/SKILL.md` — design direction, quality bar, and hook-enforced edit discipline.
-3. **Taste** (`design-taste-frontend` + task-matched variants) — `~/.agents/skills/<name>/SKILL.md` (symlinked to `~/.claude/skills/` and `~/.cursor/skills/`). Use `design-taste-frontend` for landing/portfolio/marketing/redesign; `redesign-existing-projects` on brownfield; other leonxlnx variants and image skills when the brief matches. **Not** for pure dashboards.
+1. **`tron-design`** — always first: direction, modes, critique/audit, refine commands, live iteration, and the hook-enforced detector. Style modules (`reference/styles/`) for landing/portfolio/marketing/redesign; dashboards follow its Operate mode.
+2. **`tron-motion`** — animation, transitions, gestures, toasts, interaction feel (web + Expo).
+3. **`tron-native`** — native iOS/Android/desktop feel, Apple-quality design, Swift/SwiftUI.
+4. **`tron-imagery`** — image-model comps, image-to-code, brand kits, only when the brief calls for imagery.
 
 Then:
 
-4. **`tron-design-fallback`** (subordinate) — `~/.claude/skills/tron-design-fallback/SKILL.md`. Consult **only after the combo sets direction**, and only for the four areas the combo does not cover: charts/data visualization, form UX patterns, web navigation patterns, and stack implementation guidelines (Vue, Nuxt, React, Next.js, React Native, shadcn/ui, Tailwind). Never sets visual direction. Includes a short pre-delivery add-on.
+5. **`tron-design-fallback`** (subordinate) — `~/.claude/skills/tron-design-fallback/SKILL.md`. Consult **only after the stack sets direction**, and only for the four areas it does not cover: charts/data visualization, form UX patterns, web navigation patterns, and stack implementation guidelines (Vue, Nuxt, React, Next.js, React Native, shadcn/ui, Tailwind). Never sets visual direction. Includes a short pre-delivery add-on.
 
-**On conflict between tron-design-fallback and the Emil+Impeccable+Taste combo, ALWAYS prefer the combo.**
+**On conflict between tron-design-fallback and the tron design stack, ALWAYS prefer the stack.**
 
-Announce: `Using Emil + Impeccable + Taste for [purpose]` — append `(+ tron-design-fallback)` only when it was actually consulted.
+Announce: `Using tron-design for [purpose]` — name each companion actually loaded (`+ tron-motion`, `+ tron-native`, `+ tron-imagery`, `+ tron-design-fallback`).
 
-**Emil + Impeccable + Taste are mandatory for UI work.** tron-design-fallback is consulted on demand for its four areas, never before the combo establishes design direction.
+**The tron design stack is mandatory for UI work.** tron-design-fallback is consulted on demand for its four areas, never before the stack establishes design direction.
 
 **When these skills apply:**
 - Creating new pages, components, or views

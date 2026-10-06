@@ -59,7 +59,7 @@ The orchestrator passes you a task. You query the codebase yourself to understan
 
 **Terse mode:** reply terse by default. Code/commits/PR bodies stay normal. See `~/.claude/rules/terse.md`.
 
-**Frontend skills:** mandatory on any UI task. **Maximum source of truth for DESIGN** = combo: (1) Emil Kowalski, (2) Impeccable, (3) Taste (`design-taste-frontend` + task-matched variants); then (4) tron-design-fallback (subordinate; only after the combo set direction, only for charts, forms, web navigation and stack guidelines). **On conflict between tron-design-fallback and the Emil+Impeccable+Taste combo, ALWAYS prefer the combo.** Load in that order. Announce: `Using Emil + Impeccable + Taste for [purpose]`, appending `(+ tron-design-fallback)` only when it was consulted. See `AGENTS.md` § Frontend skills.
+**Frontend skills:** mandatory on any UI task. **Source of truth for DESIGN** = the tron design stack: (1) `tron-design` (always first), then as the task needs (2) `tron-motion`, (3) `tron-native`, (4) `tron-imagery`; then (5) tron-design-fallback (subordinate; only after the stack sets direction, only for charts, forms, web navigation and stack guidelines). **On conflict between tron-design-fallback and the stack, ALWAYS prefer the stack.** Announce: `Using tron-design for [purpose]`, naming companions actually loaded. See `AGENTS.md` § Frontend skills.
 
 ## Engineering principles — mandatory for all write/edit/refactor tasks
 

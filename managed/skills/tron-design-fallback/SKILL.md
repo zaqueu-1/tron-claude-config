@@ -1,13 +1,13 @@
 ---
 name: tron-design-fallback
-description: SUBORDINATE to the Emil + Impeccable + Taste design combo. Consult only after the combo has set design direction, and only for four gaps it does not cover - charts and data visualization, form UX patterns, web navigation patterns, and stack implementation guidelines (Vue, Nuxt, React, Next.js, React Native, shadcn/ui, HTML + Tailwind). Never sets visual direction, style, palette, typography or motion.
+description: SUBORDINATE to the tron design stack (tron-design, tron-motion, tron-native, tron-imagery). Consult only after the stack has set design direction, and only for four gaps it does not cover - charts and data visualization, form UX patterns, web navigation patterns, and stack implementation guidelines (Vue, Nuxt, React, Next.js, React Native, shadcn/ui, HTML + Tailwind). Never sets visual direction, style, palette, typography or motion.
 ---
 
 # tron-design-fallback
 
-Authority: this skill never sets visual direction. Emil Kowalski, Impeccable and Taste are the maximum source of truth for design; on any conflict between this file and the combo, the combo wins. Consult it only after the combo has defined direction, and only for the four areas below: charts, forms, web navigation and stack guidelines. Existing project design systems still win for tokens and components.
+Authority: this skill never sets visual direction. The tron design stack is the maximum source of truth for design; on any conflict between this file and the stack, the stack wins. Consult it only after the stack has defined direction, and only for the four areas below: charts, forms, web navigation and stack guidelines. Existing project design systems still win for tokens and components.
 
-Not here on purpose (the combo owns it): aesthetic direction, style and palette selection, typography and font pairing, motion and animation, responsive and native iOS/Android adaptation, performance and Core Web Vitals, accessibility audit and hardening, i18n, empty and error states, copywriting, polish.
+Not here on purpose (the tron design stack owns it): aesthetic direction, style and palette selection, typography and font pairing, motion and animation, responsive and native iOS/Android adaptation, performance and Core Web Vitals, accessibility audit and hardening, i18n, empty and error states, copywriting, polish.
 
 ## 1. Charts and data visualization
 
@@ -45,7 +45,7 @@ Rules:
 
 ## 2. Forms and feedback
 
-Complements Impeccable `harden` (validation, sanitization, double-submit, permission states); use both.
+Complements `tron-design harden` (validation, sanitization, double-submit, permission states); use both.
 
 - Every input has a visible label; placeholder is never the only label. Group related fields with `fieldset`/`legend`.
 - Mark required fields visibly and with `required` / `aria-required`.
@@ -63,7 +63,7 @@ Complements Impeccable `harden` (validation, sanitization, double-submit, permis
 
 ## 3. Web navigation patterns
 
-Native navigation (tab bars, app bars, gestures) belongs to Impeccable `adapt`, `ios` and `android`.
+Native navigation (tab bars, app bars, gestures) belongs to `tron-design adapt` (native references) and `tron-native`.
 
 - Highlight the current location in every nav (indicator plus weight or color) and set `aria-current="page"`.
 - Back is predictable: restore scroll position, filters and form input; never silently reset the stack or jump home.
@@ -92,7 +92,7 @@ High-severity implementation rules only (correctness, not look). Detect the stac
 
 ## 5. Pre-delivery add-on
 
-Run after the combo's own polish/audit pass; these are the items it does not enforce.
+Run after tron-design's own polish/audit pass; these are the items it does not enforce.
 
 - [ ] Clickable elements that are not `<button>`/`<a>` have `cursor: pointer` (and a proper role plus keyboard handler).
 - [ ] Every chart has a visible legend, a non-color encoding, and a table or text-summary fallback.
