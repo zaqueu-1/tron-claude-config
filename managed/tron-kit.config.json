@@ -134,6 +134,13 @@
       "find": "`browser-qa`, `accessibility`",
       "replace": "`browser-qa`, `impeccable` (audit)",
       "minMatches": 1
+    },
+    {
+      "id": "run-with-flags-cursor-guard",
+      "files": ["scripts/hooks/run-with-flags.js"],
+      "find": "  const sanitizeEcho = text => (truncated && text === raw ? '' : text);\n  if (truncated) {",
+      "replace": "  const sanitizeEcho = text => (truncated && text === raw ? '' : text);\n\n  // Cursor rejects large pass-through echo as \"invalid JSON\"; pre-tool hooks are Claude Code-only, so under Cursor (`cursor_version`) answer \"no opinion\".\n  const isCursorPayload = () => { try { const p = JSON.parse(raw); return Boolean(p && typeof p === 'object' && p.cursor_version); } catch { return false; } };\n  if (hookId && hookId.startsWith('pre:') && isCursorPayload()) {\n    exitWithStdout('{}', 0);\n    return;\n  }\n\n  if (truncated) {",
+      "minMatches": 1
     }
   ],
   "plugin": {
