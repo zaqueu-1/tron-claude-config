@@ -7,3 +7,6 @@ node_modules/
 .omc/
 .DS_Store
 managed/.DS_Store
+
+# upstream tracker mirrors (maintainer only)
+upstream/.cache/

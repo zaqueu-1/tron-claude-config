@@ -17,7 +17,7 @@ Steps:
 3. **Semantic commits:** group the changes into cohesive units and commit each with a Conventional Commits message **in English** — `type: short description`, subject ≤ 100 chars, body only when the "why" isn't obvious. Prefer several small cohesive commits over one big commit.
    - Stage only the files for each unit (`git add <paths>`), never `git add -A` blindly.
    - NEVER use `git add -f`/`--force` on `.gitignore`d paths — if a file won't stage, ask the user.
-   - **GSD / `.planning/` files are committed LAST and ALONE:** keep all `.planning/` changes out of the feature-work commits, bundle them into a single final `docs:` commit (e.g. `docs: update GSD planning artifacts`) on the current branch, created only after every real-work commit. If the only pending changes are `.planning/` files, that one `docs:` commit is the whole job.
+   - **Workflow `.planning/` files are committed LAST and ALONE:** keep all `.planning/` changes out of the feature-work commits, bundle them into a single final `docs:` commit (e.g. `docs: update planning artifacts`) on the current branch, created only after every real-work commit. If the only pending changes are `.planning/` files, that one `docs:` commit is the whole job.
 4. **Authorship:** commits are authored solely by the repository's configured git identity (the current user). NEVER pass `--author`, and NEVER add `Co-Authored-By`, "Generated with", Claude, Cursor, or any AI/agent mention to the message or trailer.
 5. **Leak / sensitive-data scan (before push):** use the project's available tooling to confirm nothing sensitive is going out:
    - Run the repo's secret scanner if present (e.g. `gitleaks git --staged` or `gitleaks detect --staged`; it also runs on the commit hook — respect its result).

@@ -112,7 +112,7 @@ tool name exposed by the active harness.
 - Pre-commit → `husky`, `lint-staged`, `pre-commit`
 
 ### AI/LLM Integration
-- Claude SDK → Context7 for latest docs
+- Claude SDK → tron-docs for latest docs
 - Prompt management → Check MCP servers
 - Document processing → `unstructured`, `pdfplumber`, `mammoth`
 

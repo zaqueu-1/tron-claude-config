@@ -11,7 +11,8 @@ const os = require('os');
 const { execSync, execFileSync } = require('child_process');
 const { installTronRules } = require('./lib/install-tron-rules');
 const { installTronKitPlugin, removeLegacyEcc, disablePlugin } = require('./lib/install-tron-kit');
-const { ensureCodebaseMemoryMcp } = require('./lib/ensure-codebase-memory');
+const { ensureTronGraph } = require('./lib/ensure-tron-graph');
+const { ensureTronDocs } = require('./lib/ensure-tron-docs');
 const { installTronAgents } = require('./lib/install-tron-agents');
 
 const DRY = process.env.DRY === '1';
@@ -425,55 +426,51 @@ function installGsd() {
   }
 }
 
-function installCodebaseMemoryMcp() {
-  // Required by agent-isolation / AGENTS.md — should be registered in ~/.claude/.mcp.json
-  // Official installers: https://github.com/DeusData/codebase-memory-mcp (macOS/Linux + Windows)
+function installTronGraph() {
+  // Required by agent-isolation / AGENTS.md — registered as `tron-graph` in every MCP config.
   // Non-fatal here: a failed MCP install must not block copying hooks into consumer repos
   // (especially on Windows/WSL where PowerShell/curl installers often fail on first run).
-  const result = ensureCodebaseMemoryMcp();
+  const result = ensureTronGraph({ dryRun: DRY });
   if (result.alreadyReady) {
-    log('codebase-memory-mcp already registered');
+    log('tron-graph already registered');
     return result;
   }
   if (result.ok) {
     return result;
   }
-  log('WARN: codebase-memory-mcp could not be installed automatically');
-  log('WARN: run manually: node node_modules/@tron/claude-config/scripts/lib/ensure-codebase-memory.js');
+  log('WARN: tron-graph could not be installed automatically');
+  log('WARN: run manually: node node_modules/@tron/claude-config/scripts/lib/ensure-tron-graph.js');
   return result;
 }
 
-function installCaveman() {
-  if (process.platform === 'win32') {
-    log('WARN: caveman auto-install skipped on native Windows — use WSL/Git Bash or install from https://github.com/JuliusBrussee/caveman');
-    return;
-  }
-  // Check if caveman skill already present in any known location
+// Always overwrite — terse mode and engineering principles are harness-enforced, not optional.
+const CORE_RULES = ['terse.md', 'engineering-principles.md'];
+const RETIRED_RULE_PATHS = [
+  ['.claude', 'rules', 'caveman.md'],
+  ['.claude', 'skills', 'andrej-karpathy-skills'],
+];
+
+function installCoreRules() {
   const home = os.homedir();
-  const knownPaths = [
-    path.join(home, '.claude', 'skills', 'caveman'),
-    path.join(home, '.claude', 'commands', 'caveman.md'),
-  ];
-  if (knownPaths.some(p => fs.existsSync(p))) return;
-
-  try {
-    execSync(
-      'curl -fsSL https://raw.githubusercontent.com/JuliusBrussee/caveman/main/install.sh | bash',
-      { stdio: 'ignore', shell: true, timeout: 30000 }
-    );
-    log('caveman installed');
-  } catch {
-    log('WARN: caveman install failed — see: https://github.com/JuliusBrussee/caveman');
+  for (const name of CORE_RULES) {
+    const dest = path.join(home, '.claude', 'rules', name);
+    if (DRY) {
+      log(`DRY: would enforce rule → ~/.claude/rules/${name}`);
+      continue;
+    }
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.copyFileSync(path.join(PACKAGE_ROOT, 'managed', 'claude', 'rules', name), dest);
+    log(`rule enforced → ~/.claude/rules/${name}`);
   }
-}
-
-function installKarpathySkill() {
-  const dest = path.join(os.homedir(), '.claude', 'skills', 'andrej-karpathy-skills', 'karpathy-guidelines', 'SKILL.md');
-  if (fs.existsSync(dest)) return;
-  const src = path.join(PACKAGE_ROOT, 'managed', 'skills', 'andrej-karpathy-skills', 'karpathy-guidelines', 'SKILL.md');
-  fs.mkdirSync(path.dirname(dest), { recursive: true });
-  fs.copyFileSync(src, dest);
-  log('andrej-karpathy-skills installed → ~/.claude/skills/');
+  for (const parts of RETIRED_RULE_PATHS) {
+    const target = path.join(home, ...parts);
+    if (!fs.existsSync(target)) continue;
+    if (DRY) log(`DRY: would remove retired → ~/${parts.join('/')}`);
+    else {
+      fs.rmSync(target, { recursive: true, force: true });
+      log(`retired → removed ~/${parts.join('/')}`);
+    }
+  }
 }
 
 function installCommitChangesSkill() {
@@ -640,15 +637,6 @@ function installTronKit() {
   }
 }
 
-function installCavemanRule() {
-  // Always overwrite — caveman communication is harness-enforced, not optional
-  const dest = path.join(os.homedir(), '.claude', 'rules', 'caveman.md');
-  const src = path.join(PACKAGE_ROOT, 'managed', 'claude', 'rules', 'caveman.md');
-  fs.mkdirSync(path.dirname(dest), { recursive: true });
-  fs.copyFileSync(src, dest);
-  log('caveman rule enforced → ~/.claude/rules/caveman.md');
-}
-
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 const isConsumerRepo = fs.existsSync(path.join(CONSUMER_ROOT, '.git'));
@@ -672,9 +660,13 @@ if (isConsumerRepo && !isSelfInstall) {
 // Machine-level tools: install for developers, skip in CI
 if (!IS_CI) {
   installGsd();
-  installCodebaseMemoryMcp();
-  installCaveman();
-  installKarpathySkill();
+  installTronGraph();
+  try {
+    ensureTronDocs({ dryRun: DRY });
+  } catch (err) {
+    log(`WARN: tron-docs not registered: ${err.message}`);
+  }
+  installCoreRules();
   installCommitChangesSkill();
   installCodeReviewSkill();
   installSecurityReviewSkill();
@@ -696,6 +688,5 @@ if (!IS_CI) {
   installEnforcementRule();
   installAgentIsolationRule();
   installHarnessPatterns();
-  installCavemanRule();
   installDocSkill();
 }

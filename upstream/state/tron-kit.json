@@ -2,7 +2,7 @@
   "repo": "https://github.com/affaan-m/ECC.git",
   "ref": "38a7ebbe3294be9bfda5612c6d696742ade6fbb2",
   "upstreamVersion": "2.0.0",
-  "syncedAt": "2026-10-06T04:41:19.415Z",
+  "syncedAt": "2026-10-06T04:36:53.435Z",
   "excluded": [
     "hooks/README.md",
     "hooks/memory-persistence/"
@@ -55,6 +55,10 @@
     {
       "id": "run-with-flags-cursor-guard",
       "matches": 1
+    },
+    {
+      "id": "docs-mcp-is-tron-docs",
+      "matches": 8
     }
   ]
 }

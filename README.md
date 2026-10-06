@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img alt="version" src="https://img.shields.io/badge/version-1.10.0-0F766E?style=for-the-badge"/>
+  <img alt="version" src="https://img.shields.io/badge/version-1.11.0-0F766E?style=for-the-badge"/>
   <img alt="node" src="https://img.shields.io/badge/node-%3E%3D18-38BDF8?style=for-the-badge&logo=node.js&logoColor=white"/>
   <img alt="pm" src="https://img.shields.io/badge/npm%20%7C%20pnpm%20%7C%20bun-ready-A78BFA?style=for-the-badge"/>
   <img alt="license" src="https://img.shields.io/badge/private-Tron-1E293B?style=for-the-badge"/>
@@ -32,7 +32,7 @@ Drop one dependency into any repo. On `npm install`, Claude Code gets **hooks, g
 | Rules copied by hand (or forgotten) | **tron-kit rules scoped** to Vue / React / TS / … automatically |
 | “Did you update the package?” | **Auto-update** once per day, silent |
 | Different process per repo | **One kit** across the company |
-| Verbose AI replies | **Caveman** always on — same substance, fewer tokens |
+| Verbose AI replies | **Terse mode** always on — same substance, fewer tokens |
 
 <p align="center">
   <img src="docs/assets/flow-commit.svg" alt="Commit flow: rules enforcement → security-review → code-review → git commit → push" width="100%"/>
@@ -97,22 +97,22 @@ your-project/
 
 Also installed:
 
-- Karpathy guidelines skill + always-on rules under `~/.claude/rules/`
+- Always-on rules under `~/.claude/rules/`: **engineering principles** (clarify → smallest change → touch only what's needed → prove done) and **terse mode** (fewer output tokens, same substance; code, commits and PRs stay normal prose)
 - **12 tron agents** (enforced) — see [Agents](#agents--12-enforced)
-- **GSD** (`@opengsd/gsd-core`, `standard` profile) — the single workflow engine for Claude Code and Cursor (discuss → plan → execute → verify)
+- **Workflow engine** (`standard` profile) — the single plan loop for Claude Code and Cursor (discuss → plan → execute → verify)
 - **tron-kit** Claude Code plugin (`tron-kit@tron`, always synced) — lean technical library: 71 stack skills, 3 commands (`build-fix`, `test-coverage`, `refactor-clean`), 5 quality hooks and language rules, vendored as a frozen snapshot under `managed/tron-kit/` and installed at user scope via `claude plugin`. Replaces the former upstream plugin, which postinstall uninstalls automatically
 - **Emil Kowalski** + **Impeccable** + **Taste** skills (primary DESIGN authority) + **tron-design-fallback** (subordinate: charts, forms, web navigation, stack guidelines) — mandatory on any UI task; see [Frontend design skills](#frontend-design-skills--max-design-authority) and `AGENTS.md`
 - **session-handoff** skill (always synced) — session notes in a central Obsidian vault, saved and resumed; see [Workflow skills](#workflow-skills)
 - **issue-board** skill (always synced) — open issues of any GitHub Project (v2) as terminal tables; see [Workflow skills](#workflow-skills)
-- **Caveman** (`caveman.md`): terse replies enforced every session ([JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman)) — always overwritten from the package
-- **codebase-memory-mcp** ([DeusData](https://github.com/DeusData/codebase-memory-mcp)): required MCP for graph-first codebase navigation — install is **guaranteed** on macOS, Linux, and Windows (`install.sh` / `install.ps1` + `Unblock-File`, retries, npm fallback). `postinstall` exits `1` if registration in `~/.claude/.mcp.json` still fails
+- **tron-graph** MCP: structural code graph for graph-first navigation, registered as `tron-graph` for Claude Code and Cursor on macOS, Linux and Windows (platform installer + `Unblock-File`, retries, npm fallback)
+- **tron-docs** MCP: live library/API documentation, registered as `tron-docs` for Claude Code and Cursor (an existing docs entry is migrated with its key)
 - **doc** skill (always synced) — `/doc` finds the repo's Obsidian documentation vault (any folder with `.obsidian/`), reads the latest session note or the current conversation, flags notes whose `file:line` references broke or point to changed code, and applies only the doc changes the user approves (never commits). No vault: warns and offers a minimal one. Works in any project
 
 Existing customized commands are **never overwritten**.
 
 ### Agents — 12, enforced
 
-One roster for Claude Code and Cursor, replacing the 105 agents that tron-kit (ECC), GSD and Impeccable used to install. Orchestration follows six pillars in strict order: **security → architecture → model governance**, then **quality → token economy → speed**.
+One roster for Claude Code and Cursor, replacing the 105 agents the bundled toolchains used to install. Orchestration follows six pillars in strict order: **security → architecture → model governance**, then **quality → token economy → speed**.
 
 | Agent | Area | Agent | Area |
 |---|---|---|---|
@@ -124,7 +124,7 @@ One roster for Claude Code and Cursor, replacing the 105 agents that tron-kit (E
 | `tron-devops` | CI/CD & delivery | `tron-infra` | Cloud, IaC, networking |
 
 - **Files:** `managed/agents/tron/*.md` → `~/.claude/agents/` and `~/.cursor/agents/`; the orchestration protocol is one rule, `~/.claude/rules/agent-roster.md` (+ `~/.cursor/rules/agent-roster.mdc`).
-- **Enforcement:** `~/.claude/tron/agent-roster-guard.js` runs on every subagent spawn (Claude `PreToolUse` Task/Agent; Cursor `preToolUse` + `subagentStart`). The 12 agents and harness built-ins pass; known legacy names (`gsd-planner`, `code-reviewer`, `impeccable-finish-reviewer`, …) are **rewritten** to their tron owner with the original contract attached as a role brief, so GSD and Impeccable keep working; anything else is blocked. On session start it moves any agent file another tool drops into the agent folders (e.g. after `gsd update`) to `~/.claude/tron/agent-roles/`.
+- **Enforcement:** `~/.claude/tron/agent-roster-guard.js` runs on every subagent spawn (Claude `PreToolUse` Task/Agent; Cursor `preToolUse` + `subagentStart`). The 12 agents and harness built-ins pass; known legacy names (`planner`, `code-reviewer`, …) are **rewritten** to their tron owner with the original contract attached as a role brief, so the workflow and design engines keep working; anything else is blocked. On session start it moves any agent file another tool drops into the agent folders (e.g. after an engine update) to `~/.claude/tron/agent-roles/`.
 - **Mapping:** `managed/agents/roster.json` (allowlist, built-ins, legacy → owner, domain routing for generic executors).
 
 ### Workflow skills
@@ -219,11 +219,11 @@ Always: `common`. Conditionally: `typescript`, `vue`, `nuxt`, `react`, `react-na
 
 Every Claude prompt runs `bootstrap-check.sh`:
 
-- Re-runs `ensure-codebase-memory.js` if the MCP is missing (same Win + Unix path as postinstall)
-- Warns if `gsd` is missing  
+- Re-runs `ensure-tron-graph.js` if `tron-graph` is missing (same Win + Unix path as postinstall)
+- Warns if the workflow engine is missing  
 - Once per 24h, compares package SHA to remote and self-updates  
 
-Manual repair: `npm run ensure:codebase-memory` (or `node node_modules/@tron/claude-config/scripts/lib/ensure-codebase-memory.js`).
+Manual repair: `npm run ensure:tron-graph` (or `node node_modules/@tron/claude-config/scripts/lib/ensure-tron-graph.js`).
 
 ---
 
@@ -232,10 +232,10 @@ Manual repair: `npm run ensure:codebase-memory` (or `node node_modules/@tron/cla
 | Layer | Where | Wins on |
 |-------|--------|---------|
 | **tron-kit rules** | `.claude/rules/tron/` | Coding standards |
-| **Karpathy principles** | `~/.claude/rules/harness-enforcement.md` | Behavior: simplicity, surgical edits |
+| **Engineering principles** | `~/.claude/rules/engineering-principles.md` | Behavior: simplicity, surgical edits |
 | **Harness skills** | `~/.claude/commands/*` | Commit / PR workflow |
 
-tron-kit > Karpathy on standards. Karpathy > tron-kit on how to approach the work.
+tron-kit > engineering principles on standards. Engineering principles > tron-kit on how to approach the work.
 
 ---
 
@@ -278,30 +278,30 @@ npm uninstall @tron/claude-config
 
 ```
 tron-claude-config/
-├── package.json                 # v1.10.0 · postinstall entry
+├── package.json                 # v1.11.0 · postinstall entry
 ├── scripts/
 │   ├── postinstall.js           # install orchestrator
 │   ├── sync-tron-rules.js       # manual tron-kit rules re-sync CLI
-│   ├── sync-tron-kit.js         # maintainer-only: refresh managed/tron-kit/ snapshot
 │   └── lib/
 │       ├── detect-project-scope.js
 │       ├── install-tron-rules.js
 │       ├── install-tron-kit.js  # user-scope plugin install + legacy cleanup
-│       └── ensure-codebase-memory.js  # Win + macOS/Linux guarantee
+│       ├── ensure-tron-graph.js # code graph MCP (Win + macOS/Linux)
+│       └── ensure-tron-docs.js  # docs MCP registration
 ├── managed/
 │   ├── AGENTS.md
 │   ├── setup-claude-harness.sh
 │   ├── tron-kit/                # frozen tron-kit plugin snapshot (skills, commands, hooks, rules)
-│   ├── tron-kit.config.json     # snapshot pin, allowlists, kept hooks, rewrites
 │   ├── agents/                  # 12 tron agents, roster.json, roster guard hook, role briefs
-│   ├── claude/                  # settings, hooks, rules (incl. caveman)
+│   ├── claude/                  # settings, hooks, rules (terse, engineering principles, roster)
 │   ├── cursor/rules/            # frontend-skills.mdc (design authority)
 │   ├── git-hooks/               # pre-commit, pre-push
 │   ├── hooks/                   # cursor + github impeccable hook templates
 │   └── skills/                  # commit-changes, code-review, security-review,
-│                                # make-pr, karpathy, session-handoff, doc,
+│                                # make-pr, session-handoff, doc,
 │                                # issue-board, emilkowalski (Emil), impeccable,
 │                                # leonxlnx (Taste), tron-design-fallback
+├── upstream/                    # maintainer-only, not published (see MAINTAINER.md)
 ├── docs/assets/                 # README visuals
 ├── HARNESS-GUIDE.md
 ├── MAINTAINER.md

@@ -1,8 +1,4 @@
 {
-  "upstream": {
-    "repo": "https://github.com/affaan-m/ECC.git",
-    "ref": "38a7ebbe3294be9bfda5612c6d696742ade6fbb2"
-  },
   "include": [
     "commands",
     "skills",
@@ -165,6 +161,17 @@
       "find": "  const sanitizeEcho = text => (truncated && text === raw ? '' : text);\n  if (truncated) {",
       "replace": "  const sanitizeEcho = text => (truncated && text === raw ? '' : text);\n\n  // Cursor rejects large pass-through echo as \"invalid JSON\"; pre-tool hooks are Claude Code-only, so under Cursor (`cursor_version`) answer \"no opinion\".\n  const isCursorPayload = () => { try { const p = JSON.parse(raw); return Boolean(p && typeof p === 'object' && p.cursor_version); } catch { return false; } };\n  if (hookId && hookId.startsWith('pre:') && isCursorPayload()) {\n    exitWithStdout('{}', 0);\n    return;\n  }\n\n  if (truncated) {",
       "minMatches": 1
+    },
+    {
+      "id": "docs-mcp-is-tron-docs",
+      "files": [
+        "skills/mcp-server-patterns/SKILL.md",
+        "skills/search-first/SKILL.md",
+        "rules/common/development-workflow.md"
+      ],
+      "find": "Context7",
+      "replace": "tron-docs",
+      "minMatches": 8
     }
   ],
   "plugin": {

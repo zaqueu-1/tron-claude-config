@@ -117,14 +117,14 @@ echo "  pm:     $PM"
 # ── Tool verification ─────────────────────────────────────────────────────────
 MISSING=()
 
-# Check gsd (file check only — runs on every prompt)
+# Check workflow engine (file check only — runs on every prompt)
 if [ ! -d "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/gsd-core" ]; then
-  MISSING+=("gsd")
+  MISSING+=("workflow-engine")
 fi
 
-# Ensure codebase-memory-mcp (auto-install if missing; never blocks the prompt).
+# Ensure tron-graph (auto-install/normalize if missing; never blocks the prompt).
 #
-# The registration check honours CLAUDE_CONFIG_DIR and every file the official
+# The registration check honours CLAUDE_CONFIG_DIR and every file the engine
 # installer may write to. Hardcoding ~/.claude/.mcp.json produced a permanent
 # false negative on machines where CLAUDE_CONFIG_DIR points elsewhere: the
 # installer registered the server in $CLAUDE_CONFIG_DIR/.claude.json and the
@@ -144,7 +144,7 @@ if node -e "
       if (!fs.existsSync(f)) continue;
       const d = JSON.parse(fs.readFileSync(f, 'utf8'));
       const keys = Object.keys(d.mcpServers || {});
-      if (keys.some(k => k.includes('codebase-memory'))) process.exit(0);
+      if (keys.includes('tron-graph')) process.exit(0);
     } catch { /* unreadable or malformed: try the next candidate */ }
   }
   process.exit(1);
@@ -153,14 +153,14 @@ if node -e "
 fi
 
 if [ "$CBM_REGISTERED" -eq 0 ]; then
-  ENSURE_CBM="node_modules/@tron/claude-config/scripts/lib/ensure-codebase-memory.js"
+  ENSURE_CBM="node_modules/@tron/claude-config/scripts/lib/ensure-tron-graph.js"
   if [ -f "$ENSURE_CBM" ] && node "$ENSURE_CBM" >/dev/null 2>&1; then
     CBM_REGISTERED=1
   fi
 fi
 
 if [ "$CBM_REGISTERED" -eq 0 ]; then
-  MISSING+=("codebase-memory-mcp")
+  MISSING+=("tron-graph")
 fi
 
 if [ ${#MISSING[@]} -gt 0 ]; then
@@ -169,13 +169,11 @@ if [ ${#MISSING[@]} -gt 0 ]; then
   echo "Or install individually:"
   for tool in "${MISSING[@]}"; do
     case "$tool" in
-      gsd)
-        echo "  gsd: npx -y @opengsd/gsd-core@latest --claude --global --profile=standard"
+      workflow-engine)
+        echo "  workflow-engine: npm rebuild @tron/claude-config (re-runs postinstall)"
         ;;
-      codebase-memory-mcp)
-        echo "  macOS/Linux: curl -fsSL https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.sh | bash"
-        echo "  Windows: see https://github.com/DeusData/codebase-memory-mcp (install.ps1 + Unblock-File)"
-        echo "  Or: node node_modules/@tron/claude-config/scripts/lib/ensure-codebase-memory.js"
+      tron-graph)
+        echo "  tron-graph: node node_modules/@tron/claude-config/scripts/lib/ensure-tron-graph.js"
         ;;
     esac
   done
