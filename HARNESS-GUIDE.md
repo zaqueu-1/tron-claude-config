@@ -3,7 +3,7 @@
 > Quick reference: what the harness installs, what it enforces, and how to operate it day to day.  
 > Consumer pitch + install story: [README.md](README.md) · Releases: [MAINTAINER.md](MAINTAINER.md)
 
-**Current package version:** `1.9.3`
+**Current package version:** `1.10.0`
 
 ---
 
@@ -227,7 +227,7 @@ rm .git/hooks/pre-commit .git/hooks/pre-push
 
 ```
 tron-claude-config/
-├── package.json                              # v1.9.3
+├── package.json                              # v1.10.0
 ├── scripts/
 │   ├── postinstall.js                        # orchestrator
 │   ├── sync-tron-rules.js                    # tron-kit rules re-sync CLI
