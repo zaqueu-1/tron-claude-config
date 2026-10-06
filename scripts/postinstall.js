@@ -12,6 +12,7 @@ const { execSync, execFileSync } = require('child_process');
 const { installTronRules } = require('./lib/install-tron-rules');
 const { installTronKitPlugin, removeLegacyEcc, disablePlugin } = require('./lib/install-tron-kit');
 const { ensureCodebaseMemoryMcp } = require('./lib/ensure-codebase-memory');
+const { installTronAgents } = require('./lib/install-tron-agents');
 
 const DRY = process.env.DRY === '1';
 const IS_CI = !!(process.env.CI || process.env.CONTINUOUS_INTEGRATION || process.env.GITHUB_ACTIONS);
@@ -205,20 +206,6 @@ function installImpeccable() {
     copyTree(src, dest);
   }
 
-  const agentsSrc = path.join(PACKAGE_ROOT, 'managed', 'agents');
-  if (fs.existsSync(agentsSrc)) {
-    for (const agentFile of fs.readdirSync(agentsSrc).filter((f) => f.startsWith('impeccable-') && f.endsWith('.md'))) {
-      for (const agentsDir of [path.join(home, '.claude', 'agents'), path.join(home, '.cursor', 'agents')]) {
-        if (DRY) {
-          log(`DRY: would copy ${agentFile} → ${agentsDir}/`);
-          continue;
-        }
-        fs.mkdirSync(agentsDir, { recursive: true });
-        fs.copyFileSync(path.join(agentsSrc, agentFile), path.join(agentsDir, agentFile));
-      }
-    }
-  }
-
   if (!DRY) {
     for (const base of skillTargets) {
       const launcher = path.join(base, 'scripts', 'impeccable');
@@ -228,7 +215,7 @@ function installImpeccable() {
       }
     }
   }
-  log('impeccable installed → ~/.claude/skills/, ~/.cursor/skills/, ~/.github/skills/ (+ agents)');
+  log('impeccable installed → ~/.claude/skills/, ~/.cursor/skills/, ~/.github/skills/ (agents folded into tron-designer)');
 }
 
 function installImpeccableHooks(consumerRoot) {
@@ -412,35 +399,29 @@ function installGitIgnoreEntries() {
 
 // ── Machine-level tools (skip in CI — developers-only) ───────────────────────
 
-function detectPackageManager() {
-  if (fs.existsSync(path.join(CONSUMER_ROOT, 'bun.lockb')) || fs.existsSync(path.join(CONSUMER_ROOT, 'bun.lock'))) return 'bun';
-  if (fs.existsSync(path.join(CONSUMER_ROOT, 'pnpm-lock.yaml'))) return 'pnpm';
-  return 'npm';
-}
-
-function globalInstallCmd(pm, pkg) {
-  switch (pm) {
-    case 'bun':  return `bun add -g ${pkg}`;
-    case 'pnpm': return `pnpm add -g ${pkg}`;
-    default:     return `npm install -g ${pkg}`;
-  }
-}
+// GSD is the single workflow engine (plan → execute → verify). `standard` keeps the main loop and
+// cuts cold-start skill descriptions from ~12k tokens to ~700; GSD persists it across `gsd update`.
+const GSD_PROFILE = 'standard';
 
 function installGsd() {
-  // Already available?
-  const alreadyInstalled =
-    (() => { try { execSync('gsd --version', { stdio: 'ignore' }); return true; } catch { return false; } })() ||
-    (() => { try { execSync('npx --yes @opengsd/gsd-pi --version', { stdio: 'ignore', timeout: 8000 }); return true; } catch { return false; } })();
+  const home = os.homedir();
+  for (const runtime of ['claude', 'cursor']) {
+    const configDir = path.join(home, `.${runtime}`);
+    if (runtime === 'cursor' && !fs.existsSync(configDir)) continue;
+    const marker = path.join(configDir, '.gsd-profile');
+    if (fs.existsSync(marker) && fs.readFileSync(marker, 'utf8').trim() === GSD_PROFILE) continue;
 
-  if (alreadyInstalled) return;
-
-  const pm = detectPackageManager();
-  const cmd = globalInstallCmd(pm, '@opengsd/gsd-pi');
-  try {
-    execSync(cmd, { stdio: 'ignore', timeout: 60000 });
-    log(`gsd installed globally (${cmd})`);
-  } catch {
-    log(`WARN: gsd install failed — run manually: ${cmd}`);
+    const cmd = `npx -y @opengsd/gsd-core@latest --${runtime} --global --profile=${GSD_PROFILE}`;
+    if (DRY) {
+      log(`DRY: would run ${cmd}`);
+      continue;
+    }
+    try {
+      execSync(cmd, { stdio: 'ignore', timeout: 180000 });
+      log(`gsd (${GSD_PROFILE}) installed for ${runtime}`);
+    } catch {
+      log(`WARN: gsd install failed for ${runtime} — run manually: ${cmd}`);
+    }
   }
 }
 
@@ -702,6 +683,11 @@ if (!IS_CI) {
   installEmilSkills();
   installImpeccable();
   installTronKit();
+  try {
+    installTronAgents({ dryRun: DRY, log });
+  } catch (err) {
+    log(`WARN: tron agents not installed: ${err.message}`);
+  }
   installTasteSkills();
   installTronDesignFallback();
   removeLegacyDesignSkills();

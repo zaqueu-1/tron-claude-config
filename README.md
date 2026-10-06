@@ -98,7 +98,9 @@ your-project/
 Also installed:
 
 - Karpathy guidelines skill + always-on rules under `~/.claude/rules/`
-- **tron-kit** Claude Code plugin (`tron-kit@tron`, always synced) — agents, skills, commands, hooks, language rules and MCP conventions, vendored as a frozen snapshot under `managed/tron-kit/`, copied to `~/.claude/tron-kit/` and installed at user scope via `claude plugin`. Replaces the former upstream plugin, which postinstall uninstalls automatically (its user-level rules are migrated to `~/.claude/rules/tron/`)
+- **12 tron agents** (enforced) — see [Agents](#agents--12-enforced)
+- **GSD** (`@opengsd/gsd-core`, `standard` profile) — the single workflow engine for Claude Code and Cursor (discuss → plan → execute → verify)
+- **tron-kit** Claude Code plugin (`tron-kit@tron`, always synced) — lean technical library: 71 stack skills, 3 commands (`build-fix`, `test-coverage`, `refactor-clean`), 5 quality hooks and language rules, vendored as a frozen snapshot under `managed/tron-kit/` and installed at user scope via `claude plugin`. Replaces the former upstream plugin, which postinstall uninstalls automatically
 - **Emil Kowalski** + **Impeccable** + **Taste** skills (primary DESIGN authority) + **tron-design-fallback** (subordinate: charts, forms, web navigation, stack guidelines) — mandatory on any UI task; see [Frontend design skills](#frontend-design-skills--max-design-authority) and `AGENTS.md`
 - **session-handoff** skill (always synced) — session notes in a central Obsidian vault, saved and resumed; see [Workflow skills](#workflow-skills)
 - **issue-board** skill (always synced) — open issues of any GitHub Project (v2) as terminal tables; see [Workflow skills](#workflow-skills)
@@ -107,6 +109,23 @@ Also installed:
 - **doc** skill (always synced) — `/doc` finds the repo's Obsidian documentation vault (any folder with `.obsidian/`), reads the latest session note or the current conversation, flags notes whose `file:line` references broke or point to changed code, and applies only the doc changes the user approves (never commits). No vault: warns and offers a minimal one. Works in any project
 
 Existing customized commands are **never overwritten**.
+
+### Agents — 12, enforced
+
+One roster for Claude Code and Cursor, replacing the 105 agents that tron-kit (ECC), GSD and Impeccable used to install. Orchestration follows six pillars in strict order: **security → architecture → model governance**, then **quality → token economy → speed**.
+
+| Agent | Area | Agent | Area |
+|---|---|---|---|
+| `tron-designer` | UX/UI & design | `tron-qa` | QA & code review |
+| `tron-frontend` | Web frontend | `tron-security` | AppSec & compliance |
+| `tron-backend` | Backend (default implementer) | `tron-pm` | Product & planning |
+| `tron-mobile` | Native & cross-platform | `tron-cto` | Architecture & tech strategy |
+| `tron-data-ai` | Data, LLM/ML, evals | `tron-researcher` | Research & docs |
+| `tron-devops` | CI/CD & delivery | `tron-infra` | Cloud, IaC, networking |
+
+- **Files:** `managed/agents/tron/*.md` → `~/.claude/agents/` and `~/.cursor/agents/`; the orchestration protocol is one rule, `~/.claude/rules/agent-roster.md` (+ `~/.cursor/rules/agent-roster.mdc`).
+- **Enforcement:** `~/.claude/tron/agent-roster-guard.js` runs on every subagent spawn (Claude `PreToolUse` Task/Agent; Cursor `preToolUse` + `subagentStart`). The 12 agents and harness built-ins pass; known legacy names (`gsd-planner`, `code-reviewer`, `impeccable-finish-reviewer`, …) are **rewritten** to their tron owner with the original contract attached as a role brief, so GSD and Impeccable keep working; anything else is blocked. On session start it moves any agent file another tool drops into the agent folders (e.g. after `gsd update`) to `~/.claude/tron/agent-roles/`.
+- **Mapping:** `managed/agents/roster.json` (allowlist, built-ins, legacy → owner, domain routing for generic executors).
 
 ### Workflow skills
 
@@ -157,7 +176,7 @@ The former secondary layer, **ui-ux-pro-max** and **frontend-design**, was remov
 Where they land on the developer machine:
 
 - **Emil** and **Taste** are vendored under `managed/skills/{emilkowalski,leonxlnx}/`, installed to `~/.agents/skills/`, then symlinked into `~/.claude/skills/` and `~/.cursor/skills/`.
-- **Impeccable** is vendored under `managed/skills/impeccable/` and copied to `~/.claude/skills/`, `~/.cursor/skills/`, **and** `~/.github/skills/impeccable/`. Its `impeccable-*` subagents copy to `~/.claude/agents/` + `~/.cursor/agents/`, and edit-discipline hooks are written into the consumer repo's `.cursor/hooks.json` and `.github/hooks/impeccable.json`. The `darwin-arm64` engine binary ships in-tree; other platforms fetch the pinned, checksum-verified binary on first run and cache it under `~/.impeccable/`.
+- **Impeccable** is vendored under `managed/skills/impeccable/` and copied to `~/.claude/skills/`, `~/.cursor/skills/`, **and** `~/.github/skills/impeccable/`. Its subagents are folded into `tron-designer` (their contracts ship as role briefs), and edit-discipline hooks are written into the consumer repo's `.cursor/hooks.json` and `.github/hooks/impeccable.json`. The `darwin-arm64` engine binary ships in-tree; other platforms fetch the pinned, checksum-verified binary on first run and cache it under `~/.impeccable/`.
 - **tron-design-fallback** is vendored under `managed/skills/tron-design-fallback/` and always synced (overwritten) to `~/.claude/skills/` and `~/.cursor/skills/`.
 - Postinstall removes leftover `ui-ux-pro-max` / `frontend-design` skill folders from `~/.claude/skills/`, `~/.cursor/skills/`, `~/.agents/skills/` and `~/.github/skills/`, and disables the official `frontend-design@claude-plugins-official` Claude Code plugin.
 - The `frontend-skills.mdc` rule (always synced to `~/.cursor/rules/`) encodes this authority order for every UI task.
@@ -272,9 +291,9 @@ tron-claude-config/
 ├── managed/
 │   ├── AGENTS.md
 │   ├── setup-claude-harness.sh
-│   ├── tron-kit/                # frozen tron-kit plugin snapshot (skills, agents, commands, hooks, rules)
-│   ├── tron-kit.config.json     # snapshot pin, exclusions, rewrites
-│   ├── agents/                  # impeccable-* subagents
+│   ├── tron-kit/                # frozen tron-kit plugin snapshot (skills, commands, hooks, rules)
+│   ├── tron-kit.config.json     # snapshot pin, allowlists, kept hooks, rewrites
+│   ├── agents/                  # 12 tron agents, roster.json, roster guard hook, role briefs
 │   ├── claude/                  # settings, hooks, rules (incl. caveman)
 │   ├── cursor/rules/            # frontend-skills.mdc (design authority)
 │   ├── git-hooks/               # pre-commit, pre-push

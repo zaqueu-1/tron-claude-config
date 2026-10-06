@@ -87,7 +87,7 @@ log "🔍 Checking required tools..."
 
 MISSING=()
 
-if command -v gsd &>/dev/null || npx @opengsd/gsd-pi --version &>/dev/null 2>&1; then
+if [ -d "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/gsd-core" ]; then
   log "   ✓ gsd"
 else
   log "   ✗ gsd — MISSING"
@@ -123,11 +123,7 @@ if [ ${#MISSING[@]} -gt 0 ]; then
   for tool in "${MISSING[@]}"; do
     case "$tool" in
       gsd)
-        case "$PM" in
-          bun)  log "   gsd:  bun add -g @opengsd/gsd-pi" ;;
-          pnpm) log "   gsd:  pnpm add -g @opengsd/gsd-pi" ;;
-          *)    log "   gsd:  npm install -g @opengsd/gsd-pi" ;;
-        esac
+        log "   gsd:  npx -y @opengsd/gsd-core@latest --claude --global --profile=standard"
         ;;
       codebase-memory-mcp)
         log "   codebase-memory-mcp (macOS/Linux):"

@@ -117,8 +117,8 @@ echo "  pm:     $PM"
 # ── Tool verification ─────────────────────────────────────────────────────────
 MISSING=()
 
-# Check gsd
-if ! command -v gsd &>/dev/null && ! npx --yes @opengsd/gsd-pi --version &>/dev/null 2>&1; then
+# Check gsd (file check only — runs on every prompt)
+if [ ! -d "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/gsd-core" ]; then
   MISSING+=("gsd")
 fi
 
@@ -170,7 +170,7 @@ if [ ${#MISSING[@]} -gt 0 ]; then
   for tool in "${MISSING[@]}"; do
     case "$tool" in
       gsd)
-        echo "  gsd: npm install -g @opengsd/gsd-pi"
+        echo "  gsd: npx -y @opengsd/gsd-core@latest --claude --global --profile=standard"
         ;;
       codebase-memory-mcp)
         echo "  macOS/Linux: curl -fsSL https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.sh | bash"
