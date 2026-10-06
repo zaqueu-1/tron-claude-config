@@ -78,6 +78,13 @@ function denyMessage(roster, requested) {
   return `Agent "${requested}" is outside the tron roster. Use one of: ${roster.agents.join(', ')}.`;
 }
 
+function freeName(dir, file) {
+  const base = file.slice(0, -3);
+  let candidate = path.join(dir, file);
+  for (let n = 1; fs.existsSync(candidate); n += 1) candidate = path.join(dir, `${base}.${n}.md`);
+  return candidate;
+}
+
 function sweep(roster) {
   let moved = 0;
   for (const dir of AGENT_DIRS) {
@@ -89,11 +96,12 @@ function sweep(roster) {
     }
     for (const file of entries) {
       if (!file.endsWith('.md') || roster.agents.includes(file.slice(0, -3))) continue;
+      const src = path.join(dir, file);
+      if (!fs.lstatSync(src).isFile()) continue;
       const group = file.startsWith('gsd-') ? 'gsd' : file.startsWith('impeccable-') ? 'impeccable' : 'quarantine';
-      const dest = path.join(ROLES_DIR, group, file);
-      fs.mkdirSync(path.dirname(dest), { recursive: true });
-      fs.copyFileSync(path.join(dir, file), dest);
-      fs.unlinkSync(path.join(dir, file));
+      fs.mkdirSync(path.join(ROLES_DIR, group), { recursive: true });
+      fs.copyFileSync(src, group === 'quarantine' ? freeName(path.join(ROLES_DIR, group), file) : path.join(ROLES_DIR, group, file));
+      fs.unlinkSync(src);
       moved += 1;
     }
   }
