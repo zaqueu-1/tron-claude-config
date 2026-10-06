@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// sync-tron-kit.js — MAINTAINER ONLY: refresh the frozen managed/tron-kit/ snapshot from upstream
+// upstream/sync-tron-kit.js — MAINTAINER ONLY: refresh the frozen managed/tron-kit/ snapshot from upstream
 // Usage: npm run sync:tron-kit [-- --dry-run] [-- --latest] [-- --ref <sha|branch>]
-// Config (upstream pin, include/exclude, rewrites): managed/tron-kit.config.json
+// Pin: upstream/sources.json (id tron-kit). Config (include/allow/rewrites): upstream/tron-kit.config.json
 
 'use strict';
 
@@ -9,9 +9,11 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { execFileSync } = require('child_process');
+const { getSource, setSourceRef } = require('./lib/sources');
 
 const PACKAGE_ROOT = path.resolve(__dirname, '..');
-const CONFIG_PATH = path.join(PACKAGE_ROOT, 'managed', 'tron-kit.config.json');
+const CONFIG_PATH = path.join(PACKAGE_ROOT, 'upstream', 'tron-kit.config.json');
+const STATE_PATH = path.join(PACKAGE_ROOT, 'upstream', 'state', 'tron-kit.json');
 const TARGET_ROOT = path.join(PACKAGE_ROOT, 'managed', 'tron-kit');
 const PACKAGE_VERSION = JSON.parse(fs.readFileSync(path.join(PACKAGE_ROOT, 'package.json'), 'utf8')).version;
 
@@ -130,7 +132,7 @@ function applyRewrites(stageRoot, rewrites) {
     for (const pattern of rule.files) {
       if (!/[*?]/.test(pattern)) {
         if (!fs.existsSync(path.join(stageRoot, pattern))) {
-          throw new Error(`Rewrite "${rule.id}": file ${pattern} not found in upstream snapshot — upstream drifted, update managed/tron-kit.config.json`);
+          throw new Error(`Rewrite "${rule.id}": file ${pattern} not found in upstream snapshot — upstream drifted, update upstream/tron-kit.config.json`);
         }
         targets.add(pattern);
         continue;
@@ -153,7 +155,7 @@ function applyRewrites(stageRoot, rewrites) {
 
     const min = rule.minMatches ?? 1;
     if (total < min) {
-      throw new Error(`Rewrite "${rule.id}" matched ${total} time(s), expected at least ${min} — upstream drifted, update managed/tron-kit.config.json`);
+      throw new Error(`Rewrite "${rule.id}" matched ${total} time(s), expected at least ${min} — upstream drifted, update upstream/tron-kit.config.json`);
     }
     results.push({ id: rule.id, matches: total, files: perFile });
   }
@@ -335,24 +337,18 @@ function countSnapshot(root) {
   };
 }
 
-function updateConfigRef(oldRef, newRef) {
-  const raw = fs.readFileSync(CONFIG_PATH, 'utf8');
-  const needle = `"ref": "${oldRef}"`;
-  if (!raw.includes(needle)) throw new Error(`could not locate ${needle} in ${CONFIG_PATH}`);
-  fs.writeFileSync(CONFIG_PATH, raw.replace(needle, `"ref": "${newRef}"`), 'utf8');
-}
-
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
-  const requestedRef = args.latest ? 'HEAD' : (args.ref || config.upstream.ref);
+  const source = getSource('tron-kit');
+  const requestedRef = args.latest ? 'HEAD' : (args.ref || source.ref);
 
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tron-kit-sync-'));
   try {
     const upstreamRoot = path.join(tmpDir, 'upstream');
     const stageRoot = path.join(tmpDir, 'stage');
-    log(`fetching ${config.upstream.repo} @ ${requestedRef}`);
-    const sha = fetchUpstream(config.upstream.repo, requestedRef, upstreamRoot);
+    log(`fetching ${source.repo} @ ${requestedRef}`);
+    const sha = fetchUpstream(source.repo, requestedRef, upstreamRoot);
     log(`resolved upstream sha ${sha}`);
 
     const excludes = compileExcludes(config.exclude);
@@ -360,7 +356,7 @@ function main() {
     fs.mkdirSync(stageRoot, { recursive: true });
     for (const entry of config.include) {
       if (!fs.existsSync(path.join(upstreamRoot, entry))) {
-        throw new Error(`include path "${entry}" missing upstream — upstream drifted, update managed/tron-kit.config.json`);
+        throw new Error(`include path "${entry}" missing upstream — upstream drifted, update upstream/tron-kit.config.json`);
       }
       copyFiltered(upstreamRoot, entry, stageRoot, excludes, excluded);
     }
@@ -375,14 +371,14 @@ function main() {
     const upstreamVersion = fs.existsSync(path.join(stageRoot, 'VERSION'))
       ? fs.readFileSync(path.join(stageRoot, 'VERSION'), 'utf8').trim()
       : null;
-    writeJson(path.join(stageRoot, 'UPSTREAM.json'), {
-      repo: config.upstream.repo,
+    const state = {
+      repo: source.repo,
       ref: sha,
       upstreamVersion,
       syncedAt: new Date().toISOString(),
       excluded,
       rewrites: rewriteResults.map(({ id, matches }) => ({ id, matches })),
-    });
+    };
 
     const counts = countSnapshot(stageRoot);
     log(`upstream version ${upstreamVersion ?? '(unknown)'}`);
@@ -403,10 +399,12 @@ function main() {
     fs.rmSync(TARGET_ROOT, { recursive: true, force: true });
     fs.cpSync(stageRoot, TARGET_ROOT, { recursive: true, verbatimSymlinks: true });
     log(`snapshot written → ${path.relative(PACKAGE_ROOT, TARGET_ROOT)}/`);
+    writeJson(STATE_PATH, state);
+    log(`sync state → ${path.relative(PACKAGE_ROOT, STATE_PATH)}`);
 
-    if (sha !== config.upstream.ref) {
-      updateConfigRef(config.upstream.ref, sha);
-      log(`upstream.ref updated → ${sha}`);
+    if (sha !== source.ref) {
+      setSourceRef('tron-kit', sha);
+      log(`sources.json tron-kit ref updated → ${sha}`);
     }
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });

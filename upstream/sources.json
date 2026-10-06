@@ -1,0 +1,210 @@
+{
+  "$comment": "MAINTAINER ONLY — never shipped (package.json `files`). Provenance + pins for every upstream this package interprets. `watch` = paths we consume (diffs here are relevant); `discover` = dirs where new upstream items appear (reported as adoption candidates). Update pins only via `npm run upstream:watch -- --accept <id>` after porting.",
+  "sources": [
+    {
+      "id": "tron-kit",
+      "repo": "https://github.com/affaan-m/ECC.git",
+      "ref": "38a7ebbe3294be9bfda5612c6d696742ade6fbb2",
+      "license": "MIT",
+      "kind": "content",
+      "status": "vendored-snapshot",
+      "phase": 3,
+      "tron": "managed/tron-kit/",
+      "config": "upstream/tron-kit.config.json",
+      "watch": [
+        "rules/**",
+        "hooks/hooks.json",
+        "VERSION"
+      ],
+      "watchFromConfig": true,
+      "discover": [
+        "skills",
+        "commands",
+        "rules"
+      ],
+      "watchSnapshot": [
+        "scripts"
+      ]
+    },
+    {
+      "id": "tron-motion",
+      "repo": "https://github.com/emilkowalski/skills.git",
+      "ref": "e8a175de22ae1e49370fc144c1f3bb9aeedf988d",
+      "license": "MIT",
+      "kind": "content",
+      "status": "vendored",
+      "phase": 2,
+      "tron": "managed/skills/emilkowalski/",
+      "map": {
+        "skills/animate": "animate",
+        "skills/animate-expo": "animate-expo",
+        "skills/animation-vocabulary": "animation-vocabulary",
+        "skills/apple-design": "apple-design",
+        "skills/ask-sonner": "ask-sonner",
+        "skills/emil-design-eng": "emil-design-eng",
+        "skills/find-animation-opportunities": "find-animation-opportunities",
+        "skills/improve-animations": "improve-animations",
+        "skills/mobile-native": "mobile-native",
+        "skills/pick-ui-library": "pick-ui-library",
+        "skills/prototype": "prototype",
+        "skills/review-animations": "review-animations",
+        "skills/write-swift": "write-swift"
+      },
+      "discover": [
+        "skills"
+      ]
+    },
+    {
+      "id": "tron-taste",
+      "repo": "https://github.com/Leonxlnx/taste-skill.git",
+      "ref": "ce26fc25c0e5e8cab638f883de62d9a86ee5e45b",
+      "license": "MIT",
+      "kind": "content",
+      "status": "vendored",
+      "phase": 2,
+      "tron": "managed/skills/leonxlnx/",
+      "map": {
+        "skills/taste-skill": "design-taste-frontend",
+        "skills/taste-skill-v1": "design-taste-frontend-v1",
+        "skills/brandkit": "brandkit",
+        "skills/output-skill": "full-output-enforcement",
+        "skills/gpt-tasteskill": "gpt-taste",
+        "skills/soft-skill": "high-end-visual-design",
+        "skills/image-to-code-skill": "image-to-code",
+        "skills/imagegen-frontend-mobile": "imagegen-frontend-mobile",
+        "skills/imagegen-frontend-web": "imagegen-frontend-web",
+        "skills/brutalist-skill": "industrial-brutalist-ui",
+        "skills/minimalist-skill": "minimalist-ui",
+        "skills/redesign-skill": "redesign-existing-projects",
+        "skills/stitch-skill": "stitch-design-taste"
+      },
+      "discover": [
+        "skills"
+      ]
+    },
+    {
+      "id": "tron-design",
+      "repo": "https://github.com/pbakaus/impeccable.git",
+      "ref": "cd12f8660e2dde57b9615c8a6b8ea674101f9cfc",
+      "version": "skill-v4.3.1",
+      "license": "Apache-2.0",
+      "kind": "content+runtime",
+      "status": "vendored",
+      "phase": 2,
+      "tron": "managed/skills/impeccable/ + managed/agents/roles/impeccable/ + managed/hooks/",
+      "watch": [
+        ".claude/skills/impeccable/**",
+        ".claude/agents/**",
+        ".cursor/hooks.json",
+        "NOTICE.md",
+        "ENGINE_VERSION"
+      ],
+      "discover": [
+        ".claude/skills",
+        ".claude/agents"
+      ],
+      "notes": "Ships a compiled engine binary (signed bundle download). Wrapped behind tron-design in phase 2."
+    },
+    {
+      "id": "tron-principles",
+      "repo": "https://github.com/forrestchang/andrej-karpathy-skills.git",
+      "ref": "2c606141936f1eeef17fa3043a72095b4765b9c2",
+      "license": "MIT",
+      "kind": "content",
+      "status": "rewritten",
+      "phase": 1,
+      "tron": "managed/claude/rules/engineering-principles.md",
+      "watch": [
+        "skills/karpathy-guidelines/**"
+      ],
+      "discover": [
+        "skills"
+      ]
+    },
+    {
+      "id": "tron-terse",
+      "repo": "https://github.com/JuliusBrussee/caveman.git",
+      "ref": "99aafe151a1be72be783e662858e8a0955add59f",
+      "license": "Apache-2.0",
+      "kind": "content",
+      "status": "rewritten",
+      "phase": 1,
+      "tron": "managed/claude/rules/terse.md",
+      "watch": [
+        "skills/caveman/**",
+        "src/rules/caveman-activate.md"
+      ],
+      "discover": [
+        "skills"
+      ]
+    },
+    {
+      "id": "tron-flow",
+      "repo": "https://github.com/open-gsd/gsd-core.git",
+      "ref": "87e87d34b2d8519e30d1af7d910fc98f2af4bc8d",
+      "version": "v1.16.0",
+      "license": "MIT",
+      "kind": "runtime",
+      "status": "installed-external",
+      "phase": 4,
+      "tron": "managed/skills/tron-flow/ (phase 4)",
+      "watch": [
+        "commands/gsd/**",
+        "agents/**",
+        "gsd-core/**",
+        "docs/features/model-profiles.md"
+      ],
+      "discover": [
+        "commands/gsd",
+        "agents"
+      ]
+    },
+    {
+      "id": "tron-graph",
+      "repo": "https://github.com/DeusData/codebase-memory-mcp.git",
+      "ref": "268a9d8886642eb7f9b2ce45f5ce27cdecf0f519",
+      "version": "0.8.1",
+      "license": "MIT",
+      "kind": "runtime",
+      "status": "wrapped",
+      "phase": 1,
+      "tron": "scripts/lib/ensure-tron-graph.js (MCP key: tron-graph)",
+      "watch": [
+        "install.sh",
+        "install.ps1",
+        "README.md"
+      ],
+      "discover": []
+    },
+    {
+      "id": "tron-docs",
+      "repo": "https://github.com/upstash/context7.git",
+      "ref": "f2eef4f49da71a758c91cf6cb97640c8b262ef81",
+      "license": "MIT",
+      "kind": "runtime",
+      "status": "wrapped",
+      "phase": 1,
+      "tron": "scripts/lib/ensure-tron-docs.js (MCP key: tron-docs)",
+      "watch": [
+        "README.md",
+        "packages/mcp/package.json"
+      ],
+      "discover": []
+    },
+    {
+      "id": "tron-browser",
+      "repo": "https://github.com/ChromeDevTools/chrome-devtools-mcp.git",
+      "ref": "cf2eab96d96cad3d47ce769b9638815d1775500f",
+      "license": "Apache-2.0",
+      "kind": "runtime",
+      "status": "installed-external",
+      "phase": 3,
+      "tron": "managed/tron-kit/.mcp.json",
+      "watch": [
+        "README.md"
+      ],
+      "discover": [],
+      "acceptedAt": "2026-10-06"
+    }
+  ]
+}
