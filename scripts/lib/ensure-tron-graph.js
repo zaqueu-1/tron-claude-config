@@ -30,7 +30,7 @@ function mcpConfigPaths() {
   return [
     { file: path.join(home, '.claude', '.mcp.json'), required: true },
     { file: path.join(home, '.claude.json'), required: false },
-    { file: path.join(home, '.cursor', 'mcp.json'), required: false, onlyIfDir: path.join(home, '.cursor') },
+    { file: path.join(home, '.cursor', 'mcp.json'), required: true, onlyIfDir: path.join(home, '.cursor') },
   ];
 }
 
@@ -40,6 +40,13 @@ function readJson(file) {
   } catch {
     return null;
   }
+}
+
+function writeJsonAtomic(file, value) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const tmp = `${file}.tron-${process.pid}.tmp`;
+  fs.writeFileSync(tmp, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+  fs.renameSync(tmp, file);
 }
 
 function isRegisteredInMcpJson() {
@@ -91,8 +98,6 @@ function normalizeRegistration(binary, { dryRun = false } = {}) {
     }
     const servers = config.mcpServers || {};
     const legacy = Object.keys(servers).filter((name) => name !== SERVER_KEY && isEngineEntry(name, servers[name]));
-    if (!servers[SERVER_KEY] && !legacy.length && !required) continue;
-
     const entry = servers[SERVER_KEY] || (legacy.length ? servers[legacy[0]] : null) || { command: binary };
     const next = Object.fromEntries(Object.entries(servers).filter(([name]) => !legacy.includes(name)));
     next[SERVER_KEY] = entry;
@@ -100,8 +105,7 @@ function normalizeRegistration(binary, { dryRun = false } = {}) {
 
     changed.push(file);
     if (dryRun) continue;
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(file, `${JSON.stringify({ ...config, mcpServers: next }, null, 2)}\n`, 'utf8');
+    writeJsonAtomic(file, { ...config, mcpServers: next });
   }
   return changed;
 }

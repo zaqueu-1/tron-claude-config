@@ -47,14 +47,20 @@ function ensureTronDocs({ dryRun = false } = {}) {
     const legacy = Object.keys(servers).filter((name) => name !== SERVER_KEY && isEngineEntry(name, servers[name]));
     if (servers[SERVER_KEY] && !legacy.length) continue;
 
+    const keyed = legacy.map((name) => servers[name]).find((e) => e?.headers && Object.keys(e.headers).length);
+    const current = servers[SERVER_KEY];
     const next = Object.fromEntries(Object.entries(servers).filter(([name]) => !legacy.includes(name)));
-    next[SERVER_KEY] = servers[SERVER_KEY] || (legacy.length ? servers[legacy[0]] : entry);
+    next[SERVER_KEY] = current
+      ? (current.headers || !keyed ? current : { ...current, headers: keyed.headers })
+      : keyed || servers[legacy[0]] || entry;
     changed++;
     if (dryRun) {
       log(`DRY: would register tron-docs → ${file}`);
       continue;
     }
-    fs.writeFileSync(file, `${JSON.stringify({ ...config, mcpServers: next }, null, 2)}\n`, 'utf8');
+    const tmp = `${file}.tron-${process.pid}.tmp`;
+    fs.writeFileSync(tmp, `${JSON.stringify({ ...config, mcpServers: next }, null, 2)}\n`, 'utf8');
+    fs.renameSync(tmp, file);
     log(`registered tron-docs → ${file}`);
   }
   return { ok: true, changed };

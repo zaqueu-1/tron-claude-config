@@ -73,7 +73,7 @@ function listFiles(dir) {
 
 function watchPatterns(source) {
   const patterns = [...(source.watch || [])];
-  for (const upstreamPath of Object.keys(source.map || {})) patterns.push(`${upstreamPath}/**`);
+  for (const upstreamPath of Object.keys(source.map || {})) patterns.push(upstreamPath, `${upstreamPath}/**`);
   if (source.watchFromConfig && source.config) {
     const config = JSON.parse(fs.readFileSync(path.join(PACKAGE_ROOT, source.config), 'utf8'));
     for (const name of config.allow?.skills || []) patterns.push(`skills/${name}/**`);
@@ -88,7 +88,9 @@ function watchPatterns(source) {
 
 function consumedNames(source, dir) {
   const names = new Set();
-  for (const pattern of watchPatterns(source)) {
+  const patterns = watchPatterns(source);
+  if (patterns.includes(`${dir}/**`)) return null;
+  for (const pattern of patterns) {
     const rel = pattern.startsWith(`${dir}/`) ? pattern.slice(dir.length + 1) : null;
     if (rel) names.add(rel.split('/')[0].replace(/\.md$/, ''));
   }
@@ -122,11 +124,15 @@ function inspect(source) {
 
   for (const discoverDir of source.discover || []) {
     const consumed = consumedNames(source, discoverDir);
+    if (!consumed) continue;
+    const existing = new Set(
+      git(dir, 'ls-tree', '--name-only', `${pinned}:${discoverDir}`).split('\n').filter(Boolean).map((n) => n.replace(/\.md$/, '')),
+    );
     const added = parseNameStatus(git(dir, 'diff', '--name-status', '--diff-filter=A', pinned, latest, '--', discoverDir));
     const names = new Set();
     for (const { files } of added) {
       const name = files[0].slice(discoverDir.length + 1).split('/')[0].replace(/\.md$/, '');
-      if (name && !consumed.has(name)) names.add(name);
+      if (name && !consumed.has(name) && !existing.has(name)) names.add(name);
     }
     for (const name of names) result.candidates.push(`${discoverDir}/${name}`);
   }
@@ -160,7 +166,9 @@ function renderReport(source, result) {
     '',
     'Interpret relevant changes into the tron artifact in our own words (no verbatim copies), then run:',
     '',
-    `\`npm run upstream:watch -- --accept ${source.id} --ref ${result.latest}\``,
+    source.id === 'tron-kit'
+      ? `\`npm run sync:tron-kit -- --ref ${result.latest}\``
+      : `\`npm run upstream:watch -- --accept ${source.id} --ref ${result.latest}\``,
     '',
   ];
   return lines.join('\n');

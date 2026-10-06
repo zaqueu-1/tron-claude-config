@@ -1,5 +1,5 @@
 {
-  "$comment": "MAINTAINER ONLY — never shipped (package.json `files`). Provenance + pins for every upstream this package interprets. `watch` = paths we consume (diffs here are relevant); `discover` = dirs where new upstream items appear (reported as adoption candidates). Update pins only via `npm run upstream:watch -- --accept <id>` after porting.",
+  "$comment": "MAINTAINER ONLY — never shipped (package.json `files`). Provenance + pins for every upstream this package interprets. `watch` = paths we consume (diffs here are relevant); `discover` = dirs where new upstream items appear (reported as adoption candidates). Update pins only after porting: `npm run upstream:watch -- --accept <id>` (tron-kit: `npm run sync:tron-kit -- --ref <sha>`).",
   "sources": [
     {
       "id": "tron-kit",
