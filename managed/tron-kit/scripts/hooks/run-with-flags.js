@@ -152,6 +152,14 @@ async function main() {
   // the truncated flag (run() context / ECC_HOOK_INPUT_TRUNCATED), so
   // security hooks like config-protection can still choose to block.
   const sanitizeEcho = text => (truncated && text === raw ? '' : text);
+
+  // Cursor rejects large pass-through echo as "invalid JSON"; pre-tool hooks are Claude Code-only, so under Cursor (`cursor_version`) answer "no opinion".
+  const isCursorPayload = () => { try { const p = JSON.parse(raw); return Boolean(p && typeof p === 'object' && p.cursor_version); } catch { return false; } };
+  if (hookId && hookId.startsWith('pre:') && isCursorPayload()) {
+    exitWithStdout('{}', 0);
+    return;
+  }
+
   if (truncated) {
     process.stderr.write(`[Hook] stdin exceeded ${MAX_STDIN} bytes for ${hookId || 'unknown'}; suppressing pass-through (fail-open unless the hook blocks)\n`);
   }
