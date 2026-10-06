@@ -110,37 +110,8 @@ function copyTree(srcAbs, destAbs, { exclude = ['__pycache__', '.DS_Store'] } = 
   }
 }
 
-const EMIL_SKILL_NAMES = [
-  'animate',
-  'animate-expo',
-  'animation-vocabulary',
-  'apple-design',
-  'ask-sonner',
-  'emil-design-eng',
-  'find-animation-opportunities',
-  'improve-animations',
-  'mobile-native',
-  'pick-ui-library',
-  'prototype',
-  'review-animations',
-  'write-swift',
-];
-
-const TASTE_SKILL_NAMES = [
-  'brandkit',
-  'design-taste-frontend',
-  'design-taste-frontend-v1',
-  'full-output-enforcement',
-  'gpt-taste',
-  'high-end-visual-design',
-  'image-to-code',
-  'imagegen-frontend-mobile',
-  'imagegen-frontend-web',
-  'industrial-brutalist-ui',
-  'minimalist-ui',
-  'redesign-existing-projects',
-  'stitch-design-taste',
-];
+const TRON_DESIGN_SKILLS = ['tron-design', 'tron-motion', 'tron-native', 'tron-imagery'];
+const TRON_DESIGN_BIN = path.join(os.homedir(), '.agents', 'skills', 'tron-design', 'scripts', 'tron-design');
 
 function ensureSymlinkOrCopy(targetAbs, linkAbs) {
   if (fs.existsSync(linkAbs)) {
@@ -169,97 +140,81 @@ function ensureSymlinkOrCopy(targetAbs, linkAbs) {
   }
 }
 
-function installEmilSkills() {
+function installTronDesignStack() {
   const home = os.homedir();
-  const srcBase = path.join(PACKAGE_ROOT, 'managed', 'skills', 'emilkowalski');
-  for (const name of EMIL_SKILL_NAMES) {
-    const src = path.join(srcBase, name);
+  for (const name of TRON_DESIGN_SKILLS) {
+    const src = path.join(PACKAGE_ROOT, 'managed', 'skills', name);
     const agentsDest = path.join(home, '.agents', 'skills', name);
+    if (!DRY) fs.rmSync(agentsDest, { recursive: true, force: true });
     copyTree(src, agentsDest);
-    ensureSymlinkOrCopy(agentsDest, path.join(home, '.claude', 'skills', name));
-    ensureSymlinkOrCopy(agentsDest, path.join(home, '.cursor', 'skills', name));
-  }
-  log('Emil skills installed → ~/.agents/skills/ (+ symlinks to ~/.claude/skills/ and ~/.cursor/skills/)');
-}
-
-function installTasteSkills() {
-  const home = os.homedir();
-  const srcBase = path.join(PACKAGE_ROOT, 'managed', 'skills', 'leonxlnx');
-  for (const name of TASTE_SKILL_NAMES) {
-    const src = path.join(srcBase, name);
-    const agentsDest = path.join(home, '.agents', 'skills', name);
-    copyTree(src, agentsDest);
-    ensureSymlinkOrCopy(agentsDest, path.join(home, '.claude', 'skills', name));
-    ensureSymlinkOrCopy(agentsDest, path.join(home, '.cursor', 'skills', name));
-  }
-  log('Taste skills installed → ~/.agents/skills/ (+ symlinks to ~/.claude/skills/ and ~/.cursor/skills/)');
-}
-
-function installImpeccable() {
-  const home = os.homedir();
-  const src = path.join(PACKAGE_ROOT, 'managed', 'skills', 'impeccable');
-  const skillTargets = [
-    path.join(home, '.claude', 'skills', 'impeccable'),
-    path.join(home, '.cursor', 'skills', 'impeccable'),
-    path.join(home, '.github', 'skills', 'impeccable'),
-  ];
-  for (const dest of skillTargets) {
-    copyTree(src, dest);
-  }
-
-  if (!DRY) {
-    for (const base of skillTargets) {
-      const launcher = path.join(base, 'scripts', 'impeccable');
-      const bin = path.join(base, 'scripts', 'bin', 'darwin-arm64', 'impeccable');
-      for (const p of [launcher, bin]) {
-        if (fs.existsSync(p)) fs.chmodSync(p, 0o755);
+    for (const base of ['.claude', '.cursor', '.github']) {
+      const link = path.join(home, base, 'skills', name);
+      if (!DRY && fs.existsSync(link) && !fs.lstatSync(link).isSymbolicLink()) {
+        fs.rmSync(link, { recursive: true, force: true });
       }
+      ensureSymlinkOrCopy(agentsDest, link);
     }
   }
-  log('impeccable installed → ~/.claude/skills/, ~/.cursor/skills/, ~/.github/skills/ (agents folded into tron-designer)');
+  log(`design stack ${DRY ? 'would be ' : ''}synced → ~/.agents/skills/{${TRON_DESIGN_SKILLS.join(',')}} (+ symlinks in ~/.claude, ~/.cursor, ~/.github)`);
 }
 
-function installImpeccableHooks(consumerRoot) {
-  const home = os.homedir();
-  const hookSpecs = [
-    {
-      template: 'managed/hooks/cursor/hooks.json',
-      dest: path.join(consumerRoot, '.cursor', 'hooks.json'),
-      bin: path.join(home, '.cursor', 'skills', 'impeccable', 'scripts', 'impeccable'),
-    },
-    {
-      template: 'managed/hooks/github/impeccable.json',
-      dest: path.join(consumerRoot, '.github', 'hooks', 'impeccable.json'),
-      bin: path.join(home, '.github', 'skills', 'impeccable', 'scripts', 'impeccable'),
-    },
-  ];
+const LEGACY_DESIGN_BIN = /(?:\/[^'"\s\\]+)*\/skills\/impeccable\/scripts\/impeccable/g;
 
-  for (const { template, dest, bin } of hookSpecs) {
-    if (fs.existsSync(dest)) {
-      const existing = fs.readFileSync(dest, 'utf8');
-      if (existing.includes('impeccable')) {
-        log(`impeccable hooks skipped (already present): ${path.relative(consumerRoot, dest)}`);
-        continue;
-      }
-    }
-    const templateAbs = path.join(PACKAGE_ROOT, template);
-    if (!fs.existsSync(templateAbs)) {
-      log(`WARN: hook template not found: ${template}`);
-      continue;
-    }
-    const content = fs.readFileSync(templateAbs, 'utf8').replaceAll('__IMPECCABLE_BIN__', bin);
-    if (DRY) {
-      log(`DRY: would write impeccable hooks → ${path.relative(consumerRoot, dest)}`);
-      continue;
-    }
-    fs.mkdirSync(path.dirname(dest), { recursive: true });
-    fs.writeFileSync(dest, content, 'utf8');
-    log(`impeccable hooks installed → ${path.relative(consumerRoot, dest)}`);
+function mergeDesignHook(consumerRoot, { template, dest, legacyDest }) {
+  const rel = path.relative(consumerRoot, dest);
+  const templateAbs = path.join(PACKAGE_ROOT, template);
+  if (!fs.existsSync(templateAbs)) {
+    log(`WARN: hook template not found: ${template}`);
+    return;
   }
+  const fresh = JSON.parse(fs.readFileSync(templateAbs, 'utf8').replaceAll('__TRON_DESIGN_BIN__', TRON_DESIGN_BIN));
+  const legacyExists = Boolean(legacyDest) && fs.existsSync(legacyDest);
+  const sourcePath = fs.existsSync(dest) ? dest : legacyExists ? legacyDest : null;
+  const before = sourcePath ? fs.readFileSync(sourcePath, 'utf8') : '';
+  let config;
+  try {
+    config = sourcePath ? JSON.parse(before.replace(LEGACY_DESIGN_BIN, TRON_DESIGN_BIN)) : { version: 1, hooks: {} };
+  } catch (err) {
+    log(`WARN: design hook not merged, invalid JSON in ${path.relative(consumerRoot, sourcePath)}: ${err.message}`);
+    return;
+  }
+  config.hooks = config.hooks || {};
+  for (const [event, entries] of Object.entries(fresh.hooks)) {
+    const list = Array.isArray(config.hooks[event]) ? config.hooks[event] : [];
+    const present = list.some((entry) => JSON.stringify(entry).includes(TRON_DESIGN_BIN));
+    config.hooks[event] = present ? list : [...list, ...entries];
+  }
+  const after = `${JSON.stringify(config, null, 2)}\n`;
+  if (sourcePath === dest && after === before) {
+    log(`tron-design hooks already present: ${rel}`);
+    return;
+  }
+  if (DRY) {
+    log(`DRY: would write tron-design hooks → ${rel}`);
+    return;
+  }
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  const tmp = `${dest}.${process.pid}.tmp`;
+  fs.writeFileSync(tmp, after, 'utf8');
+  fs.renameSync(tmp, dest);
+  if (legacyExists && legacyDest !== dest) fs.rmSync(legacyDest, { force: true });
+  log(`tron-design hooks installed → ${rel}`);
+}
+
+function installTronDesignHooks(consumerRoot) {
+  mergeDesignHook(consumerRoot, {
+    template: 'managed/hooks/cursor/hooks.json',
+    dest: path.join(consumerRoot, '.cursor', 'hooks.json'),
+  });
+  mergeDesignHook(consumerRoot, {
+    template: 'managed/hooks/github/tron-design.json',
+    dest: path.join(consumerRoot, '.github', 'hooks', 'tron-design.json'),
+    legacyDest: path.join(consumerRoot, '.github', 'hooks', 'impeccable.json'),
+  });
 }
 
 function installTronDesignFallback() {
-  // Always sync — subordinate to the Emil + Impeccable + Taste combo; stale copies must not linger.
+  // Always sync — subordinate to tron-design; stale copies must not linger.
   const home = os.homedir();
   const src = path.join(PACKAGE_ROOT, 'managed', 'skills', 'tron-design-fallback');
   for (const dest of [
@@ -272,8 +227,55 @@ function installTronDesignFallback() {
   log(`tron-design-fallback ${DRY ? 'would be ' : ''}synced → ~/.claude/skills/, ~/.cursor/skills/`);
 }
 
-const LEGACY_DESIGN_SKILLS = ['ui-ux-pro-max', 'frontend-design'];
+const LEGACY_DESIGN_SKILLS = [
+  'ui-ux-pro-max',
+  'frontend-design',
+  'impeccable',
+  'animate',
+  'animate-expo',
+  'animation-vocabulary',
+  'apple-design',
+  'ask-sonner',
+  'emil-design-eng',
+  'find-animation-opportunities',
+  'improve-animations',
+  'mobile-native',
+  'pick-ui-library',
+  'prototype',
+  'review-animations',
+  'write-swift',
+  'brandkit',
+  'design-taste-frontend',
+  'design-taste-frontend-v1',
+  'full-output-enforcement',
+  'gpt-taste',
+  'high-end-visual-design',
+  'image-to-code',
+  'imagegen-frontend-mobile',
+  'imagegen-frontend-web',
+  'industrial-brutalist-ui',
+  'minimalist-ui',
+  'redesign-existing-projects',
+  'stitch-design-taste',
+];
 const LEGACY_DESIGN_PLUGIN = 'frontend-design@claude-plugins-official';
+
+// A user's own skill can share a retired name; only links into ~/.agents/skills and trees whose
+// SKILL.md declares that exact name are treated as ours.
+function isRetiredDesignSkill(target, stat, name) {
+  if (stat.isSymbolicLink()) {
+    const resolved = path.resolve(path.dirname(target), fs.readlinkSync(target));
+    return resolved.startsWith(path.join(os.homedir(), '.agents', 'skills') + path.sep);
+  }
+  if (!stat.isDirectory()) return false;
+  try {
+    const skill = fs.readFileSync(path.join(target, 'SKILL.md'), 'utf8');
+    const declared = /^---\n[\s\S]*?^name:\s*['"]?([\w.-]+)['"]?\s*$/m.exec(skill);
+    return Boolean(declared) && declared[1] === name;
+  } catch {
+    return false;
+  }
+}
 
 function removeLegacyDesignSkills() {
   const home = os.homedir();
@@ -287,6 +289,10 @@ function removeLegacyDesignSkills() {
         continue;
       }
       const rel = `~/${base}/skills/${name}`;
+      if (!isRetiredDesignSkill(target, stat, name)) {
+        log(`kept ${rel} (not a package-installed copy)`);
+        continue;
+      }
       if (DRY) {
         log(`DRY: would remove legacy skill ${rel}`);
         continue;
@@ -654,7 +660,7 @@ if (isConsumerRepo && !isSelfInstall) {
 
   installGitHooks();
   installGitIgnoreEntries();
-  installImpeccableHooks(CONSUMER_ROOT);
+  installTronDesignHooks(CONSUMER_ROOT);
 }
 
 // Machine-level tools: install for developers, skip in CI
@@ -672,15 +678,13 @@ if (!IS_CI) {
   installSecurityReviewSkill();
   installMakePrSkill();
   installSessionHandoffSkill();
-  installEmilSkills();
-  installImpeccable();
+  installTronDesignStack();
   installTronKit();
   try {
     installTronAgents({ dryRun: DRY, log });
   } catch (err) {
     log(`WARN: tron agents not installed: ${err.message}`);
   }
-  installTasteSkills();
   installTronDesignFallback();
   removeLegacyDesignSkills();
   installIssueBoardSkill();

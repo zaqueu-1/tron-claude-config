@@ -3,7 +3,7 @@
   "hooks": {
     "preToolUse": [
       {
-        "command": "[ ! -f '__IMPECCABLE_BIN__' ] || '__IMPECCABLE_BIN__' hook-before-edit",
+        "command": "[ ! -f '__TRON_DESIGN_BIN__' ] || '__TRON_DESIGN_BIN__' hook-before-edit",
         "timeout": 5
       }
     ]
