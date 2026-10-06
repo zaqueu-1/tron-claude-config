@@ -6,27 +6,25 @@ paths:
 ---
 # Go Coding Style
 
-> This file extends [common/coding-style.md](../common/coding-style.md) with Go specific content.
+> Builds on the shared rules in `../common/coding-style.md`.
 
-## Formatting
+## Format
 
-- **gofmt** and **goimports** are mandatory — no style debates
+**gofmt** and **goimports** — non-negotiable.
 
-## Design Principles
+## APIs
 
-- Accept interfaces, return structs
-- Keep interfaces small (1-3 methods)
+- Parameters: interfaces; returns: concrete structs.
+- Keep interfaces tiny (often 1–3 methods).
 
-## Error Handling
+## Errors
 
-Always wrap errors with context:
+Wrap with context:
 
 ```go
 if err != nil {
-    return fmt.Errorf("failed to create user: %w", err)
+    return fmt.Errorf("persist profile: %w", err)
 }
 ```
 
-## Reference
-
-See skill: `golang-patterns` for comprehensive Go idioms and patterns.
+Depth: `tron-go` skill.

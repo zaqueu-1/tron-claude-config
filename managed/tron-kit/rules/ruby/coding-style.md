@@ -8,39 +8,33 @@ paths:
 ---
 # Ruby Coding Style
 
-> This file extends [common/coding-style.md](../common/coding-style.md) with Ruby and Rails specific content.
+> Builds on the shared rules in `../common/coding-style.md`.
 
-## Standards
+## Runtime
 
-- Target **Ruby 3.3+** for new Rails work unless the project already pins an older supported runtime.
-- Enable **YJIT** in production only after measuring boot time, memory, and request/job throughput.
-- Add `# frozen_string_literal: true` to new Ruby files when the project uses that convention.
-- Prefer clear Ruby over clever metaprogramming; isolate DSL-heavy code behind narrow, tested boundaries.
+Target Ruby 3.3+ on new Rails apps; respect an existing pin to an older supported release. Enable YJIT in production only after measuring memory and throughput.
 
-## Formatting And Linting
+## Files
 
-- Use the project's checked-in RuboCop config. For Rails 8+ apps, start from `rubocop-rails-omakase` and customize only where the codebase has a real convention.
-- Keep formatter/linter commands behind binstubs or scripts so CI and local runs match:
+`# frozen_string_literal: true` when the repo uses it; keep metaprogramming behind small, tested APIs.
+
+## Lint
+
+Project RuboCop config (Rails 8+ often starts from omakase); run via binstub:
 
 ```bash
 bundle exec rubocop
 bundle exec rubocop -A
 ```
 
-- Do not silence cops inline unless the exception is narrow, documented, and harder to express cleanly in code.
+Narrow inline disables only with justification.
 
-## Rails Style
+## Rails
 
-- Follow Rails naming and directory conventions before adding custom structure.
-- Keep controllers transport-focused: authentication, authorization, parameter handling, response shape.
-- Put reusable domain behavior in models, concerns, service objects, query objects, or form objects based on actual complexity, not as default ceremony.
-- Prefer `bin/rails`, `bin/rake`, and checked-in binstubs over globally installed commands.
+MVC conventions first; thin controllers; domain in models/services/query/form objects as complexity demands; prefer `bin/rails` / binstubs.
 
-## Error Handling
+## Errors
 
-- Rescue specific exceptions. Avoid broad `rescue StandardError` blocks unless they re-raise or preserve enough context for operators.
-- Use `ActiveSupport::Notifications` or the app's logger for operational events; do not leave `puts`, `pp`, or `debugger` in committed application code.
+Rescue specific exceptions; log operations — no committed `puts`/`debugger`.
 
-## Reference
-
-See skill: `backend-patterns` for broader service/repository layering guidance.
+Layering: `tron-services` skill.

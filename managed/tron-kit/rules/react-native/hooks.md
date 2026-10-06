@@ -3,26 +3,14 @@ paths:
   - "**/*.ts"
   - "**/*.tsx"
 ---
-# React Native / Expo Hooks
+> Builds on the shared rules in `../common/hooks.md`.
 
-> This file extends [common/hooks.md](../common/hooks.md) with React Native / Expo-specific automation guidance.
+# React Native harness hooks
 
-These are recommended PostToolUse automations to keep RN/Expo code healthy. Wire them in your hook runtime (or run manually); adapt commands to your package manager.
+PostToolUse on TS/TSX: `tsc --noEmit`, `expo lint`, Prettier on touched files.
 
-## Suggested PostToolUse checks (on edit of *.ts/*.tsx)
+Periodic: `expo-doctor`, `expo install --check`, dependency audit.
 
-- **Type check:** `tsc --noEmit` — catch type errors early.
-- **Lint:** `npx expo lint` (uses `eslint-config-expo`; flat config `eslint.config.js` is the default from SDK 53+).
-- **Format:** `prettier --write` on changed files.
+No full native builds per edit — reserve EAS/E2E for CI/commands.
 
-## Pre-release / periodic
-
-- `npx expo-doctor` — validates Expo/native dependency health and config.
-- `npx expo install --check` — keeps native deps aligned with the installed Expo SDK.
-- `npm audit` — dependency vulnerability scan.
-
-## Notes
-
-- Do not run heavy native builds inside fast edit hooks; keep edit-time hooks to typecheck/lint/format.
-- Reserve `eas build` / E2E for explicit commands or CI, not per-edit automation.
-- Keep these consistent with ECC hook runtime controls (`ECC_HOOK_PROFILE`, `ECC_DISABLED_HOOKS`).
+`TRON_HOOK_PROFILE`, `TRON_DISABLED_HOOKS`.

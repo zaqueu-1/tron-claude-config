@@ -1,51 +1,37 @@
-# Agent Orchestration
+# Agent orchestration
 
-## Available Agents
+## Tron agents (12)
 
-Located in `~/.claude/agents/`:
+Invoke via Task/subagent with the agent id below.
 
-| Agent | Purpose | When to Use |
-|-------|---------|-------------|
-| planner | Implementation planning | Complex features, refactoring |
-| architect | System design | Architectural decisions |
-| tdd-guide | Test-driven development | New features, bug fixes |
-| code-reviewer | Code review | After writing code |
-| security-reviewer | Security analysis | Before commits |
-| build-error-resolver | Fix build errors | When build fails |
-| e2e-runner | E2E testing | Critical user flows |
-| refactor-cleaner | Dead code cleanup | Code maintenance |
-| doc-updater | Documentation | Updating docs |
-| rust-reviewer | Rust code review | Rust projects |
-| harmonyos-app-resolver | HarmonyOS app development | HarmonyOS/ArkTS projects |
+| Agent | Use when |
+|-------|----------|
+| tron-pm | Requirements, breakdown, acceptance criteria, plans |
+| tron-cto | Architecture, ADRs, tech choice, refactor strategy |
+| tron-researcher | Mapping, docs synthesis, external API research |
+| tron-designer | UX/visual direction; a11y via `tron-design` audit/harden |
+| tron-frontend | Web UI implementation |
+| tron-backend | APIs, services, auth, jobs |
+| tron-mobile | React Native / native mobile |
+| tron-data-ai | SQL, pipelines, LLM features |
+| tron-devops | CI/CD, hooks, releases |
+| tron-infra | Cloud, IaC, K8s |
+| tron-qa | Review gate, tests, verification |
+| tron-security | AppSec, threat modeling |
 
-## Immediate Agent Usage
+## Model tier
 
-No user prompt needed:
-1. Complex feature requests - Use **planner** agent
-2. Code just written/modified - Use **code-reviewer** agent
-3. Bug fix or new feature - Use **tdd-guide** agent
-4. Architectural decision - Use **architect** agent
+| Phase | Tier |
+|-------|------|
+| Planning, research, review, docs, verification | Economical (Composer, Sonnet, Haiku read-only) |
+| Production code changes | Robust (Opus-class execution) |
 
-## Parallel Task Execution
+## Auto-delegate
 
-ALWAYS use parallel Task execution for independent operations:
+- Complex feature → tron-pm / tron-cto
+- After code changes → tron-qa or `code-review` skill
+- Sensitive surface → tron-security or `security-review` skill
 
-```markdown
-# GOOD: Parallel execution
-Launch 3 agents in parallel:
-1. Agent 1: Security analysis of auth module
-2. Agent 2: Performance review of cache system
-3. Agent 3: Type checking of utilities
+## Parallel + completion
 
-# BAD: Sequential when unnecessary
-First agent 1, then agent 2, then agent 3
-```
-
-## Multi-Perspective Analysis
-
-For complex problems, use split role sub-agents:
-- Factual reviewer
-- Senior engineer
-- Security expert
-- Consistency reviewer
-- Redundancy checker
+Parallelize independent audits. **Never** finish while subagents still run — collect and merge results first. Split work only when one context cannot hold it.

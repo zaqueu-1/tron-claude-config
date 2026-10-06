@@ -5,82 +5,46 @@ paths:
 ---
 # Kotlin Coding Style
 
-> This file extends [common/coding-style.md](../common/coding-style.md) with Kotlin-specific content.
+> Builds on the shared rules in `../common/coding-style.md`.
 
-## Formatting
+## Format
 
-- **ktlint** or **Detekt** for style enforcement
-- Official Kotlin code style (`kotlin.code.style=official` in `gradle.properties`)
+**ktlint** or **Detekt**; `kotlin.code.style=official` in Gradle when applicable.
 
 ## Immutability
 
-- Prefer `val` over `var` — default to `val` and only use `var` when mutation is required
-- Use `data class` for value types; use immutable collections (`List`, `Map`, `Set`) in public APIs
-- Copy-on-write for state updates: `state.copy(field = newValue)`
+Default `val`; immutable collections in public APIs; `copy` for state updates.
 
 ## Naming
 
-Follow Kotlin conventions:
-- `camelCase` for functions and properties
-- `PascalCase` for classes, interfaces, objects, and type aliases
-- `SCREAMING_SNAKE_CASE` for constants (`const val` or `@JvmStatic`)
-- Prefix interfaces with behavior, not `I`: `Clickable` not `IClickable`
+Kotlin conventions; behavior-named interfaces (`Clickable`, not `IClickable`).
 
-## Null Safety
+## Nulls
 
-- Never use `!!` — prefer `?.`, `?:`, `requireNotNull()`, or `checkNotNull()`
-- Use `?.let {}` for scoped null-safe operations
-- Return nullable types from functions that can legitimately have no result
+No `!!`; use `?.`, `?:`, `requireNotNull`, `checkNotNull`, or early returns.
+
+## Sealed UI/state
 
 ```kotlin
-// BAD
-val name = user!!.name
-
-// GOOD
-val name = user?.name ?: "Unknown"
-val name = requireNotNull(user) { "User must be set before accessing name" }.name
-```
-
-## Sealed Types
-
-Use sealed classes/interfaces to model closed state hierarchies:
-
-```kotlin
-sealed interface UiState<out T> {
-    data object Loading : UiState<Nothing>
-    data class Success<T>(val data: T) : UiState<T>
-    data class Error(val message: String) : UiState<Nothing>
+sealed interface ScreenData<out T> {
+    data object Busy : ScreenData<Nothing>
+    data class Ready<T>(val payload: T) : ScreenData<T>
+    data class Problem(val msg: String) : ScreenData<Nothing>
 }
 ```
 
-Always use exhaustive `when` with sealed types — no `else` branch.
+Exhaustive `when` — no stray `else`.
 
-## Extension Functions
+## Extensions
 
-Use extension functions for utility operations, but keep them discoverable:
-- Place in a file named after the receiver type (`StringExt.kt`, `FlowExt.kt`)
-- Keep scope limited — don't add extensions to `Any` or overly generic types
+File per receiver type; avoid extensions on `Any`.
 
-## Scope Functions
+## Scope functions
 
-Use the right scope function:
-- `let` — null check + transform: `user?.let { greet(it) }`
-- `run` — compute a result using receiver: `service.run { fetch(config) }`
-- `apply` — configure an object: `builder.apply { timeout = 30 }`
-- `also` — side effects: `result.also { log(it) }`
-- Avoid deep nesting of scope functions (max 2 levels)
+`let` / `run` / `apply` / `also` — max two nested levels.
 
-## Error Handling
+## Errors
 
-- Use `Result<T>` or custom sealed types
-- Use `runCatching {}` for wrapping throwable code
-- Never catch `CancellationException` — always rethrow it
-- Avoid `try-catch` for control flow
+`Result`, sealed errors, `runCatching`; rethrow `CancellationException`; no exception-driven control flow.
 
-```kotlin
-// BAD — using exceptions for control flow
-val user = try { repository.getUser(id) } catch (e: NotFoundException) { null }
-
-// GOOD — nullable return
-val user: User? = repository.findUser(id)
-```
+Depth: `tron-kotlin` skill.

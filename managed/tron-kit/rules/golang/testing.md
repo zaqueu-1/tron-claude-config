@@ -6,26 +6,15 @@ paths:
 ---
 # Go Testing
 
-> This file extends [common/testing.md](../common/testing.md) with Go specific content.
+> Builds on the shared rules in `../common/testing.md`.
 
-## Framework
+## Style
 
-Use the standard `go test` with **table-driven tests**.
-
-## Race Detection
-
-Always run with the `-race` flag:
+Table-driven tests with `go test`.
 
 ```bash
 go test -race ./...
-```
-
-## Coverage
-
-```bash
 go test -cover ./...
 ```
 
-## Reference
-
-See skill: `golang-testing` for detailed Go testing patterns and helpers.
+Depth: `tron-go` skill (testing reference).

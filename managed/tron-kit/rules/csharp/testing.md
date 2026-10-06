@@ -6,41 +6,22 @@ paths:
 ---
 # C# Testing
 
-> This file extends [common/testing.md](../common/testing.md) with C#-specific content.
+> Builds on the shared rules in `../common/testing.md`.
 
-## Test Framework
+## Stack
 
-- Prefer **xUnit** for unit and integration tests
-- Use **FluentAssertions** for readable assertions
-- Use **Moq** or **NSubstitute** for mocking dependencies
-- Use **Testcontainers** when integration tests need real infrastructure
+xUnit, FluentAssertions, Moq/NSubstitute, Testcontainers when needed.
 
-## Test Organization
+## Layout
 
-- Mirror `src/` structure under `tests/`
-- Separate unit, integration, and end-to-end coverage clearly
-- Name tests by behavior, not implementation details
+Mirror `src/` under `tests/`; behavior-named tests.
 
-```csharp
-public sealed class OrderServiceTests
-{
-    [Fact]
-    public async Task FindByIdAsync_ReturnsOrder_WhenOrderExists()
-    {
-        // Arrange
-        // Act
-        // Assert
-    }
-}
-```
+## Web
 
-## ASP.NET Core Integration Tests
-
-- Use `WebApplicationFactory<TEntryPoint>` for API integration coverage
-- Test auth, validation, and serialization through HTTP, not by bypassing middleware
+`WebApplicationFactory` integration tests through HTTP middleware — do not bypass auth/pipeline.
 
 ## Coverage
 
-- Target 80%+ line coverage
-- Focus coverage on domain logic, validation, auth, and failure paths
-- Run `dotnet test` in CI with coverage collection enabled where available
+~80% on domain, validation, auth, failure paths; CI `dotnet test` with coverage when enabled.
+
+Depth: `tron-quality` skill; `tron-dotnet` for stack patterns.

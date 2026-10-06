@@ -6,32 +6,22 @@ paths:
 ---
 # PHP Security
 
-> This file extends [common/security.md](../common/security.md) with PHP specific content.
+> Builds on the shared rules in `../common/security.md`.
 
-## Input and Output
+## I/O
 
-- Validate request input at the framework boundary (`FormRequest`, Symfony Validator, or explicit DTO validation).
-- Escape output in templates by default; treat raw HTML rendering as an exception that must be justified.
-- Never trust query params, cookies, headers, or uploaded file metadata without validation.
+Validate at framework boundary; escape template output by default; treat headers/cookies/uploads as untrusted.
 
-## Database Safety
+## Database
 
-- Use prepared statements (`PDO`, Doctrine, Eloquent query builder) for all dynamic queries.
-- Avoid string-building SQL in controllers/views.
-- Scope ORM mass-assignment carefully and whitelist writable fields.
+Prepared statements / query builder; careful mass-assignment allow lists.
 
-## Secrets and Dependencies
+## Secrets
 
-- Load secrets from environment variables or a secret manager, never from committed config files.
-- Run `composer audit` in CI and review new package maintainer trust before adding dependencies.
-- Pin major versions deliberately and remove abandoned packages quickly.
+Env or secret manager; `composer audit` in CI; deliberate version pins.
 
-## Auth and Session Safety
+## Sessions
 
-- Use `password_hash()` / `password_verify()` for password storage.
-- Regenerate session identifiers after authentication and privilege changes.
-- Enforce CSRF protection on state-changing web requests.
+`password_hash` / `password_verify`; regenerate session id on login/privilege change; CSRF on state-changing web forms.
 
-## Reference
-
-See skill: `laravel-security` for Laravel-specific security guidance.
+Framework hardening: `tron-php` skill.

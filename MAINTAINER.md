@@ -1,6 +1,6 @@
 # tron-claude-config — Maintainer Guide
 
-Owner playbook for the shared Claude enforcement harness (`@tron/claude-config` **v1.12.0**).
+Owner playbook for the shared Claude enforcement harness (`@tron/claude-config` **v1.14.0**).
 
 Consumer docs: [README.md](README.md) · Operator cheat sheet: [HARNESS-GUIDE.md](HARNESS-GUIDE.md)
 
@@ -14,7 +14,7 @@ On consumer `npm install` / `bun install` / `pnpm install`, `scripts/postinstall
 2. Copies `AGENTS.md` and `scripts/setup-claude-harness.sh`
 3. Installs git `pre-commit` / `pre-push` hooks (via `git rev-parse --git-path hooks`, respects `core.hooksPath`)
 4. Syncs **scoped** tron-kit rules into `.claude/rules/tron/` from the bundled snapshot (detect stack → copy matching folders → prune stale ones; no network)
-5. On developer machines (not CI): installs the `tron-kit@tron` Claude plugin (see [Syncing tron-kit from upstream](#syncing-tron-kit-from-upstream)) and removes the legacy upstream plugin, its marketplace and user-level rules; installs the 12 tron agents + roster guard hooks (`scripts/lib/install-tron-agents.js`); the workflow engine with the `standard` profile for Claude Code and Cursor; install-if-missing skills; always-overwritten core rules (`terse.md`, `engineering-principles.md`, removing their retired predecessors); **attempt** `tron-graph` via `scripts/lib/ensure-tron-graph.js` (retries + npm fallback on Windows/WSL; renames the engine's own MCP keys to `tron-graph`; warns instead of aborting postinstall if still missing) and registers `tron-docs` via `scripts/lib/ensure-tron-docs.js`
+5. On developer machines (not CI): installs the `tron-kit@tron` Claude plugin (see [Syncing tron-kit from upstream](#syncing-tron-kit-from-upstream)) and removes the legacy upstream plugin, its marketplace and user-level rules; installs the 12 tron agents + roster guard hooks (`scripts/lib/install-tron-agents.js`); the workflow engine with the `standard` profile for Claude Code and Cursor; always-synced commands, skills and rules (every file recorded in `~/.claude/tron/installed.json`, so files a release drops are removed on upgrade); always-overwritten core rules (`terse.md`, `engineering-principles.md`, removing their retired predecessors); **attempt** `tron-graph` via `scripts/lib/ensure-tron-graph.js` (retries + npm fallback on Windows/WSL; renames the engine's own MCP keys to `tron-graph`; warns instead of aborting postinstall if still missing) and registers `tron-docs` via `scripts/lib/ensure-tron-docs.js`
 6. On developer machines (not CI): installs the **frontend design skill harness** — the **tron design stack** (`tron-design`, `tron-motion`, `tron-native`, `tron-imagery` — maximum DESIGN source of truth), with **tron-design-fallback** subordinate (charts, forms, web navigation, stack guidelines); removes leftover `ui-ux-pro-max` / `frontend-design` and retired design skill folders and disables the `frontend-design@claude-plugins-official` plugin (see [Frontend design skills](#frontend-design-skills-max-design-authority))
 7. Thereafter, `bootstrap-check.sh` self-updates the package about once per day
 
@@ -54,14 +54,14 @@ tron-claude-config/
 │   ├── sync-tron-rules.js             # CLI wrapper for tron-kit rules sync
 │   └── lib/
 │       ├── detect-project-scope.js    # package.json + markers → folder list
-│       ├── install-tron-rules.js      # copy from snapshot, prune, write .tron-scope.json
+│       ├── install-tron-rules.js      # copy bundled rules, prune, write .tron-scope.json
 │       ├── install-tron-kit.js        # ~/.claude/tron-kit + claude plugin install, legacy cleanup
 │       ├── ensure-tron-graph.js       # code graph MCP (Win + Unix), registered as tron-graph
 │       └── ensure-tron-docs.js        # docs MCP, registered as tron-docs
 ├── managed/
 │   ├── AGENTS.md
 │   ├── setup-claude-harness.sh        # also re-syncs tron-kit rules on auto-update
-│   ├── tron-kit/                      # frozen tron-kit plugin snapshot → ~/.claude/tron-kit/
+│   ├── tron-kit/                      # tron-kit plugin (21 stack skills, commands, hooks, rules) → ~/.claude/tron-kit/
 │   ├── agents/                        # 12 tron agents, roster.json, guard
 │   ├── cursor/rules/                  # frontend-skills.mdc → ~/.cursor/rules/
 │   ├── hooks/                         # cursor/ + github/ tron-design hook templates
@@ -95,9 +95,6 @@ tron-claude-config/
 │   ├── watch.js                       # relevant-change tracker → reports/
 │   ├── originality.js                 # ownership gate: no upstream prose or names in rewrites
 │   ├── lib/                           # sources registry + git mirror helpers
-│   ├── sync-tron-kit.js               # refresh managed/tron-kit/ from its upstream
-│   ├── tron-kit.config.json           # allowlists, kept hooks, prune, rewrites
-│   ├── state/tron-kit.json            # last sync record
 │   └── reports/                       # upstream reports (committed)
 ├── docs/assets/                       # README banner / diagrams
 ├── MAINTAINER.md
@@ -116,10 +113,11 @@ tron-claude-config/
 | `.claude/.tron-scope.json` | **Package** | Audit trail of last sync |
 | `AGENTS.md` | **Package** | Overwritten from managed copy |
 | `.git/hooks/pre-commit` / `pre-push` | **Package** | Installed by setup |
-| `~/.claude/commands/commit-changes.md` | **Package** (install-if-missing) | Must run `/security-review` + `/code-review` before token |
-| `~/.claude/commands/code-review.md` | **Package** (install-if-missing) | Required by `/commit-changes` |
-| `~/.claude/commands/security-review.md` | **Package** (install-if-missing) | Required by `/commit-changes` |
+| `~/.claude/commands/commit-changes.md` | **Package** (always synced; edits saved to `.bak` once) | Must run `/security-review` + `/code-review` before token |
+| `~/.claude/commands/code-review.md` | **Package** (always synced; edits saved to `.bak` once) | Required by `/commit-changes` |
+| `~/.claude/commands/security-review.md` | **Package** (always synced; edits saved to `.bak` once) | Required by `/commit-changes` |
 | `~/.claude/commands/make-pr.md` | **Package** (always synced) | PT-BR PR template; overwrites stale English skills |
+| `~/.claude/tron/installed.json` | **Package** (rewritten each install) | Hash ledger of every home-level file the package wrote; drives stale-file removal on upgrade |
 | `~/.agents/skills/tron-{design,motion,native,imagery}/` + `~/.claude`, `~/.cursor`, `~/.github` symlinks (+ repo hooks) | **Package** (always synced) | tron design stack = primary DESIGN authority; darwin-arm64 engine in-tree, others fetch on first run |
 | `~/.claude` + `~/.cursor/skills/tron-design-fallback/` | **Package** (always synced) | Subordinate to the stack |
 | `~/.{claude,cursor,agents,github}/skills/` legacy + retired design skills | **Package** (removed if present) | Legacy design layer and the 27 names the stack replaced; plugin `frontend-design@claude-plugins-official` disabled |
@@ -199,13 +197,19 @@ Silent by design. At most one status line in the session.
 2. Register in `GIT_HOOKS` inside `postinstall.js`  
 3. Release  
 
-## Adding a new global skill (install-if-missing)
+## Adding a new global skill or command
 
-1. Add `managed/skills/<name>/SKILL.md`  
-2. Add `installXSkill()` in `postinstall.js` (copy to `~/.claude/commands/<name>.md` only if missing)  
-3. Call it inside the `if (!IS_CI)` block  
+1. Add `managed/skills/<name>/` (`SKILL.md` plus any code files)  
+2. Register it in `postinstall.js`: a command goes in `COMMANDS`, a skill directory in `HOME_SKILLS` (list its files; per-person `config.json`/`data/` stay out)  
+3. Every file goes through `syncHomeFile`, which records it in `~/.claude/tron/installed.json`  
 4. Document in README + HARNESS-GUIDE + this table  
 5. `npm version minor` + push  
+
+## Retiring a file
+
+- **Home-level file** synced through `syncHomeFile`: delete it from `managed/` and from its list. The next install removes it from every machine (kept and reported if the user edited it).  
+- **Consumer-repo file** (`MANAGED_FILES`): move its destination to `RETIRED_CONSUMER_FILES`.  
+- **Directory trees** (design stack, tron-kit, fallback) are replaced wholesale on every install — nothing to do.  
 
 ## Changing tron-kit scope detection
 
@@ -216,31 +220,19 @@ Silent by design. At most one status line in the session.
 
 ---
 
-## Syncing tron-kit from upstream
+## tron-kit
 
-`managed/tron-kit/` is a **frozen snapshot** of the MIT-licensed upstream [affaan-m/ECC](https://github.com/affaan-m/ECC) Claude plugin (formerly installed as `ecc@ecc`), renamed and owned by this package. Consumers never fetch upstream: postinstall copies the snapshot to `~/.claude/tron-kit/`, stamps `.claude-plugin/plugin.json` + the `marketplace.json` entry with this package's `version` (so `claude plugin update` sees each release), and installs `tron-kit@tron` at user scope. The upstream `LICENSE` stays in the snapshot for attribution.
+`managed/tron-kit/` is tron's own Claude Code plugin. Consumers never fetch anything: postinstall copies it to `~/.claude/tron-kit/`, stamps `.claude-plugin/plugin.json` + the `marketplace.json` entry with this package's `version` (so `claude plugin update` sees each release), and installs `tron-kit@tron` at user scope.
 
-Refresh the snapshot (maintainers only, needs network):
+| Part | Path | Notes |
+|---|---|---|
+| Stack skills (21) | `skills/tron-*/` | `SKILL.md` is a short router (scope, non-negotiables, reference table); depth lives in `reference/*.md`, loaded on demand. Agents list them in `managed/agents/tron/*.md` |
+| Commands | `commands/{build-fix,test-coverage,refactor-clean}.md` | |
+| Quality hooks | `hooks/hooks.json` → `scripts/hooks/run.js <id>` | `pre:config-guard`, `pre:bash:no-verify`, `post:edit-tracker`, `stop:checks`. Profiles: `TRON_HOOK_PROFILE` (minimal / standard / strict), `TRON_DISABLED_HOOKS` (comma-separated ids), `TRON_ALLOW_CONFIG_EDITS=1` lifts the config guard. Pre hooks answer `{}` under Cursor payloads. Tests: `node --test scripts/lib/tron-kit-hooks.test.js` |
+| Language rules | `rules/<folder>/` | Synced into consumer `.claude/rules/tron/` by scope (`scripts/lib/detect-project-scope.js`); keep each file's `paths:` frontmatter and keep them short — they load into every session |
+| MCP | `.mcp.json` | Chrome DevTools MCP |
 
-```bash
-npm run sync:tron-kit                      # re-pull the pinned ref (upstream/sources.json, id tron-kit)
-npm run sync:tron-kit -- --dry-run         # fetch + apply rules in a tmp dir, print counts, touch nothing
-npm run sync:tron-kit -- --latest          # take upstream HEAD and write the new sha into sources.json
-npm run sync:tron-kit -- --ref <sha|branch> # sync a specific ref (resolved sha written into sources.json)
-```
-
-Repo and pin live in `upstream/sources.json` (id `tron-kit`); everything else the sync does is driven by `upstream/tron-kit.config.json`:
-
-- `include` — top-level upstream paths copied. Upstream `agents/` is not included: the 12 tron agents (`managed/agents/`) own the roster
-- `allow` — allowlists for `skills` and `commands`; everything else upstream stays out, including new upstream additions. Kept: technical skills that back a tron agent. Dropped: workflow commands/skills GSD already owns (plan, prp, orch, multi, epic, sessions, loops, learning), duplicates of tron skills (`code-review`, `security-review`, `pr`, `save-session`), the design/motion/a11y skills that compete with the tron design stack, and non-engineering domains. A listed name missing upstream aborts the sync
-- `exclude` — globs never brought back (stale hook docs, junk files)
-- `hooks.keep` / `hooks.derive` — only these hooks survive: `pre:bash:block-no-verify` (derived from the config-protection entry, so it runs without the upstream bash dispatcher), `pre:config-protection`, `post:edit:accumulate`, `stop-format-typecheck`, `check-console-log`. Telemetry, learning, compaction and session hooks are dropped (GSD covers context and sessions)
-- `prune` — directories (`scripts`, `config`, `schemas`, `manifests`, `mcp-configs`) reduced to files reachable from kept hooks, skills, commands and rules
-- `rewrites` — literal find/replace applied after copy. They retarget the hook/command root resolvers from the upstream plugin slugs to `tron-kit` / `tron-kit@tron` / `marketplaces/tron` / cache dir `tron`, and swap `/save-session` mentions for `/session-handoff`. Each rewrite asserts `minMatches`; the sync aborts with a clear error if upstream drifted — fix the rule, never loosen it blindly
-- `hooks.stripMatcherKeys` — keys removed from `hooks/hooks.json` matcher entries (matches how the plugin was installed before the migration)
-- `plugin` / `marketplace` — metadata for the generated `.claude-plugin/plugin.json` and `marketplace.json`
-
-The sync also writes `upstream/state/tron-kit.json` (repo, resolved sha, upstream version, timestamp, excluded paths, rewrite counts). After a sync: review the diff, run `claude plugin validate managed/tron-kit`, then release with a `minor` bump.
+To change a skill, edit it in place; adding or renaming a skill means updating the agent skill lists and the `map` of the `tron-kit` entry in `upstream/sources.json`. After any change: `claude plugin validate managed/tron-kit`, `npm run upstream:originality -- tron-kit`, then release with a `minor` bump.
 
 ---
 
@@ -250,12 +242,12 @@ Everything this package ships is a **tron interpretation** of an upstream. Shipp
 
 - `upstream/sources.json` — one entry per upstream: `repo`, pinned `ref`, `license`, `kind` (content / runtime), `status` (vendored → rewritten; runtime: wrapped → replaced), `phase`, the tron artifact it feeds, `watch` (paths we consume; `map` pairs upstream dirs to renamed tron skills) and `discover` (dirs where new upstream items appear).
 - `npm run upstream:watch [-- <id>...]` — mirrors each repo (blobless, cached in `upstream/.cache/`), diffs pinned → upstream HEAD restricted to the watched paths, lists commits touching them and new upstream items not adopted, and writes `upstream/reports/<date>-<id>.md`. Sources with nothing relevant just report "nothing relevant".
-- Porting: read the report, **re-express** relevant changes in the tron artifact in our own words (no verbatim copies), then `npm run upstream:watch -- --accept <id> [--ref <sha>]` to move the pin. `tron-kit` moves only via `npm run sync:tron-kit`.
+- Porting: read the report, **re-express** relevant changes in the tron artifact in our own words (no verbatim copies), then `npm run upstream:watch -- --accept <id> [--ref <sha>]` to move the pin.
 - `npm run upstream:originality [-- <id>...]` — the ownership gate. For each source with an `originality` block it compares the tron files' prose (code stripped) against the upstream files at the pin using 8-word runs, and scans them for upstream names (`brandTerms`); engine-owned literals (`.impeccable/` state paths, `IMPECCABLE_*` env names) are exempt. Exit 1 on any hit — run it after every port and before every release.
 - Runtime tools are wrapped behind tron names until replaced: code graph → `tron-graph`, docs → `tron-docs` (MCP keys renamed on install), design engine → `tron-design/scripts/tron-design` (the engine's own launcher and binary stay untouched next to it; the wrapper refuses `update`/`install`, disables telemetry and rebrands agent-facing output).
-- Licenses: MIT / Apache-2.0 notices stay with still-vendored code (`managed/tron-kit/LICENSE`; the wrapped design engine ships `scripts/ENGINE-LICENSE`) until it is rewritten or replaced; a rewritten artifact carries no upstream text, so no notice is needed.
+- Licenses: notices stay only with still-vendored code (the wrapped design engine ships `scripts/ENGINE-LICENSE`) until it is replaced; a rewritten artifact carries no upstream text, so no notice is needed.
 
-Ownership phases: 1) foundation — tracker, provenance, wrappers, core rules (done); 2) design stack → tron-design (done: content rewritten, engine wrapped); 3) tron-kit skills and hooks rewritten; 4) tron-flow replaces the workflow engine.
+Ownership phases: 1) foundation — tracker, provenance, wrappers, core rules (done); 2) design stack → tron-design (done: content rewritten, engine wrapped); 3) tron-kit → own skills, rules, commands and hooks (done: 71 upstream skills consolidated into 21); 4) tron-flow replaces the workflow engine.
 
 ---
 
@@ -267,13 +259,13 @@ node --check scripts/postinstall.js
 node --check scripts/lib/detect-project-scope.js
 node --check scripts/lib/install-tron-rules.js
 node --check scripts/lib/install-tron-kit.js
-node --check upstream/sync-tron-kit.js
 node --check upstream/watch.js
 node --check upstream/originality.js
 npm run upstream:originality
 node --check scripts/lib/ensure-tron-graph.js
 node --check scripts/lib/ensure-tron-docs.js
 node scripts/lib/pr-template-validate.test.js
+node --test scripts/lib/tron-kit-hooks.test.js
 
 # tron-graph / tron-docs registration (no changes written)
 node scripts/lib/ensure-tron-graph.js --dry-run
@@ -285,7 +277,7 @@ npm pack --dry-run
 # Scope detection (no network)
 node -e "console.log(require('./scripts/lib/detect-project-scope').detectProjectScope('.'))"
 
-# tron-kit rules dry-run (local snapshot, no network)
+# tron-kit rules dry-run (bundled rules, no network)
 node scripts/sync-tron-rules.js /tmp/some-consumer --dry-run
 
 # Plugin manifest check

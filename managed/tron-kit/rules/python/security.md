@@ -5,26 +5,22 @@ paths:
 ---
 # Python Security
 
-> This file extends [common/security.md](../common/security.md) with Python specific content.
+> Builds on the shared rules in `../common/security.md`.
 
-## Secret Management
+## Secrets
 
 ```python
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
-
-api_key = os.environ["OPENAI_API_KEY"]  # Raises KeyError if missing
+token = os.environ["SERVICE_TOKEN"]  # KeyError if unset
 ```
 
-## Security Scanning
+## Static scan
 
-- Use **bandit** for static security analysis:
-  ```bash
-  bandit -r src/
-  ```
+```bash
+bandit -r src/
+```
 
-## Reference
-
-See skill: `django-security` for Django-specific security guidelines (if applicable).
+Framework-specific hardening: `tron-python` skill. Broad review: `security-review` skill / `tron-security` agent.

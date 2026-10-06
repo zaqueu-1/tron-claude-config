@@ -1,73 +1,42 @@
 ---
-description: Analyze coverage, identify gaps, and generate missing tests toward the target threshold.
+description: Measure test coverage, rank the weakest files, and add the missing tests until the target (default 80%) is met.
+argument-hint: "[target %] [path]"
 ---
 
-# Test Coverage
+# /test-coverage
 
-Analyze test coverage, identify gaps, and generate missing tests to reach 80%+ coverage.
+Raise coverage where it buys confidence — behavior and failure paths, not line-count padding. Default target 80% unless the project or argument sets another.
 
-## Step 1: Detect Test Framework
+## 1. Measure
 
-| Indicator | Coverage Command |
-|-----------|-----------------|
-| `jest.config.*` or `package.json` jest | `npx jest --coverage --coverageReporters=json-summary` |
-| `vitest.config.*` | `npx vitest run --coverage` |
-| `pytest.ini` / `pyproject.toml` pytest | `pytest --cov=src --cov-report=json` |
+| Marker | Run |
+|---|---|
+| Vitest config | `npx vitest run --coverage` |
+| Jest config / `jest` in `package.json` | `npx jest --coverage --coverageReporters=json-summary` |
+| pytest | `pytest --cov=<pkg> --cov-report=json` |
+| `go.mod` | `go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out` |
 | `Cargo.toml` | `cargo llvm-cov --json` |
-| `pom.xml` with JaCoCo | `mvn test jacoco:report` |
-| `go.mod` | `go test -coverprofile=coverage.out ./...` |
+| Maven + JaCoCo | `mvn test jacoco:report` |
 
-## Step 2: Analyze Coverage Report
+## 2. Rank gaps
 
-1. Run the coverage command
-2. Parse the output (JSON summary or terminal output)
-3. List files **below 80% coverage**, sorted worst-first
-4. For each under-covered file, identify:
-   - Untested functions or methods
-   - Missing branch coverage (if/else, switch, error paths)
-   - Dead code that inflates the denominator
+List files under target, worst first. For each, note the untested functions, the unexercised branches (else arms, switch cases, catch blocks, early returns), and dead code that only inflates the denominator — flag that for removal instead of testing it.
 
-## Step 3: Generate Missing Tests
+## 3. Write tests, in this order
 
-For each under-covered file, generate tests following this priority:
+1. Main success path with realistic input.
+2. Failure handling: invalid input, missing records, dependency errors and timeouts.
+3. Boundaries: empty collections, null/undefined/None, 0, -1, max values, unicode.
+4. Remaining branches.
 
-1. **Happy path** — Core functionality with valid inputs
-2. **Error handling** — Invalid inputs, missing data, network failures
-3. **Edge cases** — Empty arrays, null/undefined, boundary values (0, -1, MAX_INT)
-4. **Branch coverage** — Each if/else, switch case, ternary
+Conventions: follow the project's existing test layout, naming, assertion and mocking style; mock only true externals (network, DB, clock, filesystem); keep tests independent; name each test after the behavior it proves (`rejects_duplicate_email_with_409`).
 
-### Test Generation Rules
+Priority targets: high-branching functions, error handlers, widely shared utilities, request→response paths of API handlers.
 
-- Place tests adjacent to source: `foo.ts` → `foo.test.ts` (or project convention)
-- Use existing test patterns from the project (import style, assertion library, mocking approach)
-- Mock external dependencies (database, APIs, file system)
-- Each test should be independent — no shared mutable state between tests
-- Name tests descriptively: `test_create_user_with_duplicate_email_returns_409`
+## 4. Verify
 
-## Step 4: Verify
+Full suite green, coverage re-measured. Still short → repeat step 3 on what remains.
 
-1. Run the full test suite — all tests must pass
-2. Re-run coverage — verify improvement
-3. If still below 80%, repeat Step 3 for remaining gaps
+## 5. Report
 
-## Step 5: Report
-
-Show before/after comparison:
-
-```
-Coverage Report
-──────────────────────────────
-File                   Before  After
-src/services/auth.ts   45%     88%
-src/utils/validation.ts 32%    82%
-──────────────────────────────
-Overall:               67%     84%  PASS:
-```
-
-## Focus Areas
-
-- Functions with complex branching (high cyclomatic complexity)
-- Error handlers and catch blocks
-- Utility functions used across the codebase
-- API endpoint handlers (request → response flow)
-- Edge cases: null, undefined, empty string, empty array, zero, negative numbers
+A before/after table per touched file plus the overall figure, and any code flagged as dead.

@@ -5,14 +5,8 @@ paths:
   - "**/*.js"
   - "**/*.jsx"
 ---
-# TypeScript/JavaScript Testing
+> Builds on the shared rules in `../common/testing.md`.
 
-> This file extends [common/testing.md](../common/testing.md) with TypeScript/JavaScript specific content.
+# TypeScript testing
 
-## E2E Testing
-
-Use **Playwright** as the E2E testing framework for critical user flows.
-
-## Agent Support
-
-- **e2e-runner** - Playwright E2E testing specialist
+Playwright for critical E2E flows unless the repo standard differs. Component/unit via project runner (often Vitest/Jest).

@@ -6,53 +6,52 @@ paths:
 ---
 # FastAPI Rules
 
-Use these rules for FastAPI projects alongside the general Python rules.
+Apply with general Python rules on FastAPI codebases.
 
-## Structure
+## Layout
 
-- Put app construction in `create_app()`.
-- Keep routers thin; move persistence and business behavior into services or CRUD helpers.
-- Keep request schemas, update schemas, and response schemas separate.
-- Keep database sessions and auth in dependencies.
+- Factory: `create_app()` owns wiring.
+- Routers: HTTP only; persistence and rules live in services/CRUD helpers.
+- Split create / update / response schemas.
+- DB sessions and auth via `Depends`.
 
-## Async
+## Async boundaries
 
-- Use `async def` for endpoints that perform I/O.
-- Use async database and HTTP clients from async endpoints.
-- Do not call `requests`, sync SQLAlchemy sessions, or blocking file/network operations from async routes.
+- `async def` routes when work is I/O-bound.
+- Async DB/HTTP clients from async handlers.
+- No blocking `requests`, sync SQLAlchemy sessions, or sync disk/network in async routes.
 
-## Dependency Injection
+## Injection
 
 ```python
-@router.get("/users/{user_id}")
-async def get_user(
-    user_id: str,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+@router.get("/accounts/{account_id}")
+async def fetch_account(
+    account_id: str,
+    session: AsyncSession = Depends(get_session),
+    principal: User = Depends(current_user),
 ):
     ...
 ```
 
-Do not create `SessionLocal()` or long-lived clients inside route handlers.
+Never open `SessionLocal()` or long-lived clients inside handlers.
 
 ## Schemas
 
-- Never include passwords, password hashes, access tokens, refresh tokens, or internal auth state in response models.
-- Use `response_model` on endpoints that return application data.
-- Use field constraints instead of hand-written validation when Pydantic can express the rule.
+- Omit secrets, hashes, tokens, and internal auth fields from response models.
+- Set `response_model` on data endpoints.
+- Prefer Pydantic constraints over hand-rolled validation.
 
 ## Security
 
-- Keep CORS origins environment-specific.
-- Do not combine wildcard origins with credentialed CORS.
-- Validate JWT expiry, issuer, audience, and algorithm.
-- Rate-limit auth and write-heavy endpoints.
-- Redact credentials, cookies, authorization headers, and tokens from logs.
+- CORS origins per environment; no wildcard + credentials.
+- Validate JWT exp, iss, aud, alg.
+- Rate-limit auth and heavy writes.
+- Redact credentials and auth headers in logs.
 
-## Testing
+## Tests
 
-- Override the exact dependency used by `Depends`.
-- Clear `app.dependency_overrides` after tests.
-- Prefer async test clients for async applications.
+- Override the same callable `Depends` references.
+- Clear `app.dependency_overrides` after each test.
+- Async clients for async apps.
 
-See skill: `fastapi-patterns`.
+Depth: `tron-python` skill (FastAPI reference).

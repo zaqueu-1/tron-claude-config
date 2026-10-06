@@ -8,39 +8,26 @@ paths:
 ---
 # Perl Coding Style
 
-> This file extends [common/coding-style.md](../common/coding-style.md) with Perl-specific content.
+> Builds on the shared rules in `../common/coding-style.md`.
 
-## Standards
+## Baseline
 
-- Always `use v5.36` (enables `strict`, `warnings`, `say`, subroutine signatures)
-- Use subroutine signatures — never unpack `@_` manually
-- Prefer `say` over `print` with explicit newlines
+`use v5.36` (strict, warnings, signatures); subroutine signatures — no manual `@_` unpack; `say` over bare `print`.
 
-## Immutability
+## Objects
 
-- Use **Moo** with `is => 'ro'` and `Types::Standard` for all attributes
-- Never use blessed hashrefs directly — always use Moo/Moose accessors
-- **OO override note**: Moo `has` attributes with `builder` or `default` are acceptable for computed read-only values
+**Moo** + **Types::Standard**; `is => 'ro'` attributes; no blessed hashrefs without accessors.
 
-## Formatting
+## Format
 
-Use **perltidy** with these settings:
+**perltidy** (`-i=4`, `-l=100`, `-ce`, `-bar`).
 
-```
--i=4    # 4-space indent
--l=100  # 100 char line length
--ce     # cuddled else
--bar    # opening brace always right
-```
+## Lint
 
-## Linting
-
-Use **perlcritic** at severity 3 with themes: `core`, `pbp`, `security`.
+**perlcritic** severity 3, themes `core`, `pbp`, `security`:
 
 ```bash
 perlcritic --severity 3 --theme 'core || pbp || security' lib/
 ```
 
-## Reference
-
-See skill: `perl-patterns` for comprehensive modern Perl idioms and best practices.
+Depth: consult `tron-services` for service layering if the app grows beyond scripts.

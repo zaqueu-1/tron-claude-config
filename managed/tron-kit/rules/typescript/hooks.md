@@ -5,18 +5,10 @@ paths:
   - "**/*.js"
   - "**/*.jsx"
 ---
-# TypeScript/JavaScript Hooks
+> Builds on the shared rules in `../common/hooks.md`.
 
-> This file extends [common/hooks.md](../common/hooks.md) with TypeScript/JavaScript specific content.
+# TypeScript hooks
 
-## PostToolUse Hooks
+PostToolUse: Prettier, `tsc`, warn on `console.log` in touched files. Stop: scan session edits for debug logs.
 
-Configure in `~/.claude/settings.json`:
-
-- **Prettier**: Auto-format JS/TS files after edit
-- **TypeScript check**: Run `tsc` after editing `.ts`/`.tsx` files
-- **console.log warning**: Warn about `console.log` in edited files
-
-## Stop Hooks
-
-- **console.log audit**: Check all modified files for `console.log` before session ends
+Profile: `TRON_HOOK_PROFILE`, `TRON_DISABLED_HOOKS`.

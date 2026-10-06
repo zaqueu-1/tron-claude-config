@@ -7,52 +7,26 @@ paths:
 ---
 # C# Security
 
-> This file extends [common/security.md](../common/security.md) with C#-specific content.
+> Builds on the shared rules in `../common/security.md`.
 
-## Secret Management
+## Secrets
 
-- Never hardcode API keys, tokens, or connection strings in source code
-- Use environment variables, user secrets for local development, and a secret manager in production
-- Keep `appsettings.*.json` free of real credentials
+Configuration, user secrets locally, vault in prod — no literals; real credentials never in committed appsettings.
 
-```csharp
-// BAD
-const string ApiKey = "sk-live-123";
+## SQL
 
-// GOOD
-var apiKey = builder.Configuration["OpenAI:ApiKey"]
-    ?? throw new InvalidOperationException("OpenAI:ApiKey is not configured.");
-```
+Parameterized ADO/Dapper/EF only; whitelist dynamic sort/filter fields.
 
-## SQL Injection Prevention
+## Validation
 
-- Always use parameterized queries with ADO.NET, Dapper, or EF Core
-- Never concatenate user input into SQL strings
-- Validate sort fields and filter operators before using dynamic query composition
+Validate DTOs at the edge (annotations, FluentValidation, guards).
 
-```csharp
-const string sql = "SELECT * FROM Orders WHERE CustomerId = @customerId";
-await connection.QueryAsync<Order>(sql, new { customerId });
-```
+## Auth
 
-## Input Validation
+Framework handlers and policies; never log tokens/passwords.
 
-- Validate DTOs at the application boundary
-- Use data annotations, FluentValidation, or explicit guard clauses
-- Reject invalid model state before running business logic
+## Errors
 
-## Authentication and Authorization
+Safe outward messages; structured server logs without stack/SQL/path leakage.
 
-- Prefer framework auth handlers instead of custom token parsing
-- Enforce authorization policies at endpoint or handler boundaries
-- Never log raw tokens, passwords, or PII
-
-## Error Handling
-
-- Return safe client-facing messages
-- Log detailed exceptions with structured context server-side
-- Do not expose stack traces, SQL text, or filesystem paths in API responses
-
-## References
-
-See skill: `security-review` for broader application security review checklists.
+Review: `security-review` skill / `tron-security` agent.

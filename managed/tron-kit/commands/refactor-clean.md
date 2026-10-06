@@ -1,84 +1,46 @@
 ---
-description: Safely identify and remove dead code with verification after each change.
+description: Find and remove dead code safely, verifying with the test suite after every single removal.
 ---
 
-# Refactor Clean
+# /refactor-clean
 
-Safely identify and remove dead code with test verification at every step.
+Delete what nothing uses, one verified step at a time. Cleaning and refactoring are separate passes.
 
-## Step 1: Detect Dead Code
+## 1. Find candidates
 
-Run analysis tools based on project type:
+| Stack | Tool |
+|---|---|
+| JS/TS | `npx knip` (files, exports, deps); `npx depcheck` for deps only |
+| Python | `vulture <src>` |
+| Go | `deadcode ./...` |
+| Rust | `cargo +nightly udeps` (deps); compiler `dead_code` warnings |
 
-| Tool | What It Finds | Command |
-|------|--------------|---------|
-| knip | Unused exports, files, dependencies | `npx knip` |
-| depcheck | Unused npm dependencies | `npx depcheck` |
-| ts-prune | Unused TypeScript exports | `npx ts-prune` |
-| vulture | Unused Python code | `vulture src/` |
-| deadcode | Unused Go code | `deadcode ./...` |
-| cargo-udeps | Unused Rust dependencies | `cargo +nightly udeps` |
+No tool available → search for exported symbols with zero importers (the `tron-graph` MCP `search_graph` / `trace_path` answers this faster than grep).
 
-If no tool is available, use Grep to find exports with zero imports:
-```
-# Find exports, then check if they're imported anywhere
-```
+## 2. Classify
 
-## Step 2: Categorize Findings
+| Risk | Typical items | Handling |
+|---|---|---|
+| Low | private helpers, unused test fixtures, internal functions | remove |
+| Medium | components, routes, middleware, CLI commands | first rule out dynamic loading and external callers |
+| High | entry points, config, public types, package exports | investigate; usually ask before touching |
 
-Sort findings into safety tiers:
+For medium-risk items check: dynamic `import()` / `require()` / `__import__`, names referenced as strings (routers, DI containers, config files, templates), the package's public API surface, and known downstream consumers.
 
-| Tier | Examples | Action |
-|------|----------|--------|
-| **SAFE** | Unused utilities, test helpers, internal functions | Delete with confidence |
-| **CAUTION** | Components, API routes, middleware | Verify no dynamic imports or external consumers |
-| **DANGER** | Config files, entry points, type definitions | Investigate before touching |
+## 3. Removal loop
 
-## Step 3: Safe Deletion Loop
+1. Suite green before you start (baseline).
+2. Remove one item.
+3. Rerun tests (and build/type check).
+4. Red → undo that removal with an edit and mark the item skipped. Never discard unrelated working-tree changes.
+5. Green → next item.
 
-For each SAFE item:
+## 4. Consolidate (optional, after cleaning)
 
-1. **Run full test suite** — Establish baseline (all green)
-2. **Delete the dead code** — Use Edit tool for surgical removal
-3. **Re-run test suite** — Verify nothing broke
-4. **If tests fail** — Immediately revert with `git checkout -- <file>` and skip this item
-5. **If tests pass** — Move to next item
+Merge near-identical functions, collapse duplicate type definitions, inline wrappers that add nothing, drop pass-through re-exports — each as its own verified step.
 
-## Step 4: Handle CAUTION Items
+## 5. Report
 
-Before deleting CAUTION items:
-- Search for dynamic imports: `import()`, `require()`, `__import__`
-- Search for string references: route names, component names in configs
-- Check if exported from a public package API
-- Verify no external consumers (check dependents if published)
+Counts of removed functions, files and dependencies; skipped items with the failing test; approximate lines removed; final suite status.
 
-## Step 5: Consolidate Duplicates
-
-After removing dead code, look for:
-- Near-duplicate functions (>80% similar) — merge into one
-- Redundant type definitions — consolidate
-- Wrapper functions that add no value — inline them
-- Re-exports that serve no purpose — remove indirection
-
-## Step 6: Summary
-
-Report results:
-
-```
-Dead Code Cleanup
-──────────────────────────────
-Deleted:   12 unused functions
-           3 unused files
-           5 unused dependencies
-Skipped:   2 items (tests failed)
-Saved:     ~450 lines removed
-──────────────────────────────
-All tests passing PASS:
-```
-
-## Rules
-
-- **Never delete without running tests first**
-- **One deletion at a time** — Atomic changes make rollback easy
-- **Skip if uncertain** — Better to keep dead code than break production
-- **Don't refactor while cleaning** — Separate concerns (clean first, refactor later)
+Rules: never remove without a green baseline; one removal per verification; when unsure, keep it.

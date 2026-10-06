@@ -7,33 +7,22 @@ paths:
 ---
 # PHP Testing
 
-> This file extends [common/testing.md](../common/testing.md) with PHP specific content.
+> Builds on the shared rules in `../common/testing.md`.
 
-## Framework
+## Runner
 
-Use **PHPUnit** as the default test framework. If **Pest** is configured in the project, prefer Pest for new tests and avoid mixing frameworks.
-
-## Coverage
+PHPUnit default; Pest only when the repo already standardizes on Pest — do not mix casually.
 
 ```bash
 vendor/bin/phpunit --coverage-text
-# or
-vendor/bin/pest --coverage
 ```
 
-Prefer **pcov** or **Xdebug** in CI, and keep coverage thresholds in CI rather than as tribal knowledge.
+## Organization
 
-## Test Organization
-
-- Separate fast unit tests from framework/database integration tests.
-- Use factory/builders for fixtures instead of large hand-written arrays.
-- Keep HTTP/controller tests focused on transport and validation; move business rules into service-level tests.
+Fast unit vs integration suites; factories/builders over huge arrays; service tests for rules, controller tests for transport.
 
 ## Inertia
 
-If the project uses Inertia.js, prefer `assertInertia` with `AssertableInertia` to verify component names and props instead of raw JSON assertions.
+When used, assert Inertia component/props via framework helpers — not raw JSON alone.
 
-## Reference
-
-See skill: `tdd-workflow` for the repo-wide RED -> GREEN -> REFACTOR loop.
-See skill: `laravel-tdd` for Laravel-specific testing patterns (PHPUnit and Pest).
+Loop: `tron-quality` skill; Laravel testing: `tron-php` skill.

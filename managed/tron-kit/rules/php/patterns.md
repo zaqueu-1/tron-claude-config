@@ -5,29 +5,22 @@ paths:
 ---
 # PHP Patterns
 
-> This file extends [common/patterns.md](../common/patterns.md) with PHP specific content.
+> Builds on the shared rules in `../common/patterns.md`.
 
-## Thin Controllers, Explicit Services
+## Controllers
 
-- Keep controllers focused on transport: auth, validation, serialization, status codes.
-- Move business rules into application/domain services that are easy to test without HTTP bootstrapping.
+HTTP concerns only — auth, validation, status, serialization.
 
-## DTOs and Value Objects
+## Services
 
-- Replace shape-heavy associative arrays with DTOs for requests, commands, and external API payloads.
-- Use value objects for money, identifiers, date ranges, and other constrained concepts.
+Business rules in injectable services testable without bootstrapping the full framework.
 
-## Dependency Injection
+## DTOs / values
 
-- Depend on interfaces or narrow service contracts, not framework globals.
-- Pass collaborators through constructors so services are testable without service-locator lookups.
+Typed request/response objects; value objects for money, ids, ranges.
 
 ## Boundaries
 
-- Isolate ORM models from domain decisions when the model layer is doing more than persistence.
-- Wrap third-party SDKs behind small adapters so the rest of the codebase depends on your contract, not theirs.
+Thin ORM models; adapter wrappers around third-party SDKs.
 
-## Reference
-
-See skill: `api-design` for endpoint conventions and response-shape guidance.
-See skill: `laravel-patterns` for Laravel-specific architecture guidance.
+API shape: `tron-services` skill; Laravel architecture: `tron-php` skill.

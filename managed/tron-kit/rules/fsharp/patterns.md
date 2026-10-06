@@ -5,107 +5,39 @@ paths:
 ---
 # F# Patterns
 
-> This file extends [common/patterns.md](../common/patterns.md) with F#-specific content.
+> Builds on the shared rules in `../common/patterns.md`.
 
-## Result Type for Error Handling
-
-Use `Result<'T, 'TError>` with railway-oriented programming instead of exceptions for expected failures.
+## Result railway
 
 ```fsharp
-type OrderError =
-    | InvalidCustomer of string
-    | EmptyItems
-    | ItemOutOfStock of sku: string
+type OrderProblem =
+    | BadCustomer of string
+    | NoLines
 
-let validateOrder (request: CreateOrderRequest) : Result<ValidatedOrder, OrderError> =
-    if String.IsNullOrWhiteSpace request.CustomerId then
-        Error(InvalidCustomer "CustomerId is required")
-    elif request.Items |> List.isEmpty then
-        Error EmptyItems
-    else
-        Ok { CustomerId = request.CustomerId; Items = request.Items }
+let validateDraft (req: DraftOrder) : Result<ValidOrder, OrderProblem> =
+    if String.IsNullOrWhiteSpace req.CustomerId then Error(BadCustomer "CustomerId required")
+    elif List.isEmpty req.Lines then Error NoLines
+    else Ok { CustomerId = req.CustomerId; Lines = req.Lines }
 ```
 
-## Option for Missing Values
+## Option
 
-Prefer `Option<'T>` over null. Use `Option.map`, `Option.bind`, and `Option.defaultValue` to transform.
+`Option.map` / `bind` / `defaultValue` instead of null checks.
 
-```fsharp
-let findUser (id: Guid) : User option =
-    users |> Map.tryFind id
+## Unions
 
-let getUserEmail userId =
-    findUser userId
-    |> Option.map (fun u -> u.Email)
-    |> Option.defaultValue "unknown@example.com"
-```
+Exhaustive `match` on business states (payment, fulfillment, etc.).
 
-## Discriminated Unions for Domain Modeling
+## Computation expressions
 
-Model business states explicitly. The compiler enforces exhaustive handling.
+`result { }` / custom CEs for sequential validation.
 
-```fsharp
-type PaymentState =
-    | AwaitingPayment of amount: decimal
-    | Paid of paidAt: DateTimeOffset * transactionId: string
-    | Refunded of refundedAt: DateTimeOffset * reason: string
-    | Failed of error: string
+## Modules
 
-let describePayment = function
-    | AwaitingPayment amount -> $"Awaiting payment of {amount:C}"
-    | Paid (at, txn) -> $"Paid at {at} (txn: {txn})"
-    | Refunded (at, reason) -> $"Refunded at {at}: {reason}"
-    | Failed error -> $"Payment failed: {error}"
-```
+`[<RequireQualifiedAccess>]` on domain modules; functions over classes.
 
-## Computation Expressions
+## DI
 
-Use computation expressions to simplify sequential operations that may fail.
+Record-of-functions or explicit parameters; partial application for pipelines.
 
-```fsharp
-let placeOrder request =
-    result {
-        let! validated = validateOrder request
-        let! inventory = checkInventory validated.Items
-        let! order = createOrder validated inventory
-        return order
-    }
-```
-
-## Module Organization
-
-- Group related functions in modules rather than classes
-- Use `[<RequireQualifiedAccess>]` to prevent name collisions
-- Keep modules small and focused on a single responsibility
-
-```fsharp
-[<RequireQualifiedAccess>]
-module Order =
-    let create customerId items = { Id = Guid.NewGuid(); CustomerId = customerId; Items = items; Status = Pending }
-    let confirm order = { order with Status = Confirmed(DateTimeOffset.UtcNow) }
-    let cancel reason order = { order with Status = Cancelled reason }
-```
-
-## Dependency Injection
-
-- Define dependencies as function parameters or record-of-functions
-- Use interfaces sparingly, primarily at the boundary with .NET libraries
-- Prefer partial application for injecting dependencies into pipelines
-
-```fsharp
-type OrderDeps =
-    { FindOrder: Guid -> Task<Order option>
-      SaveOrder: Order -> Task<unit>
-      SendNotification: Order -> Task<unit> }
-
-let processOrder (deps: OrderDeps) orderId =
-    task {
-        match! deps.FindOrder orderId with
-        | None -> return Error "Order not found"
-        | Some order ->
-            let confirmed = Order.confirm order
-            do! deps.SaveOrder confirmed
-            do! deps.SendNotification confirmed
-            return Ok confirmed
-    }
-```
+Depth: `tron-dotnet` skill.

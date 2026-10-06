@@ -5,36 +5,26 @@ paths:
 ---
 # PHP Coding Style
 
-> This file extends [common/coding-style.md](../common/coding-style.md) with PHP specific content.
+> Builds on the shared rules in `../common/coding-style.md`.
 
-## Standards
+## Baseline
 
-- Follow **PSR-12** formatting and naming conventions.
-- Prefer `declare(strict_types=1);` in application code.
-- Use scalar type hints, return types, and typed properties everywhere new code permits.
+PSR-12; `declare(strict_types=1);` in new app code; scalar/return/property types everywhere practical.
 
-## Immutability
+## Data
 
-- Prefer immutable DTOs and value objects for data crossing service boundaries.
-- Use `readonly` properties or immutable constructors for request/response payloads where possible.
-- Keep arrays for simple maps; promote business-critical structures into explicit classes.
+Immutable DTOs/value objects at boundaries; `readonly` where supported; promote repeated array shapes to classes.
 
-## Formatting
+## Tooling
 
-- Use **PHP-CS-Fixer** or **Laravel Pint** for formatting.
-- Use **PHPStan** or **Psalm** for static analysis.
-- Keep Composer scripts checked in so the same commands run locally and in CI.
+PHP-CS-Fixer or Laravel Pint; PHPStan/Psalm; Composer scripts identical locally and in CI.
 
 ## Imports
 
-- Add `use` statements for all referenced classes, interfaces, and traits.
-- Avoid relying on the global namespace unless the project explicitly prefers fully qualified names.
+Explicit `use` statements; avoid global namespace unless the project standard says otherwise.
 
-## Error Handling
+## Errors
 
-- Throw exceptions for exceptional states; avoid returning `false`/`null` as hidden error channels in new code.
-- Convert framework/request input into validated DTOs before it reaches domain logic.
+Exceptions for abnormal flow; validate HTTP input into DTOs before domain code.
 
-## Reference
-
-See skill: `backend-patterns` for broader service/repository layering guidance.
+Layering: `tron-services` skill; Laravel specifics: `tron-php` skill.

@@ -2,55 +2,28 @@
 paths:
   - "**/*.vue"
 ---
+> Builds on the shared rules in `../common/patterns.md`.
 
-# Vue Patterns
-
-> This file extends [common/patterns.md](../common/patterns.md) with Vue specific content.
+# Vue patterns
 
 ## Composables
 
-- The composable (`useXxx`) is the reusable-logic unit. In Feature-Sliced Design it lives in the slice `model` segment.
-- Accept `MaybeRefOrGetter<T>` inputs and normalize with `toValue`, so callers can pass a ref, a getter, or a raw value.
-- Return `toRefs(reactive(...))` so consumers can destructure without losing reactivity.
-- A composable that uses lifecycle hooks or `provide` / `inject` must be called inside a component `setup`, not lazily or conditionally.
+Export `useFeature()` accepting `MaybeRefOrGetter` inputs (`toValue` inside). Return `toRefs(reactiveState)` so callers can destructure safely.
 
-## Props, Emits, v-model
+If the composable registers lifecycle hooks or `provide`, call it synchronously from `setup` only.
 
-- Type-based `defineProps<Props>()` and tuple-form `defineEmits<{ change: [id: number] }>()`.
-- `defineModel<T>('name', { default })` for two-way binding. It compiles to a prop plus an `update:*` emit.
+## State split
 
-## Provide / Inject
+Pinia (client/domain) vs `@tanstack/vue-query` (server cache). Keep fetch functions + `queryOptions` factories in an `api/` layer.
 
-- Use `provide` / `inject` for tree-scoped data without prop drilling.
-- Type-safe collision-free keys: `const key = Symbol() as InjectionKey<T>`.
-- The provider owns mutations. Expose a `readonly` ref plus an explicit updater function, never a raw mutable ref.
+Query keys must include reactive refs/computed objects — **not** `.value` snapshots — or refetch breaks.
 
-## Pinia (FSD model segment)
+## Router
 
-- Prefer setup stores: `ref` is state, `computed` is getters, `function` is actions.
-- Setup stores do not get `$reset` for free. Define your own.
-- Use `storeToRefs` for state and getters. Destructure actions directly off the store.
-- Never persist raw auth tokens to `localStorage`.
+Lazy `import()` route components. Global guard checks `meta.requiresAuth`. Watch `() => route.params.id` instead of the whole route object.
 
-## vue-router
+## Provide / inject
 
-- Lazy-load route components with dynamic `import()`.
-- A global `beforeEach` auth gate keyed on `meta.requiresAuth`. Guards return `false` (cancel), a route location (redirect), or `undefined` / `true` (continue).
-- Watch `() => route.params.id`, not the whole `route` object.
+Use `Symbol` keys typed with `InjectionKey<T>`. Expose readonly state + explicit mutators.
 
-## vue-query (server cache)
-
-- `@tanstack/vue-query` owns server-cache state. Pinia owns client state.
-- Put request functions plus `queryOptions` factories in the FSD `api` segment.
-- Critical: put the ref or computed ITSELF in the query key, never `.value`. Passing `.value` freezes the key and kills reactive refetch.
-
-```ts
-useQuery({ queryKey: ['auction', id], queryFn: () => fetchAuction(toValue(id)) })
-// after a mutation
-queryClient.invalidateQueries({ queryKey: ['auction', id] })
-```
-
-## Reference
-
-- ECC skills: `frontend-patterns`, `vite-patterns`.
-- Docs: <https://pinia.vuejs.org/> · <https://router.vuejs.org/> · <https://tanstack.com/query/latest/docs/framework/vue/overview> · <https://vuejs.org/guide/reusability/composables.html>
+**tron-vue** skill for FSD/Nuxt overlap.

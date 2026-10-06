@@ -6,12 +6,12 @@ paths:
 ---
 # Kotlin Hooks
 
-> This file extends [common/hooks.md](../common/hooks.md) with Kotlin-specific content.
+> Builds on the shared rules in `../common/hooks.md`.
 
-## PostToolUse Hooks
+`TRON_HOOK_PROFILE` / `TRON_DISABLED_HOOKS` control which hooks run.
 
-Configure in `~/.claude/settings.json`:
+## PostToolUse
 
-- **ktfmt/ktlint**: Auto-format `.kt` and `.kts` files after edit
-- **detekt**: Run static analysis after editing Kotlin files
-- **./gradlew build**: Verify compilation after changes
+- **ktfmt** or **ktlint** on `.kt` / `.kts`
+- **detekt** when configured
+- **`./gradlew build`** on compile-risky edits (strict profile)

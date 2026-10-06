@@ -5,24 +5,10 @@ paths:
   - "**/*.js"
   - "**/*.jsx"
 ---
-# TypeScript/JavaScript Security
+> Builds on the shared rules in `../common/security.md`.
 
-> This file extends [common/security.md](../common/security.md) with TypeScript/JavaScript specific content.
+# TypeScript security
 
-## Secret Management
+Read secrets from `process.env`; throw at startup if missing. Never embed keys in source.
 
-```typescript
-// NEVER: Hardcoded secrets
-const apiKey = "sk-proj-xxxxx"
-
-// ALWAYS: Environment variables
-const apiKey = process.env.API_KEY
-
-if (!apiKey) {
-  throw new Error('API_KEY not configured')
-}
-```
-
-## Agent Support
-
-- Use **security-reviewer** skill for comprehensive security audits
+Use **tron-security** / `security-review` for audits.

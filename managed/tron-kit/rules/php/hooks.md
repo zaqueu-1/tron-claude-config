@@ -8,17 +8,17 @@ paths:
 ---
 # PHP Hooks
 
-> This file extends [common/hooks.md](../common/hooks.md) with PHP specific content.
+> Builds on the shared rules in `../common/hooks.md`.
 
-## PostToolUse Hooks
+`TRON_HOOK_PROFILE` / `TRON_DISABLED_HOOKS`.
 
-Configure in `~/.claude/settings.json`:
+## PostToolUse
 
-- **Pint / PHP-CS-Fixer**: Auto-format edited `.php` files.
-- **PHPStan / Psalm**: Run static analysis after PHP edits in typed codebases.
-- **PHPUnit / Pest**: Run targeted tests for touched files or modules when edits affect behavior.
+- **Pint** / PHP-CS-Fixer on edited PHP
+- **PHPStan** / **Psalm** when configured
+- Targeted **PHPUnit** / **Pest** when behavior changes
 
 ## Warnings
 
-- Warn on `var_dump`, `dd`, `dump`, or `die()` left in edited files.
-- Warn when edited PHP files add raw SQL or disable CSRF/session protections.
+- `var_dump`, `dd`, `dump`, `die()` left in edits
+- Raw SQL strings or disabled CSRF/session guards

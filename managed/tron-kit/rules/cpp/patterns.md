@@ -10,42 +10,22 @@ paths:
 ---
 # C++ Patterns
 
-> This file extends [common/patterns.md](../common/patterns.md) with C++ specific content.
+> Builds on the shared rules in `../common/patterns.md`.
 
-## RAII (Resource Acquisition Is Initialization)
+## RAII handles
 
-Tie resource lifetime to object lifetime:
+Acquire in ctor, release in dtor; deleted copy/move when ownership is unique.
 
-```cpp
-class FileHandle {
-public:
-    explicit FileHandle(const std::string& path) : file_(std::fopen(path.c_str(), "r")) {}
-    ~FileHandle() { if (file_) std::fclose(file_); }
-    FileHandle(const FileHandle&) = delete;
-    FileHandle& operator=(const FileHandle&) = delete;
-private:
-    std::FILE* file_;
-};
-```
+## Rule of Zero / Five
 
-## Rule of Five/Zero
+Prefer zero special members; if you customize one, define all five.
 
-- **Rule of Zero**: Prefer classes that need no custom destructor, copy/move constructors, or assignments
-- **Rule of Five**: If you define any of destructor/copy-ctor/copy-assign/move-ctor/move-assign, define all five
+## Values
 
-## Value Semantics
+Small types by value; large by `const&`; return by value (RVO); move sinks.
 
-- Pass small/trivial types by value
-- Pass large types by `const&`
-- Return by value (rely on RVO/NRVO)
-- Use move semantics for sink parameters
+## Errors
 
-## Error Handling
+Exceptions for exceptional paths; `optional` for absence; `expected` (C++23) or result types for expected failures.
 
-- Use exceptions for exceptional conditions
-- Use `std::optional` for values that may not exist
-- Use `std::expected` (C++23) or result types for expected failures
-
-## Reference
-
-See skill: `cpp-coding-standards` for comprehensive C++ patterns and anti-patterns.
+Depth: `tron-cpp` skill.

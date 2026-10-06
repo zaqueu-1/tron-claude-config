@@ -5,29 +5,18 @@ paths:
 ---
 # Swift Security
 
-> This file extends [common/security.md](../common/security.md) with Swift specific content.
+> Builds on the shared rules in `../common/security.md`.
 
-## Secret Management
+## Secrets
 
-- Use **Keychain Services** for sensitive data (tokens, passwords, keys) — never `UserDefaults`
-- Use environment variables or `.xcconfig` files for build-time secrets
-- Never hardcode secrets in source — decompilation tools extract them trivially
+Keychain for tokens/passwords — not UserDefaults; build-time via `.xcconfig`/env; no literals in repo.
 
-```swift
-let apiKey = ProcessInfo.processInfo.environment["API_KEY"]
-guard let apiKey, !apiKey.isEmpty else {
-    fatalError("API_KEY not configured")
-}
-```
+## Transport
 
-## Transport Security
+Keep ATS enabled; pin certs for high-value endpoints; validate server trust.
 
-- App Transport Security (ATS) is enforced by default — do not disable it
-- Use certificate pinning for critical endpoints
-- Validate all server certificates
+## Input
 
-## Input Validation
+Sanitize before render; validate `URL` and deep links; treat API/pasteboard data as untrusted until validated.
 
-- Sanitize all user input before display to prevent injection
-- Use `URL(string:)` with validation rather than force-unwrapping
-- Validate data from external sources (APIs, deep links, pasteboard) before processing
+Review: `security-review` skill / `tron-security` agent.

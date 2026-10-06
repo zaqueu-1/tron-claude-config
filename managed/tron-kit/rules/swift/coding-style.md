@@ -5,43 +5,26 @@ paths:
 ---
 # Swift Coding Style
 
-> This file extends [common/coding-style.md](../common/coding-style.md) with Swift specific content.
+> Builds on the shared rules in `../common/coding-style.md`.
 
-## Formatting
+## Format
 
-- **SwiftFormat** for auto-formatting, **SwiftLint** for style enforcement
-- `swift-format` is bundled with Xcode 16+ as an alternative
+SwiftFormat + SwiftLint (or Xcode 16+ `swift-format` if that is the repo standard).
 
-## Immutability
+## Values
 
-- Prefer `let` over `var` — define everything as `let` and only change to `var` if the compiler requires it
-- Use `struct` with value semantics by default; use `class` only when identity or reference semantics are needed
+Prefer `let`; structs by default; classes only for identity/reference semantics.
 
 ## Naming
 
-Follow [Apple API Design Guidelines](https://www.swift.org/documentation/api-design-guidelines/):
+Apple API Design Guidelines — clarity at call site; omit redundant type words; `static let` for constants.
 
-- Clarity at the point of use — omit needless words
-- Name methods and properties for their roles, not their types
-- Use `static let` for constants over global constants
+## Errors
 
-## Error Handling
-
-Use typed throws (Swift 6+) and pattern matching:
-
-```swift
-func load(id: String) throws(LoadError) -> Item {
-    guard let data = try? read(from: path) else {
-        throw .fileNotFound(id)
-    }
-    return try decode(data)
-}
-```
+Typed throws (Swift 6+) where applicable; structured `LoadError`-style enums.
 
 ## Concurrency
 
-Enable Swift 6 strict concurrency checking. Prefer:
+Strict concurrency checking; `Sendable` values across actors; actors for shared mutation; structured concurrency over detached tasks.
 
-- `Sendable` value types for data crossing isolation boundaries
-- Actors for shared mutable state
-- Structured concurrency (`async let`, `TaskGroup`) over unstructured `Task {}`
+Depth: `tron-swift` skill.

@@ -5,6 +5,7 @@
 
 'use strict';
 
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -32,6 +33,13 @@ const MANAGED_FILES = [
   ['managed/claude/hooks/lib/pr-create-gate.cjs',      '.claude/hooks/lib/pr-create-gate.cjs'],
   ['managed/setup-claude-harness.sh',                 'scripts/setup-claude-harness.sh'],
   ['managed/AGENTS.md',                               'AGENTS.md'],
+];
+
+// Consumer files older versions installed that the harness no longer uses.
+const RETIRED_CONSUMER_FILES = [
+  '.claude/hooks/lib/pr-template-validate.js',
+  '.claude/hooks/lib/validate-pr-body.js',
+  '.claude/hooks/lib/pr-create-gate.js',
 ];
 
 // Each entry: [src relative to PACKAGE_ROOT, hook name]. The destination
@@ -77,6 +85,98 @@ function copyFile(src, destRel) {
   if (destAbs.endsWith('.sh')) {
     fs.chmodSync(destAbs, 0o755);
   }
+}
+
+function removeRetiredConsumerFiles() {
+  for (const rel of RETIRED_CONSUMER_FILES) {
+    const target = path.join(CONSUMER_ROOT, rel);
+    if (!fs.existsSync(target)) continue;
+    if (DRY) {
+      log(`DRY: would remove retired ${rel}`);
+      continue;
+    }
+    fs.rmSync(target, { force: true });
+    log(`retired → removed ${rel}`);
+  }
+}
+
+// ── Machine-level file ledger ────────────────────────────────────────────────
+// Every single file the package writes under $HOME is recorded with the hash of what was written.
+// On upgrade, files the previous version wrote but this one no longer ships are deleted —
+// unless the user edited them since, in which case they are kept and reported.
+
+const LEDGER_PATH = path.join(os.homedir(), '.claude', 'tron', 'installed.json');
+const ledger = { previous: readLedger(), current: {}, complete: true };
+
+function readLedger() {
+  try {
+    return JSON.parse(fs.readFileSync(LEDGER_PATH, 'utf8')).files || {};
+  } catch {
+    return {};
+  }
+}
+
+function sha256(content) {
+  return crypto.createHash('sha256').update(content).digest('hex');
+}
+
+function homeRel(abs) {
+  return path.relative(os.homedir(), abs).split(path.sep).join('/');
+}
+
+// userEditable: older versions never overwrote the file, so content that differs from what the
+// package last wrote may hold the user's edits — it is saved to <file>.bak before syncing.
+function syncHomeFile(srcAbs, destAbs, { userEditable = false } = {}) {
+  const rel = homeRel(destAbs);
+  if (DRY) {
+    log(`DRY: would sync ~/${rel}`);
+    return;
+  }
+  try {
+    const content = fs.readFileSync(srcAbs);
+    const hash = sha256(content);
+    if (userEditable && fs.existsSync(destAbs)) {
+      const existing = sha256(fs.readFileSync(destAbs));
+      if (existing !== hash && existing !== ledger.previous[rel]) {
+        fs.copyFileSync(destAbs, `${destAbs}.bak`);
+        log(`your edits to ~/${rel} saved → ~/${rel}.bak`);
+      }
+    }
+    fs.mkdirSync(path.dirname(destAbs), { recursive: true });
+    fs.writeFileSync(destAbs, content);
+    ledger.current[rel] = hash;
+  } catch (err) {
+    ledger.complete = false;
+    log(`WARN: ~/${rel} not synced: ${err.message}`);
+  }
+}
+
+function pruneStaleHomeFiles() {
+  // A partial run would make every unsynced file look retired; keep the old ledger instead.
+  if (!ledger.complete) {
+    log('WARN: some files failed to sync — stale-file cleanup skipped until the next clean install');
+    ledger.current = { ...ledger.previous, ...ledger.current };
+  } else {
+    for (const [rel, hash] of Object.entries(ledger.previous)) {
+      if (rel in ledger.current) continue;
+      const target = path.join(os.homedir(), rel);
+      if (!fs.existsSync(target)) continue;
+      if (sha256(fs.readFileSync(target)) !== hash) {
+        log(`kept ~/${rel} (edited since install; no longer managed)`);
+        continue;
+      }
+      if (DRY) {
+        log(`DRY: would remove retired ~/${rel}`);
+        continue;
+      }
+      fs.rmSync(target, { force: true });
+      log(`retired → removed ~/${rel}`);
+    }
+  }
+  if (DRY) return;
+  fs.mkdirSync(path.dirname(LEDGER_PATH), { recursive: true });
+  const version = JSON.parse(fs.readFileSync(path.join(PACKAGE_ROOT, 'package.json'), 'utf8')).version;
+  fs.writeFileSync(LEDGER_PATH, `${JSON.stringify({ version, files: ledger.current }, null, 2)}\n`, 'utf8');
 }
 
 function copyTree(srcAbs, destAbs, { exclude = ['__pycache__', '.DS_Store'] } = {}) {
@@ -314,19 +414,10 @@ function removeLegacyDesignSkills() {
 }
 
 function installFrontendSkillsRule() {
-  const dest = path.join(os.homedir(), '.cursor', 'rules', 'frontend-skills.mdc');
-  const src = path.join(PACKAGE_ROOT, 'managed', 'cursor', 'rules', 'frontend-skills.mdc');
-  if (!fs.existsSync(src)) {
-    log('WARN: frontend-skills.mdc not found in managed/');
-    return;
-  }
-  if (DRY) {
-    log('DRY: would sync frontend-skills.mdc → ~/.cursor/rules/');
-    return;
-  }
-  fs.mkdirSync(path.dirname(dest), { recursive: true });
-  fs.copyFileSync(src, dest);
-  log('frontend-skills rule synced → ~/.cursor/rules/frontend-skills.mdc');
+  syncHomeFile(
+    path.join(PACKAGE_ROOT, 'managed', 'cursor', 'rules', 'frontend-skills.mdc'),
+    path.join(os.homedir(), '.cursor', 'rules', 'frontend-skills.mdc'),
+  );
 }
 
 function git(...args) {
@@ -449,25 +540,19 @@ function installTronGraph() {
   return result;
 }
 
-// Always overwrite — terse mode and engineering principles are harness-enforced, not optional.
-const CORE_RULES = ['terse.md', 'engineering-principles.md'];
+// Always overwrite — these rules are harness-enforced, not optional.
+const GLOBAL_RULES = ['terse.md', 'engineering-principles.md', 'harness-enforcement.md', 'agent-isolation.md', 'harness-patterns.md'];
 const RETIRED_RULE_PATHS = [
   ['.claude', 'rules', 'caveman.md'],
   ['.claude', 'skills', 'andrej-karpathy-skills'],
 ];
 
-function installCoreRules() {
+function installGlobalRules() {
   const home = os.homedir();
-  for (const name of CORE_RULES) {
-    const dest = path.join(home, '.claude', 'rules', name);
-    if (DRY) {
-      log(`DRY: would enforce rule → ~/.claude/rules/${name}`);
-      continue;
-    }
-    fs.mkdirSync(path.dirname(dest), { recursive: true });
-    fs.copyFileSync(path.join(PACKAGE_ROOT, 'managed', 'claude', 'rules', name), dest);
-    log(`rule enforced → ~/.claude/rules/${name}`);
+  for (const name of GLOBAL_RULES) {
+    syncHomeFile(path.join(PACKAGE_ROOT, 'managed', 'claude', 'rules', name), path.join(home, '.claude', 'rules', name));
   }
+  log(`rules ${DRY ? 'would be ' : ''}synced → ~/.claude/rules/{${GLOBAL_RULES.join(',')}}`);
   for (const parts of RETIRED_RULE_PATHS) {
     const target = path.join(home, ...parts);
     if (!fs.existsSync(target)) continue;
@@ -479,153 +564,45 @@ function installCoreRules() {
   }
 }
 
-function installCommitChangesSkill() {
-  const dest = path.join(os.homedir(), '.claude', 'commands', 'commit-changes.md');
-  if (fs.existsSync(dest)) return;
-  const src = path.join(PACKAGE_ROOT, 'managed', 'skills', 'commit-changes', 'SKILL.md');
-  fs.mkdirSync(path.dirname(dest), { recursive: true });
-  fs.copyFileSync(src, dest);
-  log('commit-changes skill installed → ~/.claude/commands/commit-changes.md');
-}
+// make-pr was always synced; the others were install-if-missing, so edits are backed up once.
+const COMMANDS = [
+  ['make-pr', { userEditable: false }],
+  ['commit-changes', { userEditable: true }],
+  ['code-review', { userEditable: true }],
+  ['security-review', { userEditable: true }],
+];
 
-function installCodeReviewSkill() {
-  const dest = path.join(os.homedir(), '.claude', 'commands', 'code-review.md');
-  if (fs.existsSync(dest)) return;
-  const src = path.join(PACKAGE_ROOT, 'managed', 'skills', 'code-review', 'SKILL.md');
-  fs.mkdirSync(path.dirname(dest), { recursive: true });
-  fs.copyFileSync(src, dest);
-  log('code-review skill installed → ~/.claude/commands/code-review.md');
-}
-
-function installSecurityReviewSkill() {
-  const dest = path.join(os.homedir(), '.claude', 'commands', 'security-review.md');
-  if (fs.existsSync(dest)) return;
-  const src = path.join(PACKAGE_ROOT, 'managed', 'skills', 'security-review', 'SKILL.md');
-  fs.mkdirSync(path.dirname(dest), { recursive: true });
-  fs.copyFileSync(src, dest);
-  log('security-review skill installed → ~/.claude/commands/security-review.md');
-}
-
-function installMakePrSkill() {
-  // Always sync — enforcement contract; stale English "Summary" skills were bypassing the PT-BR template.
-  const dest = path.join(os.homedir(), '.claude', 'commands', 'make-pr.md');
-  const src = path.join(PACKAGE_ROOT, 'managed', 'skills', 'make-pr', 'SKILL.md');
-  fs.mkdirSync(path.dirname(dest), { recursive: true });
-  fs.copyFileSync(src, dest);
-  log('make-pr skill synced → ~/.claude/commands/make-pr.md');
-}
-
-function installSessionHandoffSkill() {
-  // Always sync the code files so fixes reach everyone; never touch config.json,
-  // which holds each person's sessions vault path.
-  const destDir = path.join(os.homedir(), '.claude', 'skills', 'session-handoff');
-  const srcDir = path.join(PACKAGE_ROOT, 'managed', 'skills', 'session-handoff');
-  const existing = path.join(destDir, 'SKILL.md');
-  if (fs.existsSync(existing) && !/^name: session-handoff\r?$/m.test(fs.readFileSync(existing, 'utf8'))) {
-    log('WARN: ~/.claude/skills/session-handoff/ holds a different skill — left untouched');
-    return;
+function installCommands() {
+  for (const [name, opts] of COMMANDS) {
+    syncHomeFile(
+      path.join(PACKAGE_ROOT, 'managed', 'skills', name, 'SKILL.md'),
+      path.join(os.homedir(), '.claude', 'commands', `${name}.md`),
+      opts,
+    );
   }
-  if (DRY) {
-    log('DRY: would sync session-handoff skill → ~/.claude/skills/session-handoff/');
-    return;
-  }
-  try {
-    fs.mkdirSync(destDir, { recursive: true });
-    for (const file of ['SKILL.md', 'config.example.json']) {
-      const src = path.join(srcDir, file);
-      if (fs.existsSync(src)) {
-        fs.copyFileSync(src, path.join(destDir, file));
-      }
+  log(`commands ${DRY ? 'would be ' : ''}synced → ~/.claude/commands/{${COMMANDS.map(([n]) => n).join(',')}}.md`);
+}
+
+// Code files only — config.json and data/ hold each person's settings and cache and are never touched.
+const HOME_SKILLS = {
+  'session-handoff': ['SKILL.md', 'config.example.json'],
+  'issue-board': ['SKILL.md', 'board.mjs', 'render.py', 'config.example.json'],
+  doc: ['SKILL.md', 'doc.mjs'],
+};
+
+function installHomeSkills() {
+  for (const [name, files] of Object.entries(HOME_SKILLS)) {
+    const destDir = path.join(os.homedir(), '.claude', 'skills', name);
+    const existing = path.join(destDir, 'SKILL.md');
+    if (fs.existsSync(existing) && !new RegExp(`^name: ${name}\\r?$`, 'm').test(fs.readFileSync(existing, 'utf8'))) {
+      log(`WARN: ~/.claude/skills/${name}/ holds a different skill — left untouched`);
+      continue;
     }
-    log('session-handoff skill synced → ~/.claude/skills/session-handoff/ (vault set in config.json on first use)');
-  } catch (err) {
-    log(`WARN: session-handoff skill not synced: ${err.message}`);
-  }
-}
-
-function installSessionHandoffCommand() {
-  // Always sync — `/session-handoff` replaces legacy `/save-session` and `/retomar`.
-  const dest = path.join(os.homedir(), '.claude', 'commands', 'session-handoff.md');
-  const src = path.join(PACKAGE_ROOT, 'managed', 'skills', 'session-handoff', 'SKILL.md');
-  if (DRY) {
-    log('DRY: would sync session-handoff command → ~/.claude/commands/session-handoff.md');
-    return;
-  }
-  fs.mkdirSync(path.dirname(dest), { recursive: true });
-  fs.copyFileSync(src, dest);
-  log('session-handoff command synced → ~/.claude/commands/session-handoff.md');
-}
-
-function installIssueBoardSkill() {
-  // Always sync the code files so fixes reach everyone; never touch config.json or data/,
-  // which hold each person's board and cached classification.
-  const destDir = path.join(os.homedir(), '.claude', 'skills', 'issue-board');
-  const srcDir = path.join(PACKAGE_ROOT, 'managed', 'skills', 'issue-board');
-  const existing = path.join(destDir, 'SKILL.md');
-  if (fs.existsSync(existing) && !/^name: issue-board\r?$/m.test(fs.readFileSync(existing, 'utf8'))) {
-    log('WARN: ~/.claude/skills/issue-board/ holds a different skill — left untouched');
-    return;
-  }
-  if (DRY) {
-    log('DRY: would sync issue-board skill → ~/.claude/skills/issue-board/');
-    return;
-  }
-  try {
-    fs.mkdirSync(destDir, { recursive: true });
-    for (const file of ['SKILL.md', 'board.mjs', 'render.py', 'config.example.json']) {
-      fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
+    for (const file of files) {
+      syncHomeFile(path.join(PACKAGE_ROOT, 'managed', 'skills', name, file), path.join(destDir, file));
     }
-    log('issue-board skill synced → ~/.claude/skills/issue-board/ (board is set in config.json on first use)');
-  } catch (err) {
-    // Optional tool: a copy failure (locked file on Windows) must not break npm install.
-    log(`WARN: issue-board skill not synced: ${err.message}`);
   }
-}
-
-function installDocSkill() {
-  // Always sync the code files so fixes reach everyone. The skill keeps no per-person state.
-  const destDir = path.join(os.homedir(), '.claude', 'skills', 'doc');
-  const srcDir = path.join(PACKAGE_ROOT, 'managed', 'skills', 'doc');
-  const existing = path.join(destDir, 'SKILL.md');
-  if (fs.existsSync(existing) && !/^name: doc\r?$/m.test(fs.readFileSync(existing, 'utf8'))) {
-    log('WARN: ~/.claude/skills/doc/ holds a different skill — left untouched');
-    return;
-  }
-  if (DRY) {
-    log('DRY: would sync doc skill → ~/.claude/skills/doc/');
-    return;
-  }
-  try {
-    fs.mkdirSync(destDir, { recursive: true });
-    for (const file of ['SKILL.md', 'doc.mjs']) {
-      fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
-    }
-    log('doc skill synced → ~/.claude/skills/doc/');
-  } catch (err) {
-    // Optional tool: a copy failure (locked file on Windows) must not break npm install.
-    log(`WARN: doc skill not synced: ${err.message}`);
-  }
-}
-
-function installEnforcementRule() {
-  const dest = path.join(os.homedir(), '.claude', 'rules', 'harness-enforcement.md');
-  const src = path.join(PACKAGE_ROOT, 'managed', 'claude', 'rules', 'harness-enforcement.md');
-  fs.mkdirSync(path.dirname(dest), { recursive: true });
-  fs.copyFileSync(src, dest);
-}
-
-function installAgentIsolationRule() {
-  const dest = path.join(os.homedir(), '.claude', 'rules', 'agent-isolation.md');
-  const src = path.join(PACKAGE_ROOT, 'managed', 'claude', 'rules', 'agent-isolation.md');
-  fs.mkdirSync(path.dirname(dest), { recursive: true });
-  fs.copyFileSync(src, dest);
-}
-
-function installHarnessPatterns() {
-  const dest = path.join(os.homedir(), '.claude', 'rules', 'harness-patterns.md');
-  const src = path.join(PACKAGE_ROOT, 'managed', 'claude', 'rules', 'harness-patterns.md');
-  fs.mkdirSync(path.dirname(dest), { recursive: true });
-  fs.copyFileSync(src, dest);
+  log(`skills ${DRY ? 'would be ' : ''}synced → ~/.claude/skills/{${Object.keys(HOME_SKILLS).join(',')}}`);
 }
 
 function installTronKit() {
@@ -653,6 +630,7 @@ if (isConsumerRepo && !isSelfInstall) {
   for (const [src, dest] of MANAGED_FILES) {
     copyFile(src, dest);
   }
+  removeRetiredConsumerFiles();
 
   if (!IS_CI) {
     installTronRules(CONSUMER_ROOT, { dryRun: DRY, silent: DRY });
@@ -672,12 +650,10 @@ if (!IS_CI) {
   } catch (err) {
     log(`WARN: tron-docs not registered: ${err.message}`);
   }
-  installCoreRules();
-  installCommitChangesSkill();
-  installCodeReviewSkill();
-  installSecurityReviewSkill();
-  installMakePrSkill();
-  installSessionHandoffSkill();
+  installGlobalRules();
+  installCommands();
+  installHomeSkills();
+  installFrontendSkillsRule();
   installTronDesignStack();
   installTronKit();
   try {
@@ -687,10 +663,5 @@ if (!IS_CI) {
   }
   installTronDesignFallback();
   removeLegacyDesignSkills();
-  installIssueBoardSkill();
-  installFrontendSkillsRule();
-  installEnforcementRule();
-  installAgentIsolationRule();
-  installHarnessPatterns();
-  installDocSkill();
+  pruneStaleHomeFiles();
 }

@@ -5,15 +5,15 @@ paths:
 ---
 # Python Hooks
 
-> This file extends [common/hooks.md](../common/hooks.md) with Python specific content.
+> Builds on the shared rules in `../common/hooks.md`.
 
-## PostToolUse Hooks
+Hook intensity: `TRON_HOOK_PROFILE` (`minimal` | `standard` | `strict`). Skip ids via `TRON_DISABLED_HOOKS` (comma-separated).
 
-Configure in `~/.claude/settings.json`:
+## PostToolUse (when profile allows)
 
-- **black/ruff**: Auto-format `.py` files after edit
-- **mypy/pyright**: Run type checking after editing `.py` files
+- **black** / **ruff** on edited `.py`
+- **mypy** / **pyright** after type-sensitive edits
 
 ## Warnings
 
-- Warn about `print()` statements in edited files (use `logging` module instead)
+- Flag new `print()` in application code — use `logging`.

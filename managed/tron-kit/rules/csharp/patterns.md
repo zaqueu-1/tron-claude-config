@@ -5,46 +5,24 @@ paths:
 ---
 # C# Patterns
 
-> This file extends [common/patterns.md](../common/patterns.md) with C#-specific content.
+> Builds on the shared rules in `../common/patterns.md`.
 
-## API Response Pattern
-
-```csharp
-public sealed record ApiResponse<T>(
-    bool Success,
-    T? Data = default,
-    string? Error = null,
-    object? Meta = null);
-```
-
-## Repository Pattern
+## API wrapper
 
 ```csharp
-public interface IRepository<T>
-{
-    Task<IReadOnlyList<T>> FindAllAsync(CancellationToken cancellationToken);
-    Task<T?> FindByIdAsync(Guid id, CancellationToken cancellationToken);
-    Task<T> CreateAsync(T entity, CancellationToken cancellationToken);
-    Task<T> UpdateAsync(T entity, CancellationToken cancellationToken);
-    Task DeleteAsync(Guid id, CancellationToken cancellationToken);
-}
+public sealed record ApiResult<T>(bool Ok, T? Payload = default, string? Error = null);
 ```
 
-## Options Pattern
+## Repository
 
-Use strongly typed options for config instead of reading raw strings throughout the codebase.
+Async CRUD interface with `CancellationToken` on each method.
 
-```csharp
-public sealed class PaymentsOptions
-{
-    public const string SectionName = "Payments";
-    public required string BaseUrl { get; init; }
-    public required string ApiKeySecretName { get; init; }
-}
-```
+## Options
 
-## Dependency Injection
+Strongly typed `IOptions<T>` sections — no magic string keys scattered in code.
 
-- Depend on interfaces at service boundaries
-- Keep constructors focused; if a service needs too many dependencies, split responsibilities
-- Register lifetimes intentionally: singleton for stateless/shared services, scoped for request data, transient for lightweight pure workers
+## DI lifetimes
+
+Singleton for stateless/shared infra; scoped per request; transient for cheap workers; split god-services instead of huge constructors.
+
+Depth: `tron-dotnet` skill.
