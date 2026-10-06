@@ -8,7 +8,8 @@
     "ensure:tron-graph": "node scripts/lib/ensure-tron-graph.js",
     "sync:quanthub": "bash scripts/sync-quanthub-fork.sh",
     "sync:tron-kit": "node upstream/sync-tron-kit.js",
-    "upstream:watch": "node upstream/watch.js"
+    "upstream:watch": "node upstream/watch.js",
+    "upstream:originality": "node upstream/originality.js"
   },
   "engines": {
     "node": ">=18.0.0"

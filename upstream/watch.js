@@ -7,10 +7,9 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execFileSync } = require('child_process');
 const { UPSTREAM_ROOT, loadSources, getSource, setSourceRef } = require('./lib/sources');
+const { git, mirror } = require('./lib/git');
 
-const CACHE_ROOT = path.join(UPSTREAM_ROOT, '.cache');
 const REPORTS_ROOT = path.join(UPSTREAM_ROOT, 'reports');
 const PACKAGE_ROOT = path.resolve(UPSTREAM_ROOT, '..');
 const LOG_LIMIT = 60;
@@ -33,34 +32,6 @@ function parseArgs(argv) {
   if (args.ref === undefined) throw new Error('--ref requires a sha');
   if (args.ref && !args.accept) throw new Error('--ref is only valid with --accept');
   return args;
-}
-
-function git(cwd, ...args) {
-  return execFileSync('git', args, {
-    cwd,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-    timeout: 300000,
-    maxBuffer: 64 * 1024 * 1024,
-  }).trim();
-}
-
-function mirror(source) {
-  const dir = path.join(CACHE_ROOT, `${source.id}.git`);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(CACHE_ROOT, { recursive: true });
-    git(CACHE_ROOT, 'clone', '--bare', '--filter=blob:none', '--quiet', source.repo, dir);
-  }
-  git(dir, 'fetch', '--quiet', '--filter=blob:none', 'origin', 'HEAD');
-  const latest = git(dir, 'rev-parse', 'FETCH_HEAD');
-  if (source.ref && source.ref !== 'HEAD') {
-    try {
-      git(dir, 'cat-file', '-e', `${source.ref}^{commit}`);
-    } catch {
-      git(dir, 'fetch', '--quiet', '--filter=blob:none', 'origin', source.ref);
-    }
-  }
-  return { dir, latest };
 }
 
 function listFiles(dir) {
