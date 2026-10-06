@@ -3,7 +3,7 @@
 > Quick reference: what the harness installs, what it enforces, and how to operate it day to day.  
 > Consumer pitch + install story: [README.md](README.md) · Releases: [MAINTAINER.md](MAINTAINER.md)
 
-**Current package version:** `1.12.0`
+**Current package version:** `1.14.0`
 
 ---
 
@@ -29,10 +29,10 @@
 
 | Gate | Rule |
 |------|------|
-| `/commit-changes` | Only official commit path. **Must** run `/security-review` then `/code-review` before creating the bypass token. Bundled (install-if-missing). |
-| `/code-review` | Required quality gate. Bundled (install-if-missing). |
-| `/security-review` | Required security gate. Bundled (install-if-missing). |
-| `/make-pr` | Only official PR path. Bundled (install-if-missing). |
+| `/commit-changes` | Only official commit path. **Must** run `/security-review` then `/code-review` before creating the bypass token. Bundled, synced on every install. |
+| `/code-review` | Required quality gate. Bundled, synced on every install. |
+| `/security-review` | Required security gate. Bundled, synced on every install. |
+| `/make-pr` | Only official PR path. Bundled, synced on every install. |
 | PR body | `gh pr create` blocked unless `--body-file .claude/.pr-body-draft.md` with PT-BR headers (no inline `--body`, no `## Summary`) |
 | Terminal `git commit` | Blocked by `pre-commit` without token |
 | Push to `main`/`master` | Blocked by `pre-push` |
@@ -43,10 +43,10 @@
 
 | Tool | Installed to | How |
 |------|-------------|-----|
-| `/commit-changes` | `~/.claude/commands/commit-changes.md` | Bundled skill, install-if-missing |
-| `/code-review` | `~/.claude/commands/code-review.md` | Bundled skill, install-if-missing |
-| `/security-review` | `~/.claude/commands/security-review.md` | Bundled skill, install-if-missing |
-| `/make-pr` | `~/.claude/commands/make-pr.md` | Bundled skill, install-if-missing |
+| `/commit-changes` | `~/.claude/commands/commit-changes.md` | Bundled, synced on every install |
+| `/code-review` | `~/.claude/commands/code-review.md` | Bundled, synced on every install |
+| `/security-review` | `~/.claude/commands/security-review.md` | Bundled, synced on every install |
+| `/make-pr` | `~/.claude/commands/make-pr.md` | Bundled, synced on every install |
 | Harness enforcement rule | `~/.claude/rules/harness-enforcement.md` | Copied from package |
 | Agent isolation / harness patterns | `~/.claude/rules/` | Copied from package |
 | tron design stack | `~/.agents/skills/tron-{design,motion,native,imagery}/` (symlinked → `~/.claude/skills/`, `~/.cursor/skills/`, `~/.github/skills/`) | Synced fresh from `managed/skills/tron-*/`; **primary DESIGN authority**; engine runs only via `tron-design/scripts/tron-design` (no telemetry, no self-update); `darwin-arm64` binary in-tree, other platforms fetch the pinned binary on first run |
@@ -230,7 +230,7 @@ Agents never skip hooks: tron-kit refuses hook-skipping git commands, and an age
 
 ```
 tron-claude-config/
-├── package.json                              # v1.12.0
+├── package.json                              # v1.14.0
 ├── scripts/
 │   ├── postinstall.js                        # orchestrator
 │   ├── sync-tron-rules.js                    # tron-kit rules re-sync CLI

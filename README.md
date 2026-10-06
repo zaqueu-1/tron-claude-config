@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img alt="version" src="https://img.shields.io/badge/version-1.12.0-0F766E?style=for-the-badge"/>
+  <img alt="version" src="https://img.shields.io/badge/version-1.14.0-0F766E?style=for-the-badge"/>
   <img alt="node" src="https://img.shields.io/badge/node-%3E%3D18-38BDF8?style=for-the-badge&logo=node.js&logoColor=white"/>
   <img alt="pm" src="https://img.shields.io/badge/npm%20%7C%20pnpm%20%7C%20bun-ready-A78BFA?style=for-the-badge"/>
   <img alt="license" src="https://img.shields.io/badge/private-Tron-1E293B?style=for-the-badge"/>
@@ -17,22 +17,26 @@
 
 # @tron/claude-config
 
-Drop one dependency into any repo. On `npm install`, Claude Code gets **hooks, git gates, scoped coding rules, and the official skills** (`/commit-changes`, `/code-review`, `/security-review`, `/make-pr`) — enforced by the filesystem, not by memory.
+**One dev dependency turns Claude Code and Cursor into a disciplined engineering team.**
 
-> **Hooks over vibes.** Reviews before commits. Complete PRs before merge. Rules matched to the project stack. Silent daily self-update.
+Add it to any repo and `npm install` does the rest: reviewed-only commits, complete PRs, coding rules matched to your stack, a 12-agent roster with fixed model tiers, a lean technical skill library for 20+ stacks, a design system for every UI task, and structural code navigation — all enforced by hooks and the filesystem, not by the model's memory.
+
+> **Hooks over vibes.** Reviews before every commit. Complete PRs before every merge. Rules that match the project. Silent daily self-update. Clean upgrades.
 
 ---
 
-## Why you should install this
+## Why teams install it
 
 | Without the harness | With the harness |
 |---------------------|------------------|
-| Anyone (or any model) can `git commit` raw | Only `/commit-changes` after **security + code review** |
-| PRs that say “fix stuff” | Template with **5 mandatory sections** (PT-BR) |
-| Rules copied by hand (or forgotten) | **tron-kit rules scoped** to Vue / React / TS / … automatically |
-| “Did you update the package?” | **Auto-update** once per day, silent |
-| Different process per repo | **One kit** across the company |
-| Verbose AI replies | **Terse mode** always on — same substance, fewer tokens |
+| Anyone — or any model — can `git commit` raw | Commits only through `/commit-changes`, **after a security review and a code review** |
+| PRs that say "fix stuff" | Every PR body has **5 mandatory sections**, validated before `gh pr create` runs |
+| Rules copied by hand, or forgotten | **Coding rules synced to the detected stack** (Vue, React, TypeScript, Python, Go, …) |
+| 100+ overlapping agents, random model choices | **12 agents**, one per domain, with the model tier **fixed per phase** |
+| Generic, inconsistent UI output | A **design authority** that loads on every UI task, with a hook-enforced detector |
+| The agent reads the whole codebase to answer one question | **Graph-first navigation** through the `tron-graph` MCP, live docs through `tron-docs` |
+| "Did you update the package?" | **Self-updates** once a day, silently, and reinstalls cleanly |
+| A different process in every repo | **One kit** across the company |
 
 <p align="center">
   <img src="docs/assets/flow-commit.svg" alt="Commit flow: rules enforcement → security-review → code-review → git commit → push" width="100%"/>
@@ -42,7 +46,7 @@ Drop one dependency into any repo. On `npm install`, Claude Code gets **hooks, g
 
 ## 60-second install
 
-### 1. Add the dependency
+**1. Add the dependency**
 
 ```json
 {
@@ -52,67 +56,34 @@ Drop one dependency into any repo. On `npm install`, Claude Code gets **hooks, g
 }
 ```
 
-### 2. Install
+**2. Install**
 
 ```bash
-npm install   # or: bun install / pnpm install
+npm install   # or: pnpm install / bun install
 ```
 
-That’s it. `postinstall` wires the repo and (on developer machines) installs the global skills.
+That's it. `postinstall` wires the repo and, on developer machines, installs the global toolkit. CI runs only the repo-level part.
 
-> Works with **npm, bun, and pnpm** — detected from your lockfile.
-
-The harness lives under `.claude/` and `.git/hooks/`. It does **not** overwrite your `CLAUDE.md`, repo-local `.claude/commands/`, or `.claude/settings.local.json`.
+The harness lives under `.claude/` and `.git/hooks/`. It **never touches** your `CLAUDE.md`, repo-local `.claude/commands/` or `.claude/settings.local.json`.
 
 ---
 
 ## What you get
 
-### In every consumer repo
+### 1. Gates you can't skip
 
-```
-your-project/
-├── .claude/
-│   ├── settings.json           ← Claude Code hooks
-│   ├── rules/tron/             ← tron-kit rules (common + stack-matched folders)
-│   ├── .tron-scope.json        ← last detected scope (audit trail)
-│   └── hooks/
-│       ├── bypass-check.sh     ← token + PR template gate
-│       └── bootstrap-check.sh  ← tool check + daily auto-update
-├── .git/hooks/
-│   ├── pre-commit              ← blocks raw commits
-│   └── pre-push                ← blocks raw push to main/master
-├── AGENTS.md                   ← agent contract for this repo
-└── scripts/setup-claude-harness.sh
-```
+| Command | What it guarantees |
+|---------|--------------------|
+| `/commit-changes` | The only commit path: security review → code review → one-shot token → commit → push |
+| `/security-review` | Security checklist on the diff; **blocks** on critical/high findings |
+| `/code-review` | Correctness and quality review on the diff; **blocks** on critical/high findings |
+| `/make-pr` | The only PR path: fills the template, validates it, then opens the PR |
 
-### On the developer machine (install-if-missing)
+Raw `git commit` in a terminal is blocked by `pre-commit`, and direct pushes to `main`/`master` are blocked by `pre-push`. Agents refuse hook-skipping flags, so a failing hook gets fixed, not bypassed.
 
-| Command | Role |
-|---------|------|
-| `/commit-changes` | Official commit path — reviews → token → commit → push |
-| `/code-review` | Quality / correctness gate (**required** before commit) |
-| `/security-review` | Security checklist gate (**required** before commit) |
-| `/make-pr` | Official PR path — PT-BR template + token |
+### 2. Twelve agents, one per domain
 
-Also installed:
-
-- Always-on rules under `~/.claude/rules/`: **engineering principles** (clarify → smallest change → touch only what's needed → prove done) and **terse mode** (fewer output tokens, same substance; code, commits and PRs stay normal prose)
-- **12 tron agents** (enforced) — see [Agents](#agents--12-enforced)
-- **Workflow engine** (`standard` profile) — the single plan loop for Claude Code and Cursor (discuss → plan → execute → verify)
-- **tron-kit** Claude Code plugin (`tron-kit@tron`, always synced) — lean technical library written and owned by tron: 21 stack skills (`tron-react`, `tron-vue`, `tron-services`, `tron-python`, `tron-databases`, `tron-ml`, `tron-quality`, `tron-delivery`, …; each a short router plus on-demand references), 3 commands (`build-fix`, `test-coverage`, `refactor-clean`), quality hooks (config guard, hook-bypass guard, format + type check + `console.log` check on stop) and language rules, under `managed/tron-kit/` and installed at user scope via `claude plugin`. Replaces the former upstream plugin, which postinstall uninstalls automatically
-- **tron design stack** — `tron-design`, `tron-motion`, `tron-native`, `tron-imagery` (primary DESIGN authority) + **tron-design-fallback** (subordinate: charts, forms, web navigation, stack guidelines) — mandatory on any UI task; see [Frontend design skills](#frontend-design-skills--max-design-authority) and `AGENTS.md`
-- **session-handoff** skill (always synced) — session notes in a central Obsidian vault, saved and resumed; see [Workflow skills](#workflow-skills)
-- **issue-board** skill (always synced) — open issues of any GitHub Project (v2) as terminal tables; see [Workflow skills](#workflow-skills)
-- **tron-graph** MCP: structural code graph for graph-first navigation, registered as `tron-graph` for Claude Code and Cursor on macOS, Linux and Windows (platform installer + `Unblock-File`, retries, npm fallback)
-- **tron-docs** MCP: live library/API documentation, registered as `tron-docs` for Claude Code and Cursor (an existing docs entry is migrated with its key)
-- **doc** skill (always synced) — `/doc` finds the repo's Obsidian documentation vault (any folder with `.obsidian/`), reads the latest session note or the current conversation, flags notes whose `file:line` references broke or point to changed code, and applies only the doc changes the user approves (never commits). No vault: warns and offers a minimal one. Works in any project
-
-Existing customized commands are **never overwritten**.
-
-### Agents — 12, enforced
-
-One roster for Claude Code and Cursor, replacing the 105 agents the bundled toolchains used to install. Orchestration follows six pillars in strict order: **security → architecture → model governance**, then **quality → token economy → speed**.
+A single enforced roster for Claude Code and Cursor, replacing the 105 agents the bundled toolchains used to install.
 
 | Agent | Area | Agent | Area |
 |---|---|---|---|
@@ -123,64 +94,46 @@ One roster for Claude Code and Cursor, replacing the 105 agents the bundled tool
 | `tron-data-ai` | Data, LLM/ML, evals | `tron-researcher` | Research & docs |
 | `tron-devops` | CI/CD & delivery | `tron-infra` | Cloud, IaC, networking |
 
-- **Files:** `managed/agents/tron/*.md` → `~/.claude/agents/` and `~/.cursor/agents/`; the orchestration protocol is one rule, `~/.claude/rules/agent-roster.md` (+ `~/.cursor/rules/agent-roster.mdc`).
-- **Enforcement:** `~/.claude/tron/agent-roster-guard.js` runs on every subagent spawn (Claude `PreToolUse` Task/Agent; Cursor `preToolUse` + `subagentStart`). The 12 agents and harness built-ins pass; known legacy names (`planner`, `code-reviewer`, …) are **rewritten** to their tron owner with the original contract attached as a role brief, so the workflow and design engines keep working; anything else is blocked. On session start it moves any agent file another tool drops into the agent folders (e.g. after an engine update) to `~/.claude/tron/agent-roles/`.
-- **Mapping:** `managed/agents/roster.json` (allowlist, built-ins, legacy → owner, domain routing for generic executors).
+- **Six pillars, in strict order:** security → architecture → model governance → quality → token economy → speed.
+- **Model tier by phase:** planning, research, review and docs run on the economical tier; code execution runs on the robust tier. In Claude Code, per-call model overrides are rewritten back to the agent's tier.
+- **Enforced, not suggested:** `agent-roster-guard.js` runs on every subagent spawn. Legacy agent names (`planner`, `code-reviewer`, …) are rewritten to their tron owner with the original contract attached, so workflow and design engines keep working; unknown agents are blocked. Agent files dropped by other tools are swept to `~/.claude/tron/agent-roles/`.
 
-### Workflow skills
+### 3. tron-kit — a lean technical library
 
-Two personal-workflow skills ship with the harness. Both are always synced from the package (code files only) and keep each person's settings in a local `config.json` that is never overwritten. Their trigger phrases are PT-BR.
+The `tron-kit@tron` Claude Code plugin, written and owned by tron, installed at user scope:
 
-#### `/session-handoff`
+- **21 stack skills**, each a short router that loads detailed references only when needed: `tron-web`, `tron-react`, `tron-vue`, `tron-angular`, `tron-services`, `tron-python`, `tron-java`, `tron-kotlin`, `tron-go`, `tron-rust`, `tron-cpp`, `tron-dotnet`, `tron-php`, `tron-swift`, `tron-flutter`, `tron-react-native`, `tron-databases`, `tron-ml`, `tron-quality`, `tron-delivery`, `tron-research`.
+- **3 commands:** `build-fix`, `test-coverage`, `refactor-clean`.
+- **Quality hooks:** a config guard (no weakening linter/formatter configs to make errors go away), a hook-bypass guard, and on stop: format, type check and a `console.log` check on the files that were edited.
+- **Language rules** for 22 stacks, synced into each repo by scope (see below).
 
-Turns the current session into an actionable note for an agent that **did not see the conversation**, and resumes from the latest note. It replaces the legacy `/save-session`, `/salvar` and `/retomar`.
+### 4. A design authority for every UI task
 
-- **When:** "handoff", "resume a sessão", "salva a sessão no obsidian", "retoma a última sessão", "continua de onde parou", or right before `/compact` or `/clear`.
-- **Save mode (default):** collects the real state of every repo touched (`git worktree list`, `git status`, `git log`, open PRs via `gh`, cited issues/PRs, `.claude/todo.md`) — collected state beats conversation memory. Writes `<vault>/<repo>/YYYY-MM-DD HHmm — <topic>.md` with a "Comece por aqui" first action, literal user decisions, a pending checklist with `verificar:` per item, risks and promotion candidates. Then rewrites `<vault>/_ULTIMA-SESSAO.md` and prepends a row to `<vault>/_Sessões — Índice.md`.
-- **Resume mode:** reads the latest note for the current repo (or `_ULTIMA-SESSAO.md`), reads the docs it lists, re-validates git/gh state, reports what changed in up to 5 lines and runs "Comece por aqui". Authorizations from the previous session do **not** carry over — commit, push, PR and prod writes are asked again.
-- **Setup (once):** the vault path lives in `sessionsVault` in `~/.claude/skills/session-handoff/config.json`. On first use the skill asks for it, creates the folder with an empty `.obsidian/` and saves the answer. One folder per repo inside the vault (`avulsas/` outside a repo).
-- **Never:** writes session notes inside a code repository; stores secrets (API keys, tokens, passwords, connection strings are replaced with `<redacted>` plus where the secret lives); edits project docs on its own (learnings go to "Candidatos a promoção").
+1. **tron design stack** — the source of truth for design. `tron-design` always loads first: modes (persuade, operate, read, experience), direction, critique and audit, refine commands (`polish`, `harden`, `typeset`, `layout`, …), live browser iteration, style modules and a hook-enforced design detector. `tron-motion` covers animation and interaction feel (web and Expo), `tron-native` covers native platform craft and Swift/SwiftUI, and `tron-imagery` covers image-model comps, image-to-code and brand kits.
+2. **tron-design-fallback** — subordinate, consulted only after the stack sets direction, for charts and data visualization, form UX, web navigation and stack implementation guidelines.
 
-#### `/issue-board`
+On any conflict the stack wins. The design engine runs with telemetry and self-update turned off. Edit-discipline hooks are merged into the repo's `.cursor/hooks.json` and `.github/hooks/tron-design.json` without dropping existing hooks.
 
-Shows the open issues you have to do in any GitHub Project (v2) as terminal tables, grouped by type, priority, difficulty, status, repo or a board field. The agent classifies only what the board leaves empty.
+### 5. Code intelligence
 
-- **When:** "minhas issues", "o que tenho pra fazer", "mostra o board", "rankeia as issues", "separa as issues por dificuldade/tipo".
-- **Flow:** everything runs through `node ~/.claude/skills/issue-board/board.mjs` (Node 18+ and `gh`, no dependencies):
+- **`tron-graph` MCP** — a structural code graph (search, call paths, architecture, snippets) so agents query structure before reading files. Registered for Claude Code and Cursor on macOS, Linux and Windows, with retries and an npm fallback.
+- **`tron-docs` MCP** — current library and API documentation, so answers don't rely on stale training data.
 
-  ```bash
-  S=~/.claude/skills/issue-board
-  node $S/board.mjs fetch          # read the board (default: issues assigned to you)
-  node $S/board.mjs pending        # valid types + issues still unclassified (JSON)
-  node $S/board.mjs classify <file.json>   # apply the agent's classification (file outside the repo)
-  python $S/render.py              # rich tables; falls back to the Node render without rich
-  node $S/board.mjs render         # same content, plain; --json for another renderer
-  ```
+### 6. Workflow skills
 
-  Scope and filters for `pending`/`render`: `--all`, `--user login`, `--por tipo|prioridade|dificuldade|campo|status|repo`, and `--prioridade`, `--dificuldade`, `--tipo`, `--campo`, `--repo`, `--status` (comma-separated, partial, case- and accent-insensitive). `--owner x --project-number n` looks at another board without touching the config.
-- **Classification:** each issue gets a type (from the configured `types`, or the built-in neutral list), priority `P0`–`P3`, difficulty `1`–`3` and an optional short note. Results are cached per board under `data/<owner>-<number>/` and reused.
-- **Setup (once):** `gh auth login -s read:project` (or `gh auth refresh -s read:project`). On first run the skill lists your boards and writes `owner` and `projectNumber` into `~/.claude/skills/issue-board/config.json`; field names (`status`, `priority`, `size`, `group`), `priorityMap`/`sizeMap` and custom `types` are optional there. For colored tables, `pip install rich`.
-- **Never:** edits board fields (unless you ask); overrides the board — when `Priority` or `Size` is filled on the board, that value wins and agent suggestions appear only on empty fields, marked `~`; works around missing auth; versions `config.json`.
+| Skill | What it does |
+|-------|--------------|
+| `/session-handoff` | Saves the session as an actionable note in a central Obsidian vault for an agent that never saw the conversation, and resumes from the latest note. Collected git/PR state beats conversation memory; secrets are redacted; authorizations never carry over. |
+| `/issue-board` | Shows your open issues from any GitHub Project (v2) as terminal tables, grouped by type, priority, difficulty, status, repo or any board field. The agent classifies only what the board leaves empty, and board values always win. |
+| `/doc` | Finds the repo's Obsidian documentation vault, flags notes whose `file:line` references broke or point to changed code, and applies only the changes you approve. Never commits. |
 
-### Frontend design skills — MAX DESIGN authority
+These skills were written for a Portuguese-speaking team, so their trigger phrases are Portuguese (for example "resume a sessão", "minhas issues", "atualiza a doc"); calling them by name works in any language. Each keeps personal settings in a local `config.json` that upgrades never overwrite. Full usage: [HARNESS-GUIDE.md](HARNESS-GUIDE.md).
 
-On any frontend/UI task the harness enforces a two-level design stack:
+### 7. Always-on behavior rules
 
-1. **tron design stack** — the **maximum source of truth for design**. `tron-design` always loads first: modes (persuade, operate, read, experience), direction, critique/audit, refine commands (`polish`, `harden`, `typeset`, `layout`, …), live browser iteration, style modules for landing/portfolio/redesign work, and a hook-enforced design detector. `tron-motion` covers animation and interaction feel (web + Expo), `tron-native` covers native platform craft and Swift/SwiftUI, and `tron-imagery` covers image-model comps, image-to-code and brand kits.
-2. **tron-design-fallback** — **subordinate**, consulted only after the stack sets direction and only for the four areas it does not cover: **charts and data visualization** (chart selection table + a11y rules), **form UX patterns**, **web navigation patterns**, and **stack implementation guidelines** (high-severity rules for Vue, Nuxt, React, Next.js, React Native, shadcn/ui, HTML + Tailwind), plus a short pre-delivery add-on. It never sets visual direction.
-
-**On any conflict, the tron design stack always wins over tron-design-fallback.** Agents announce `Using tron-design for [purpose]`, naming each companion skill actually loaded. Full contract: [AGENTS.md](managed/AGENTS.md).
-
-The former secondary layer, **ui-ux-pro-max** and **frontend-design**, was removed: its direction-setting generator and style/color/font data competed with the stack. The only genuinely missing pieces were extracted into tron-design-fallback. For the same reason, tron-kit has no design, motion or accessibility skills of its own; those belong to the stack.
-
-Where they land on the developer machine:
-
-- The four stack skills live under `managed/skills/tron-{design,motion,native,imagery}/`, are synced fresh to `~/.agents/skills/` on every install, then symlinked into `~/.claude/skills/`, `~/.cursor/skills/` and `~/.github/skills/`. They replace 27 former skills; postinstall removes the retired names.
-- `tron-design` runs its bundled design engine only through `scripts/tron-design`, which turns off telemetry and self-update (engine updates go through the maintainer upstream tracker), and keeps agent-facing output in tron terms. The `darwin-arm64` engine binary ships in-tree; other platforms fetch the pinned binary on first run. Design subagent contracts are folded into `tron-designer`.
-- Edit-discipline hooks are merged into the consumer repo's `.cursor/hooks.json` and `.github/hooks/tron-design.json` (existing hooks are kept; the legacy hook path is migrated).
-- **tron-design-fallback** is vendored under `managed/skills/tron-design-fallback/` and always synced (overwritten) to `~/.claude/skills/` and `~/.cursor/skills/`.
-- Postinstall removes leftover `ui-ux-pro-max` / `frontend-design` skill folders from `~/.claude/skills/`, `~/.cursor/skills/`, `~/.agents/skills/` and `~/.github/skills/`, and disables the official `frontend-design@claude-plugins-official` Claude Code plugin.
-- The `frontend-skills.mdc` rule (always synced to `~/.cursor/rules/`) encodes this authority order for every UI task.
+- **Engineering principles** — clarify, make the smallest change, touch only what's needed, prove it's done.
+- **Terse mode** — fewer output tokens, same substance; code, commits and PRs stay in normal prose.
+- **Harness enforcement and agent isolation** — the contract every agent follows inside the harness.
 
 ---
 
@@ -188,74 +141,92 @@ Where they land on the developer machine:
 
 ### Commit path
 
-1. `/security-review` on the staged/branch diff → **BLOCK** on CRITICAL/HIGH  
-2. `/code-review` on the same diff → **BLOCK** on CRITICAL/HIGH  
-3. Create `.claude/.commit-authorized`  
-4. `git commit` — hooks allow once, then delete the token  
-
-Raw `git commit` in the terminal? **Blocked** by `pre-commit`.
+1. `/security-review` on the diff → **blocks** on critical/high
+2. `/code-review` on the same diff → **blocks** on critical/high
+3. Creates the one-shot token `.claude/.commit-authorized`
+4. `git commit` — the hook allows it once and deletes the token
 
 ### PR path
 
-1. `/make-pr` writes `.claude/.pr-body-draft.md` from `.claude/PR-TEMPLATE.md` (5 PT-BR sections)
-2. Runs `node .claude/hooks/lib/validate-pr-body.cjs .claude/.pr-body-draft.md`
-3. Creates `.claude/.pr-authorized`
-4. `gh pr create --body-file .claude/.pr-body-draft.md` — hook validates token, **command**, and headers (blocks inline `--body` and English `## Summary`)
+1. `/make-pr` writes `.claude/.pr-body-draft.md` from `.claude/PR-TEMPLATE.md`
+2. Validates it with `node .claude/hooks/lib/validate-pr-body.cjs`
+3. Creates the one-shot token `.claude/.pr-authorized`
+4. `gh pr create --body-file .claude/.pr-body-draft.md` — the hook checks the token, the command and the headers
 
-Required sections: **Resumo**, **Principais mudanças**, **Arquitetura & implementação**, **Antes → Agora**, **Roteiro de teste**.  
-English headers (`Summary`, `Test plan`, …) are **rejected**. If a section doesn’t apply, keep the header and use `_N/A — não aplicável a esta mudança_`.
+The template's five headers are enforced literally and are in Portuguese: **Resumo** (summary), **Principais mudanças** (key changes), **Arquitetura & implementação** (architecture & implementation), **Antes → Agora** (before → after) and **Roteiro de teste** (test plan). Inline `--body` and English headers are rejected; a section that doesn't apply keeps its header with an N/A line.
 
-### Scoped tron-kit rules
+### Scoped rules
 
-On install and on harness setup/update, the package:
-
-1. Detects stack from `package.json` + project markers  
-2. Reads rule folders from the bundled `managed/tron-kit/rules/` (no network)  
-3. Syncs **only** matching folders into `.claude/rules/tron/`  
-4. Removes managed folders that no longer match (and legacy rule folders from before tron-kit, if present)  
-
-Always: `common`. Conditionally: `typescript`, `vue`, `nuxt`, `react`, `react-native`, `web`, `csharp`, `python`, `golang`, and other tron-kit languages when detected.
+On install and on every harness update, the package detects the stack from `package.json` and project markers, then syncs only the matching rule folders from the bundled tron-kit into `.claude/rules/tron/` (no network). Folders that no longer match are removed. `common` is always included; `typescript`, `vue`, `nuxt`, `react`, `react-native`, `web`, `python`, `golang`, `csharp` and the other tron-kit languages are added when detected.
 
 ### Session bootstrap
 
-Every Claude prompt runs `bootstrap-check.sh`:
+Every Claude prompt runs `bootstrap-check.sh`, which re-ensures `tron-graph` if it is missing, warns if the workflow engine is missing, and once every 24 hours compares the installed package to the remote and self-updates. Manual repair: `npm run ensure:tron-graph`.
 
-- Re-runs `ensure-tron-graph.js` if `tron-graph` is missing (same Win + Unix path as postinstall)
-- Warns if the workflow engine is missing  
-- Once per 24h, compares package SHA to remote and self-updates  
+### Quality layers
 
-Manual repair: `npm run ensure:tron-graph` (or `node node_modules/@tron/claude-config/scripts/lib/ensure-tron-graph.js`).
+| Layer | Where | Decides |
+|-------|-------|---------|
+| tron-kit rules | `.claude/rules/tron/` | Coding standards |
+| Engineering principles | `~/.claude/rules/engineering-principles.md` | How to approach the work |
+| Harness commands | `~/.claude/commands/` | The commit and PR workflow |
 
 ---
 
-## Quality layers
+## Clean upgrades
 
-| Layer | Where | Wins on |
-|-------|--------|---------|
-| **tron-kit rules** | `.claude/rules/tron/` | Coding standards |
-| **Engineering principles** | `~/.claude/rules/engineering-principles.md` | Behavior: simplicity, surgical edits |
-| **Harness skills** | `~/.claude/commands/*` | Commit / PR workflow |
+Every update — `npm install` or the daily self-update — reinstalls the harness from scratch, so nothing from an older version lingers:
 
-tron-kit > engineering principles on standards. Engineering principles > tron-kit on how to approach the work.
+- **Directory trees are replaced wholesale:** tron-kit, the design stack, tron-design-fallback and the scoped rules folders.
+- **Single files are tracked:** every command, rule and skill file written under your home directory is recorded with its hash in `~/.claude/tron/installed.json`. When a release stops shipping a file, the next install deletes it. If you edited it, it's kept and reported instead.
+- **Your edits are never lost:** if `/commit-changes`, `/code-review` or `/security-review` differ from what the package last installed, the old file is saved as `<name>.md.bak` before syncing.
+- **Retired pieces are cleaned up:** legacy plugins, superseded design skills, retired rules and old consumer hook files are removed automatically.
+- **Personal data is untouched:** `config.json` and `data/` in workflow skills, your `CLAUDE.md`, local settings and repo-local commands.
+
+---
+
+## What lands where
+
+**In every consumer repo**
+
+```
+your-project/
+├── .claude/
+│   ├── settings.json           ← Claude Code hooks
+│   ├── PR-TEMPLATE.md          ← PR body scaffold
+│   ├── rules/tron/             ← tron-kit rules (common + stack-matched folders)
+│   ├── .tron-scope.json        ← last detected scope (audit trail)
+│   └── hooks/
+│       ├── bypass-check.sh     ← token + PR template gate
+│       ├── bootstrap-check.sh  ← tool check + daily self-update
+│       └── lib/*.cjs           ← PR body and command validators
+├── .git/hooks/
+│   ├── pre-commit              ← blocks raw commits
+│   └── pre-push                ← blocks raw pushes to main/master
+├── AGENTS.md                   ← agent contract for this repo
+└── scripts/setup-claude-harness.sh
+```
+
+**On the developer machine:** the four gate commands in `~/.claude/commands/`; behavior rules in `~/.claude/rules/`; the 12 agents in `~/.claude/agents/` and `~/.cursor/agents/`; the tron-kit plugin; the design stack in `~/.agents/skills/` (symlinked into `~/.claude/skills/`, `~/.cursor/skills/` and `~/.github/skills/`); the workflow skills in `~/.claude/skills/`; the `tron-graph` and `tron-docs` MCPs; and the workflow engine with its `standard` profile (discuss → plan → execute → verify).
 
 ---
 
 ## Emergency bypass (humans only)
 
-Agents never skip hooks: tron-kit refuses hook-skipping git commands, and an agent that hits a failing hook fixes the cause or stops and asks. If a person truly has to ship past a broken gate, they do it themselves in their own terminal, then fix the gate in a follow-up. Removing the harness from a repo means removing the dependency and its `.git/hooks/pre-commit` / `pre-push`, not editing them away.
+Agents never skip hooks: a failing hook gets fixed, or the agent stops and asks. If a person truly has to ship past a broken gate, they do it themselves in their own terminal and fix the gate in a follow-up. Removing the harness from a repo means removing the dependency and its git hooks, not editing them away.
 
 ---
 
-## Keep it fresh
+## Releasing
 
-Push to `main` in this repo. Consumers pick up changes on the next daily check — or immediately on `npm install`.
+Push to `main`. Consumers pick up the change on the next daily check, or immediately on `npm install`.
 
 ```bash
 npm version patch|minor|major
 git push origin main --follow-tags
 ```
 
-Full maintainer playbook: **[MAINTAINER.md](MAINTAINER.md)** · Day-to-day reference: **[HARNESS-GUIDE.md](HARNESS-GUIDE.md)**
+Maintainer playbook: **[MAINTAINER.md](MAINTAINER.md)** · Day-to-day reference: **[HARNESS-GUIDE.md](HARNESS-GUIDE.md)**
 
 ---
 
@@ -273,31 +244,29 @@ npm uninstall @tron/claude-config
 
 ```
 tron-claude-config/
-├── package.json                 # v1.12.0 · postinstall entry
+├── package.json                  # v1.14.0 · postinstall entry
 ├── scripts/
-│   ├── postinstall.js           # install orchestrator
-│   ├── sync-tron-rules.js       # manual tron-kit rules re-sync CLI
+│   ├── postinstall.js            # install orchestrator + home-file ledger
+│   ├── sync-tron-rules.js        # manual rules re-sync CLI
 │   └── lib/
 │       ├── detect-project-scope.js
 │       ├── install-tron-rules.js
-│       ├── install-tron-kit.js  # user-scope plugin install + legacy cleanup
-│       ├── ensure-tron-graph.js # code graph MCP (Win + macOS/Linux)
-│       └── ensure-tron-docs.js  # docs MCP registration
+│       ├── install-tron-kit.js   # user-scope plugin install + legacy cleanup
+│       ├── install-tron-agents.js# 12 agents + roster guard hooks
+│       ├── ensure-tron-graph.js  # code graph MCP (Windows + macOS/Linux)
+│       └── ensure-tron-docs.js   # docs MCP registration
 ├── managed/
 │   ├── AGENTS.md
 │   ├── setup-claude-harness.sh
-│   ├── tron-kit/                # tron-kit plugin (stack skills, commands, hooks, rules)
-│   ├── agents/                  # 12 tron agents, roster.json, roster guard hook
-│   ├── claude/                  # settings, hooks, rules (terse, engineering principles, roster)
-│   ├── cursor/rules/            # frontend-skills.mdc (design authority)
-│   ├── git-hooks/               # pre-commit, pre-push
-│   ├── hooks/                   # cursor + github tron-design hook templates
-│   └── skills/                  # commit-changes, code-review, security-review,
-│                                # make-pr, session-handoff, doc,
-│                                # issue-board, tron-design, tron-motion,
-│                                # tron-native, tron-imagery, tron-design-fallback
-├── upstream/                    # maintainer-only, not published (see MAINTAINER.md)
-├── docs/assets/                 # README visuals
+│   ├── tron-kit/                 # plugin: stack skills, commands, hooks, rules
+│   ├── agents/                   # 12 tron agents, roster.json, roster guard
+│   ├── claude/                   # settings, hooks, PR template, global rules
+│   ├── cursor/rules/             # frontend-skills.mdc (design authority order)
+│   ├── git-hooks/                # pre-commit, pre-push
+│   ├── hooks/                    # Cursor + GitHub tron-design hook templates
+│   └── skills/                   # gate commands, workflow skills, design stack
+├── upstream/                     # maintainer-only, not published (see MAINTAINER.md)
+├── docs/assets/                  # README visuals
 ├── HARNESS-GUIDE.md
 ├── MAINTAINER.md
 └── README.md
@@ -306,5 +275,5 @@ tron-claude-config/
 ---
 
 <p align="center">
-  <em>One install. Company-wide process. Reviews you can’t skip.</em>
+  <em>One install. Company-wide process. Reviews you can't skip.</em>
 </p>

@@ -1,6 +1,6 @@
 # tron-claude-config — Maintainer Guide
 
-Owner playbook for the shared Claude enforcement harness (`@tron/claude-config` **v1.12.0**).
+Owner playbook for the shared Claude enforcement harness (`@tron/claude-config` **v1.14.0**).
 
 Consumer docs: [README.md](README.md) · Operator cheat sheet: [HARNESS-GUIDE.md](HARNESS-GUIDE.md)
 
@@ -14,7 +14,7 @@ On consumer `npm install` / `bun install` / `pnpm install`, `scripts/postinstall
 2. Copies `AGENTS.md` and `scripts/setup-claude-harness.sh`
 3. Installs git `pre-commit` / `pre-push` hooks (via `git rev-parse --git-path hooks`, respects `core.hooksPath`)
 4. Syncs **scoped** tron-kit rules into `.claude/rules/tron/` from the bundled snapshot (detect stack → copy matching folders → prune stale ones; no network)
-5. On developer machines (not CI): installs the `tron-kit@tron` Claude plugin (see [Syncing tron-kit from upstream](#syncing-tron-kit-from-upstream)) and removes the legacy upstream plugin, its marketplace and user-level rules; installs the 12 tron agents + roster guard hooks (`scripts/lib/install-tron-agents.js`); the workflow engine with the `standard` profile for Claude Code and Cursor; install-if-missing skills; always-overwritten core rules (`terse.md`, `engineering-principles.md`, removing their retired predecessors); **attempt** `tron-graph` via `scripts/lib/ensure-tron-graph.js` (retries + npm fallback on Windows/WSL; renames the engine's own MCP keys to `tron-graph`; warns instead of aborting postinstall if still missing) and registers `tron-docs` via `scripts/lib/ensure-tron-docs.js`
+5. On developer machines (not CI): installs the `tron-kit@tron` Claude plugin (see [Syncing tron-kit from upstream](#syncing-tron-kit-from-upstream)) and removes the legacy upstream plugin, its marketplace and user-level rules; installs the 12 tron agents + roster guard hooks (`scripts/lib/install-tron-agents.js`); the workflow engine with the `standard` profile for Claude Code and Cursor; always-synced commands, skills and rules (every file recorded in `~/.claude/tron/installed.json`, so files a release drops are removed on upgrade); always-overwritten core rules (`terse.md`, `engineering-principles.md`, removing their retired predecessors); **attempt** `tron-graph` via `scripts/lib/ensure-tron-graph.js` (retries + npm fallback on Windows/WSL; renames the engine's own MCP keys to `tron-graph`; warns instead of aborting postinstall if still missing) and registers `tron-docs` via `scripts/lib/ensure-tron-docs.js`
 6. On developer machines (not CI): installs the **frontend design skill harness** — the **tron design stack** (`tron-design`, `tron-motion`, `tron-native`, `tron-imagery` — maximum DESIGN source of truth), with **tron-design-fallback** subordinate (charts, forms, web navigation, stack guidelines); removes leftover `ui-ux-pro-max` / `frontend-design` and retired design skill folders and disables the `frontend-design@claude-plugins-official` plugin (see [Frontend design skills](#frontend-design-skills-max-design-authority))
 7. Thereafter, `bootstrap-check.sh` self-updates the package about once per day
 
@@ -113,10 +113,11 @@ tron-claude-config/
 | `.claude/.tron-scope.json` | **Package** | Audit trail of last sync |
 | `AGENTS.md` | **Package** | Overwritten from managed copy |
 | `.git/hooks/pre-commit` / `pre-push` | **Package** | Installed by setup |
-| `~/.claude/commands/commit-changes.md` | **Package** (install-if-missing) | Must run `/security-review` + `/code-review` before token |
-| `~/.claude/commands/code-review.md` | **Package** (install-if-missing) | Required by `/commit-changes` |
-| `~/.claude/commands/security-review.md` | **Package** (install-if-missing) | Required by `/commit-changes` |
+| `~/.claude/commands/commit-changes.md` | **Package** (always synced; edits saved to `.bak` once) | Must run `/security-review` + `/code-review` before token |
+| `~/.claude/commands/code-review.md` | **Package** (always synced; edits saved to `.bak` once) | Required by `/commit-changes` |
+| `~/.claude/commands/security-review.md` | **Package** (always synced; edits saved to `.bak` once) | Required by `/commit-changes` |
 | `~/.claude/commands/make-pr.md` | **Package** (always synced) | PT-BR PR template; overwrites stale English skills |
+| `~/.claude/tron/installed.json` | **Package** (rewritten each install) | Hash ledger of every home-level file the package wrote; drives stale-file removal on upgrade |
 | `~/.agents/skills/tron-{design,motion,native,imagery}/` + `~/.claude`, `~/.cursor`, `~/.github` symlinks (+ repo hooks) | **Package** (always synced) | tron design stack = primary DESIGN authority; darwin-arm64 engine in-tree, others fetch on first run |
 | `~/.claude` + `~/.cursor/skills/tron-design-fallback/` | **Package** (always synced) | Subordinate to the stack |
 | `~/.{claude,cursor,agents,github}/skills/` legacy + retired design skills | **Package** (removed if present) | Legacy design layer and the 27 names the stack replaced; plugin `frontend-design@claude-plugins-official` disabled |
@@ -196,13 +197,19 @@ Silent by design. At most one status line in the session.
 2. Register in `GIT_HOOKS` inside `postinstall.js`  
 3. Release  
 
-## Adding a new global skill (install-if-missing)
+## Adding a new global skill or command
 
-1. Add `managed/skills/<name>/SKILL.md`  
-2. Add `installXSkill()` in `postinstall.js` (copy to `~/.claude/commands/<name>.md` only if missing)  
-3. Call it inside the `if (!IS_CI)` block  
+1. Add `managed/skills/<name>/` (`SKILL.md` plus any code files)  
+2. Register it in `postinstall.js`: a command goes in `COMMANDS`, a skill directory in `HOME_SKILLS` (list its files; per-person `config.json`/`data/` stay out)  
+3. Every file goes through `syncHomeFile`, which records it in `~/.claude/tron/installed.json`  
 4. Document in README + HARNESS-GUIDE + this table  
 5. `npm version minor` + push  
+
+## Retiring a file
+
+- **Home-level file** synced through `syncHomeFile`: delete it from `managed/` and from its list. The next install removes it from every machine (kept and reported if the user edited it).  
+- **Consumer-repo file** (`MANAGED_FILES`): move its destination to `RETIRED_CONSUMER_FILES`.  
+- **Directory trees** (design stack, tron-kit, fallback) are replaced wholesale on every install — nothing to do.  
 
 ## Changing tron-kit scope detection
 
