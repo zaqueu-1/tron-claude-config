@@ -1,6 +1,6 @@
 {
   "name": "tron-kit",
-  "version": "1.12.0",
+  "version": "1.13.0",
   "description": "Tron engineering kit for Claude Code: stack skills, commands, quality hooks and language rules managed by @tron/claude-config",
   "author": {
     "name": "tron"
