@@ -9,17 +9,16 @@ paths:
 ---
 # C# Hooks
 
-> This file extends [common/hooks.md](../common/hooks.md) with C#-specific content.
+> Builds on the shared rules in `../common/hooks.md`.
 
-## PostToolUse Hooks
+`TRON_HOOK_PROFILE` / `TRON_DISABLED_HOOKS`.
 
-Configure in `~/.claude/settings.json`:
+## PostToolUse
 
-- **dotnet format**: Auto-format edited C# files and apply analyzer fixes
-- **dotnet build**: Verify the solution or project still compiles after edits
-- **dotnet test --no-build**: Re-run the nearest relevant test project after behavior changes
+- **dotnet format** on edited C#
+- **dotnet build**
+- **dotnet test --no-build** when behavior changed (standard/strict)
 
-## Stop Hooks
+## Stop
 
-- Run a final `dotnet build` before ending a session with broad C# changes
-- Warn on modified `appsettings*.json` files so secrets do not get committed
+Strict profile: final **dotnet build** after wide edits; warn on touched `appsettings*.json` (secrets).

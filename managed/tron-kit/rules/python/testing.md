@@ -5,34 +5,28 @@ paths:
 ---
 # Python Testing
 
-> This file extends [common/testing.md](../common/testing.md) with Python specific content.
+> Builds on the shared rules in `../common/testing.md`.
 
-## Framework
+## Runner
 
-Use **pytest** as the testing framework.
-
-## Coverage
+**pytest** default.
 
 ```bash
 pytest --cov=src --cov-report=term-missing
 ```
 
-## Test Organization
-
-Use `pytest.mark` for test categorization:
+## Marks
 
 ```python
 import pytest
 
 @pytest.mark.unit
-def test_calculate_total():
+def test_subtotal():
     ...
 
 @pytest.mark.integration
-def test_database_connection():
+def test_pool_connect():
     ...
 ```
 
-## Reference
-
-See skill: `python-testing` for detailed pytest patterns and fixtures.
+Depth: `tron-python` skill (testing reference).

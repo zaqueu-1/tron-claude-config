@@ -8,37 +8,26 @@ paths:
 ---
 # Ruby Patterns
 
-> This file extends [common/patterns.md](../common/patterns.md) with Ruby and Rails specific content.
+> Builds on the shared rules in `../common/patterns.md`.
 
-## Rails Way First
+## Rails first
 
-- Start with plain Rails MVC and Active Record conventions for small and medium features.
-- Introduce service objects, query objects, form objects, decorators, or presenters when the model/controller boundary is carrying multiple responsibilities.
-- Name extracted objects after the business operation they perform, not after generic layers like `Manager` or `Processor`.
+MVC until boundaries blur — then extract named service/query/form objects (verb names, not `Manager`).
 
-## Persistence
+## Data store
 
-- Prefer PostgreSQL for multi-host production Rails apps unless the existing platform has a clear reason for MySQL or SQLite.
-- Treat Rails 8 SQLite-backed defaults as viable for single-host or modest deployments, not as an automatic fit for shared multi-service systems.
-- Keep raw SQL behind query objects or model scopes and parameterize every dynamic value.
+PostgreSQL for typical multi-host production; SQLite defaults suit single-host — match platform reality. Parameterize all dynamic SQL.
 
-## Background Jobs And Runtime Services
+## Jobs
 
-- Use **Solid Queue** for greenfield Rails 8 apps with modest throughput and simple deployment needs.
-- Use **Sidekiq** when the app needs mature observability, high throughput, existing Redis infrastructure, or Pro/Enterprise features.
-- Use **Solid Cache** and **Solid Cable** when their deployment model matches the app; use Redis when shared cross-service behavior, high fanout, or advanced data structures matter.
+Solid Queue for simple Rails 8 deployments; Sidekiq when Redis ops, throughput, or mature tooling already exist. Solid Cache/Cable vs Redis — match deployment needs.
 
-## Frontend
+## UI
 
-- Prefer **Hotwire** with Turbo, Stimulus, Importmap, and Propshaft for server-rendered Rails apps.
-- Use React, Vue, Inertia.js, or a separate SPA when interaction complexity, existing product architecture, or team ownership justifies the extra client surface.
-- Keep view components, partials, and presenters focused on rendering decisions; keep persistence and authorization out of templates.
+Hotwire (Turbo/Stimulus/importmap) for server-rendered apps; SPA/Inertia when complexity or team ownership requires it. No persistence/auth in templates.
 
-## Authentication
+## Auth
 
-- Use the Rails 8 authentication generator for straightforward session auth and password reset needs.
-- Use Devise or another established auth system when requirements include OAuth, MFA, confirmable/lockable flows, multi-model auth, or a large existing Devise footprint.
+Rails 8 generator for basic session auth; Devise (or similar) for OAuth/MFA/legacy Devise apps.
 
-## Reference
-
-See skill: `backend-patterns` for service boundaries and adapter patterns.
+Boundaries: `tron-services` skill.

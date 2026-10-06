@@ -8,15 +8,15 @@ paths:
 ---
 # Perl Hooks
 
-> This file extends [common/hooks.md](../common/hooks.md) with Perl-specific content.
+> Builds on the shared rules in `../common/hooks.md`.
 
-## PostToolUse Hooks
+`TRON_HOOK_PROFILE` / `TRON_DISABLED_HOOKS`.
 
-Configure in `~/.claude/settings.json`:
+## PostToolUse
 
-- **perltidy**: Auto-format `.pl` and `.pm` files after edit
-- **perlcritic**: Run lint check after editing `.pm` files
+- **perltidy** on `.pl`/`.pm`
+- **perlcritic** on `.pm` (standard/strict)
 
 ## Warnings
 
-- Warn about `print` in non-script `.pm` files — use `say` or a logging module (e.g., `Log::Any`)
+`print` in library modules — use `say` or structured logging (`Log::Any`).

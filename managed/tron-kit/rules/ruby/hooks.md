@@ -8,24 +8,22 @@ paths:
 ---
 # Ruby Hooks
 
-> This file extends [common/hooks.md](../common/hooks.md) with Ruby and Rails specific content.
+> Builds on the shared rules in `../common/hooks.md`.
 
-## PostToolUse Hooks
+`TRON_HOOK_PROFILE` / `TRON_DISABLED_HOOKS`.
 
-Configure project-local hooks to prefer binstubs and checked-in tooling:
+## PostToolUse
 
-- **RuboCop**: run `bundle exec rubocop -A <file>` or the project's safer formatter command after Ruby edits.
-- **Brakeman**: run `bundle exec brakeman --no-progress` after security-sensitive Rails changes.
-- **Tests**: run the narrowest matching `bin/rails test ...` or `bundle exec rspec ...` command for touched files.
-- **Bundler audit**: run `bundle exec bundle-audit check --update` when `Gemfile` or `Gemfile.lock` changes and the project has bundler-audit installed.
+- **RuboCop** (`bundle exec rubocop -A` or project script)
+- **Brakeman** after security-sensitive Rails edits
+- Narrowest **bin/rails test** / **rspec** for touched paths
+- **bundle-audit** when Gemfile/lock changes (if installed)
 
 ## Warnings
 
-- Warn on committed `debugger`, `binding.irb`, `binding.pry`, `puts`, `pp`, or `p` calls in application code.
-- Warn when an edit disables CSRF protection, expands mass-assignment, or adds raw SQL without parameterization.
-- Warn when a migration changes data destructively without a reversible path or documented rollout plan.
+Debug helpers (`binding.pry`, `debugger`, `puts`) in app code; CSRF off; unsafe mass assignment; raw SQL.
 
-## CI Gate Suggestions
+## CI (use what exists)
 
 ```bash
 bundle exec rubocop
@@ -33,5 +31,3 @@ bundle exec brakeman --no-progress
 bin/rails test
 bundle exec rspec
 ```
-
-Use only the commands that are present in the project; do not install new hook dependencies without maintainer approval.

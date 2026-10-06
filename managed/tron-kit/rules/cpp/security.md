@@ -10,42 +10,28 @@ paths:
 ---
 # C++ Security
 
-> This file extends [common/security.md](../common/security.md) with C++ specific content.
+> Builds on the shared rules in `../common/security.md`.
 
-## Memory Safety
+## Memory
 
-- Never use raw `new`/`delete` — use smart pointers
-- Never use C-style arrays — use `std::array` or `std::vector`
-- Never use `malloc`/`free` — use C++ allocation
-- Avoid `reinterpret_cast` unless absolutely necessary
+Smart pointers; `std::vector` / `std::array` not C arrays; no `malloc`/`free` in app code; avoid `reinterpret_cast`.
 
-## Buffer Overflows
+## Strings
 
-- Use `std::string` over `char*`
-- Use `.at()` for bounds-checked access when safety matters
-- Never use `strcpy`, `strcat`, `sprintf` — use `std::string` or `fmt::format`
+`std::string`, `.at()` when bounds matter; ban `strcpy`/`sprintf` — use safe formatters.
 
-## Undefined Behavior
+## UB hygiene
 
-- Always initialize variables
-- Avoid signed integer overflow
-- Never dereference null or dangling pointers
-- Use sanitizers in CI:
-  ```bash
-  cmake -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined" ..
-  ```
+Initialize variables; no signed overflow; no dangling/null deref.
 
-## Static Analysis
+## CI sanitizers
 
-- Use **clang-tidy** for automated checks:
-  ```bash
-  clang-tidy --checks='*' src/*.cpp
-  ```
-- Use **cppcheck** for additional analysis:
-  ```bash
-  cppcheck --enable=all src/
-  ```
+```bash
+cmake -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined" ..
+```
 
-## Reference
+## Static analysis
 
-See skill: `cpp-coding-standards` for detailed security guidelines.
+clang-tidy and cppcheck on touched translation units.
+
+Depth: `tron-cpp` skill.

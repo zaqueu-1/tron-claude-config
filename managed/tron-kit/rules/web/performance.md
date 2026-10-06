@@ -10,67 +10,16 @@ paths:
   - "**/*.vue"
   - "**/*.svelte"
 ---
-> This file extends [common/performance.md](../common/performance.md) with web-specific performance content.
+> Builds on the shared rules in `../common/performance.md`.
 
-# Web Performance Rules
+# Web performance
 
-## Core Web Vitals Targets
+Targets: LCP <2.5s, INP <200ms, CLS <0.1. Budgets (~150kb gzip JS landing, ~300kb app — tune per product).
 
-| Metric | Target |
-|--------|--------|
-| LCP | < 2.5s |
-| INP | < 200ms |
-| CLS | < 0.1 |
-| FCP | < 1.5s |
-| TBT | < 200ms |
+Inline critical CSS when justified; preload hero font/image; defer rest; dynamic-import heavy libs.
 
-## Bundle Budget
+Images: dimensions set; lazy below fold; modern formats. Fonts: ≤2 families, `font-display: swap`.
 
-| Page Type | JS Budget (gzipped) | CSS Budget |
-|-----------|---------------------|------------|
-| Landing page | < 150kb | < 30kb |
-| App page | < 300kb | < 50kb |
-| Microsite | < 80kb | < 15kb |
+Motion on compositor props only; narrow `will-change`.
 
-## Loading Strategy
-
-1. Inline critical above-the-fold CSS where justified
-2. Preload the hero image and primary font only
-3. Defer non-critical CSS or JS
-4. Dynamically import heavy libraries
-
-```js
-const gsapModule = await import('gsap');
-const { ScrollTrigger } = await import('gsap/ScrollTrigger');
-```
-
-## Image Optimization
-
-- Explicit `width` and `height`
-- `loading="eager"` plus `fetchpriority="high"` for hero media only
-- `loading="lazy"` for below-the-fold assets
-- Prefer AVIF or WebP with fallbacks
-- Never ship source images far beyond rendered size
-
-## Font Loading
-
-- Max two font families unless there is a clear exception
-- `font-display: swap`
-- Subset where possible
-- Preload only the truly critical weight/style
-
-## Animation Performance
-
-- Animate compositor-friendly properties only
-- Use `will-change` narrowly and remove it when done
-- Prefer CSS for simple transitions
-- Use `requestAnimationFrame` or established animation libraries for JS motion
-- Avoid scroll handler churn; use IntersectionObserver or well-behaved libraries
-
-## Performance Checklist
-
-- [ ] All images have explicit dimensions
-- [ ] No accidental render-blocking resources
-- [ ] No layout shifts from dynamic content
-- [ ] Motion stays on compositor-friendly properties
-- [ ] Third-party scripts load async/defer and only when needed
+Checklist: no layout shift from late content; third parties async/defer.

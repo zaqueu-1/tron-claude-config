@@ -6,27 +6,26 @@ paths:
 ---
 # Go Security
 
-> This file extends [common/security.md](../common/security.md) with Go specific content.
+> Builds on the shared rules in `../common/security.md`.
 
-## Secret Management
+## Secrets
 
 ```go
-apiKey := os.Getenv("OPENAI_API_KEY")
-if apiKey == "" {
-    log.Fatal("OPENAI_API_KEY not configured")
+key := os.Getenv("BILLING_KEY")
+if key == "" {
+    log.Fatal("BILLING_KEY not configured")
 }
 ```
 
-## Security Scanning
+## Scan
 
-- Use **gosec** for static security analysis:
-  ```bash
-  gosec ./...
-  ```
+```bash
+gosec ./...
+```
 
-## Context & Timeouts
+## Timeouts
 
-Always use `context.Context` for timeout control:
+Always bound I/O with context:
 
 ```go
 ctx, cancel := context.WithTimeout(ctx, 5*time.Second)

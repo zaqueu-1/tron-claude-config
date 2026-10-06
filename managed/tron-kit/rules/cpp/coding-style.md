@@ -10,35 +10,22 @@ paths:
 ---
 # C++ Coding Style
 
-> This file extends [common/coding-style.md](../common/coding-style.md) with C++ specific content.
+> Builds on the shared rules in `../common/coding-style.md`.
 
-## Modern C++ (C++17/20/23)
+## Modern C++
 
-- Prefer **modern C++ features** over C-style constructs
-- Use `auto` when the type is obvious from context
-- Use `constexpr` for compile-time constants
-- Use structured bindings: `auto [key, value] = map_entry;`
+Prefer C++17/20/23 over C idioms: `auto` when obvious, `constexpr`, structured bindings.
 
-## Resource Management
+## RAII
 
-- **RAII everywhere** — no manual `new`/`delete`
-- Use `std::unique_ptr` for exclusive ownership
-- Use `std::shared_ptr` only when shared ownership is truly needed
-- Use `std::make_unique` / `std::make_shared` over raw `new`
+No manual `new`/`delete`; `unique_ptr` default ownership; `shared_ptr` only when sharing is real; `make_unique` / `make_shared`.
 
-## Naming Conventions
+## Naming
 
-- Types/Classes: `PascalCase`
-- Functions/Methods: `snake_case` or `camelCase` (follow project convention)
-- Constants: `kPascalCase` or `UPPER_SNAKE_CASE`
-- Namespaces: `lowercase`
-- Member variables: `snake_case_` (trailing underscore) or `m_` prefix
+PascalCase types; snake_case or camelCase functions (match project); `kConstant` or `UPPER_SNAKE`; lowercase namespaces; trailing `_` or `m_` for members per repo rule.
 
-## Formatting
+## Format
 
-- Use **clang-format** — no style debates
-- Run `clang-format -i <file>` before committing
+**clang-format** before commit.
 
-## Reference
-
-See skill: `cpp-coding-standards` for comprehensive C++ coding standards and guidelines.
+Depth: `tron-cpp` skill.

@@ -1,66 +1,48 @@
 ---
-description: Detect the project build system and incrementally fix build/type errors with minimal safe changes.
+description: Get a failing build or type check green again with the smallest safe edits, one error at a time.
 ---
 
-# Build and Fix
+# /build-fix
 
-Incrementally fix build and type errors with minimal, safe changes.
+Restore a passing build. Smallest diff wins; no refactoring on the way.
 
-## Step 1: Detect Build System
+## 1. Find the build
 
-Identify the project's build tool and run the build:
-
-| Indicator | Build Command |
-|-----------|---------------|
-| `package.json` with `build` script | `npm run build` or `pnpm build` |
-| `tsconfig.json` (TypeScript only) | `npx tsc --noEmit` |
-| `Cargo.toml` | `cargo build 2>&1` |
-| `pom.xml` | `mvn compile` |
-| `build.gradle` | `./gradlew compileJava` |
+| Marker | Run |
+|---|---|
+| `package.json` `build` script | the project's package manager: `pnpm build` / `npm run build` / `bun run build` |
+| `tsconfig.json` only | `npx tsc --noEmit` |
+| `Cargo.toml` | `cargo build` |
 | `go.mod` | `go build ./...` |
-| `pyproject.toml` | `python -m compileall -q .` or `mypy .` |
+| `pom.xml` | `mvn -q compile` |
+| `build.gradle(.kts)` | `./gradlew compileJava` or `compileKotlin` |
+| `pyproject.toml` | `mypy .` if configured, else `python -m compileall -q .` |
 
-## Step 2: Parse and Group Errors
+Several markers → build the one CI runs (check the workflow files).
 
-1. Run the build command and capture stderr
-2. Group errors by file path
-3. Sort by dependency order (fix imports/types before logic errors)
-4. Count total errors for progress tracking
+## 2. Triage
 
-## Step 3: Fix Loop (One Error at a Time)
+Capture the full error output, group it by file, and order it so root causes come first: missing modules and broken imports, then type declarations, then call sites. Keep a running count so progress is visible.
 
-For each error:
+## 3. Fix loop
 
-1. **Read the file** — Use Read tool to see error context (10 lines around the error)
-2. **Diagnose** — Identify root cause (missing import, wrong type, syntax error)
-3. **Fix minimally** — Use Edit tool for the smallest change that resolves the error
-4. **Re-run build** — Verify the error is gone and no new errors introduced
-5. **Move to next** — Continue with remaining errors
+Per error: read about 10 lines of context around it → name the cause → make the minimal edit → rebuild → confirm the count dropped and nothing new appeared. Then take the next one.
 
-## Step 4: Guardrails
+| Cause | Move |
+|---|---|
+| Unresolved import/module | Confirm the package is installed and the path/alias is right; propose the install command rather than running it |
+| Type mismatch | Read both declarations; narrow at the boundary instead of widening to `any`/`unknown` casts |
+| Import cycle | Trace the cycle; move the shared piece into its own module |
+| Version skew | Compare manifest constraints with the lockfile |
+| Tool misconfiguration | Diff the config against the tool's documented defaults; never weaken lint/type settings to pass |
 
-Stop and ask the user if:
-- A fix introduces **more errors than it resolves**
-- The **same error persists after 3 attempts** (likely a deeper issue)
-- The fix requires **architectural changes** (not just a build fix)
-- Build errors stem from **missing dependencies** (need `npm install`, `cargo add`, etc.)
+## 4. Stop and ask when
 
-## Step 5: Summary
+- a fix creates more errors than it removes;
+- the same error survives three attempts;
+- the real fix is architectural;
+- dependencies must be installed or upgraded.
 
-Show results:
-- Errors fixed (with file paths)
-- Errors remaining (if any)
-- New errors introduced (should be zero)
-- Suggested next steps for unresolved issues
+## 5. Report
 
-## Recovery Strategies
-
-| Situation | Action |
-|-----------|--------|
-| Missing module/import | Check if package is installed; suggest install command |
-| Type mismatch | Read both type definitions; fix the narrower type |
-| Circular dependency | Identify cycle with import graph; suggest extraction |
-| Version conflict | Check `package.json` / `Cargo.toml` for version constraints |
-| Build tool misconfiguration | Read config file; compare with working defaults |
-
-Fix one error at a time for safety. Prefer minimal diffs over refactoring.
+Fixed (file list), still failing, newly introduced (target: none), and the suggested next step for anything unresolved.

@@ -5,38 +5,34 @@ paths:
 ---
 # Python Coding Style
 
-> This file extends [common/coding-style.md](../common/coding-style.md) with Python specific content.
+> Builds on the shared rules in `../common/coding-style.md`.
 
 ## Standards
 
-- Follow **PEP 8** conventions
-- Use **type annotations** on all function signatures
+- PEP 8 layout and naming; annotate every public function signature.
 
 ## Immutability
 
-Prefer immutable data structures:
+Favor frozen or value-style data for shared state:
 
 ```python
 from dataclasses import dataclass
-
-@dataclass(frozen=True)
-class User:
-    name: str
-    email: str
-
 from typing import NamedTuple
 
-class Point(NamedTuple):
+@dataclass(frozen=True)
+class Account:
+    handle: str
+    mailbox: str
+
+class Coord(NamedTuple):
     x: float
     y: float
 ```
 
-## Formatting
+## Tooling
 
-- **black** for code formatting
-- **isort** for import sorting
-- **ruff** for linting
+- **black** — format
+- **isort** — import order
+- **ruff** — lint
 
-## Reference
-
-See skill: `python-patterns` for comprehensive Python idioms and patterns.
+Depth: `tron-python` skill.

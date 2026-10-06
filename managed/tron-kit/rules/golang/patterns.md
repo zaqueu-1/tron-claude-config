@@ -6,40 +6,38 @@ paths:
 ---
 # Go Patterns
 
-> This file extends [common/patterns.md](../common/patterns.md) with Go specific content.
+> Builds on the shared rules in `../common/patterns.md`.
 
-## Functional Options
+## Functional options
 
 ```go
-type Option func(*Server)
+type Tune func(*Server)
 
-func WithPort(port int) Option {
-    return func(s *Server) { s.port = port }
+func WithListenPort(p int) Tune {
+    return func(s *Server) { s.port = p }
 }
 
-func NewServer(opts ...Option) *Server {
+func NewServer(tunes ...Tune) *Server {
     s := &Server{port: 8080}
-    for _, opt := range opts {
-        opt(s)
+    for _, t := range tunes {
+        t(s)
     }
     return s
 }
 ```
 
-## Small Interfaces
+## Interfaces
 
-Define interfaces where they are used, not where they are implemented.
+Declare small interfaces at the call site, not on the implementer.
 
-## Dependency Injection
+## Wiring
 
-Use constructor functions to inject dependencies:
+Constructor injection:
 
 ```go
-func NewUserService(repo UserRepository, logger Logger) *UserService {
-    return &UserService{repo: repo, logger: logger}
+func NewBillingSvc(store LedgerStore, log Logger) *BillingSvc {
+    return &BillingSvc{store: store, log: log}
 }
 ```
 
-## Reference
-
-See skill: `golang-patterns` for comprehensive Go patterns including concurrency, error handling, and package organization.
+Depth: `tron-go` skill.

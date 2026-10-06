@@ -10,60 +10,14 @@ paths:
   - "**/*.vue"
   - "**/*.svelte"
 ---
-> This file extends [common/security.md](../common/security.md) with web-specific security content.
+> Builds on the shared rules in `../common/security.md`.
 
-# Web Security Rules
+# Web security
 
-## Content Security Policy
+Production CSP with nonces for scripts where possible; tighten per project. No unsanitized HTML (`innerHTML` / framework escape hatches) without sanitizer.
 
-Always configure a production CSP.
+Third-party scripts: async, SRI on CDNs, periodic audit. Security headers: HSTS, `nosniff`, frame deny, referrer policy, permissions policy.
 
-### Nonce-Based CSP
+Forms: CSRF on mutations; server validation; rate limits.
 
-Use a per-request nonce for scripts instead of `'unsafe-inline'`.
-
-```text
-Content-Security-Policy:
-  default-src 'self';
-  script-src 'self' 'nonce-{RANDOM}' https://cdn.jsdelivr.net;
-  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-  img-src 'self' data: https:;
-  font-src 'self' https://fonts.gstatic.com;
-  connect-src 'self' https://*.example.com;
-  frame-src 'none';
-  object-src 'none';
-  base-uri 'self';
-```
-
-Adjust origins to the project. Do not cargo-cult this block unchanged.
-
-## XSS Prevention
-
-- Never inject unsanitized HTML
-- Avoid `innerHTML` / `dangerouslySetInnerHTML` unless sanitized first
-- Escape dynamic template values
-- Sanitize user HTML with a vetted local sanitizer when absolutely necessary
-
-## Third-Party Scripts
-
-- Load asynchronously
-- Use SRI when serving from a CDN
-- Audit quarterly
-- Prefer self-hosting for critical dependencies when practical
-
-## HTTPS and Headers
-
-```text
-Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
-X-Content-Type-Options: nosniff
-X-Frame-Options: DENY
-Referrer-Policy: strict-origin-when-cross-origin
-Permissions-Policy: camera=(), microphone=(), geolocation=()
-```
-
-## Forms
-
-- CSRF protection on state-changing forms
-- Rate limiting on submission endpoints
-- Validate client and server side
-- Prefer honeypots or light anti-abuse controls over heavy-handed CAPTCHA defaults
+**tron-security** for deep review.

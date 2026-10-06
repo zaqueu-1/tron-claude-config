@@ -7,19 +7,17 @@ paths:
   - "**/*.pipe.ts"
   - "**/*.spec.ts"
 ---
-# Angular Hooks
+> Builds on the shared rules in `../common/hooks.md`.
 
-> This file extends [common/hooks.md](../common/hooks.md) with Angular specific content.
+# Angular harness hooks
 
-## PostToolUse Hooks
+PostToolUse on TS/HTML edits:
 
-Configure in `~/.claude/settings.json`:
+- Prettier on touched files
+- `ng lint` (or eslint angular config)
+- `tsc --noEmit` for quick type feedback
+- `ng build` after codegen-sized changes (templates + types)
 
-- **Prettier**: Auto-format `.ts` and `.html` files after edit
-- **ESLint / ng lint**: Run `ng lint` after editing Angular source files to catch decorator misuse, template errors, and style violations
-- **TypeScript check**: Run `tsc --noEmit` after editing `.ts` files
-- **Build check**: Run `ng build` after generating or significantly changing Angular code to catch template and type errors early
+Stop hook: lint sweep on modified paths.
 
-## Stop Hooks
-
-- **Lint audit**: Run `ng lint` across modified files before session ends to catch any outstanding violations
+Tune aggressiveness with `TRON_HOOK_PROFILE` and disable specific ids via `TRON_DISABLED_HOOKS`.

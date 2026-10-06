@@ -6,210 +6,34 @@ paths:
 ---
 # Dart/Flutter Testing
 
-> This file extends [common/testing.md](../common/testing.md) with Dart and Flutter-specific content.
+> Builds on the shared rules in `../common/testing.md`.
 
-## Test Framework
+## Stack
 
-- **flutter_test** / **dart:test** — built-in test runner
-- **mockito** (with `@GenerateMocks`) or **mocktail** (no codegen) for mocking
-- **bloc_test** for BLoC/Cubit unit tests
-- **fake_async** for controlling time in unit tests
-- **integration_test** for end-to-end device tests
+`flutter_test` / `test`; **mocktail** or mockito; **bloc_test**; **fake_async**; **integration_test** for device flows.
 
-## Test Types
+## Layout
 
-| Type | Tool | Location | When to Write |
-|------|------|----------|---------------|
-| Unit | `dart:test` | `test/unit/` | All domain logic, state managers, repositories |
-| Widget | `flutter_test` | `test/widget/` | All widgets with meaningful behavior |
-| Golden | `flutter_test` | `test/golden/` | Design-critical UI components |
-| Integration | `integration_test` | `integration_test/` | Critical user flows on real device/emulator |
+`test/unit`, `test/widget`, `test/golden`, `integration_test/flows`.
 
-## Unit Tests: State Managers
+## State tests
 
-### BLoC with `bloc_test`
+`blocTest` for BLoC; `ProviderContainer` + overrides for Riverpod.
 
-```dart
-group('CartBloc', () {
-  late CartBloc bloc;
-  late MockCartRepository repository;
+## Widget tests
 
-  setUp(() {
-    repository = MockCartRepository();
-    bloc = CartBloc(repository);
-  });
+Pump with scoped providers; assert semantics and key widgets.
 
-  tearDown(() => bloc.close());
+## Fakes
 
-  blocTest<CartBloc, CartState>(
-    'emits updated items when CartItemAdded',
-    build: () => bloc,
-    act: (b) => b.add(CartItemAdded(testItem)),
-    expect: () => [CartState(items: [testItem])],
-  );
+Hand-written repository fakes over deep mocks.
 
-  blocTest<CartBloc, CartState>(
-    'emits empty cart when CartCleared',
-    seed: () => CartState(items: [testItem]),
-    build: () => bloc,
-    act: (b) => b.add(CartCleared()),
-    expect: () => [const CartState()],
-  );
-});
-```
+## Goldens
 
-### Riverpod with `ProviderContainer`
-
-```dart
-test('usersProvider loads users from repository', () async {
-  final container = ProviderContainer(
-    overrides: [userRepositoryProvider.overrideWithValue(FakeUserRepository())],
-  );
-  addTearDown(container.dispose);
-
-  final result = await container.read(usersProvider.future);
-  expect(result, isNotEmpty);
-});
-```
-
-## Widget Tests
-
-```dart
-testWidgets('CartPage shows item count badge', (tester) async {
-  await tester.pumpWidget(
-    ProviderScope(
-      overrides: [
-        cartNotifierProvider.overrideWith(() => FakeCartNotifier([testItem])),
-      ],
-      child: const MaterialApp(home: CartPage()),
-    ),
-  );
-
-  await tester.pump();
-  expect(find.text('1'), findsOneWidget);
-  expect(find.byType(CartItemTile), findsOneWidget);
-});
-
-testWidgets('shows empty state when cart is empty', (tester) async {
-  await tester.pumpWidget(
-    ProviderScope(
-      overrides: [cartNotifierProvider.overrideWith(() => FakeCartNotifier([]))],
-      child: const MaterialApp(home: CartPage()),
-    ),
-  );
-
-  await tester.pump();
-  expect(find.text('Your cart is empty'), findsOneWidget);
-});
-```
-
-## Fakes Over Mocks
-
-Prefer hand-written fakes for complex dependencies:
-
-```dart
-class FakeUserRepository implements UserRepository {
-  final _users = <String, User>{};
-  Object? fetchError;
-
-  @override
-  Future<User?> getById(String id) async {
-    if (fetchError != null) throw fetchError!;
-    return _users[id];
-  }
-
-  @override
-  Future<List<User>> getAll() async {
-    if (fetchError != null) throw fetchError!;
-    return _users.values.toList();
-  }
-
-  @override
-  Stream<List<User>> watchAll() => Stream.value(_users.values.toList());
-
-  @override
-  Future<void> save(User user) async {
-    _users[user.id] = user;
-  }
-
-  @override
-  Future<void> delete(String id) async {
-    _users.remove(id);
-  }
-
-  void addUser(User user) => _users[user.id] = user;
-}
-```
-
-## Async Testing
-
-```dart
-// Use fake_async for controlling timers and Futures
-test('debounce triggers after 300ms', () {
-  fakeAsync((async) {
-    final debouncer = Debouncer(delay: const Duration(milliseconds: 300));
-    var callCount = 0;
-    debouncer.run(() => callCount++);
-    expect(callCount, 0);
-    async.elapse(const Duration(milliseconds: 200));
-    expect(callCount, 0);
-    async.elapse(const Duration(milliseconds: 200));
-    expect(callCount, 1);
-  });
-});
-```
-
-## Golden Tests
-
-```dart
-testWidgets('UserCard golden test', (tester) async {
-  await tester.pumpWidget(
-    MaterialApp(home: UserCard(user: testUser)),
-  );
-
-  await expectLater(
-    find.byType(UserCard),
-    matchesGoldenFile('goldens/user_card.png'),
-  );
-});
-```
-
-Run `flutter test --update-goldens` when intentional visual changes are made.
-
-## Test Naming
-
-Use descriptive, behavior-focused names:
-
-```dart
-test('returns null when user does not exist', () { ... });
-test('throws NotFoundException when id is empty string', () { ... });
-testWidgets('disables submit button while form is invalid', (tester) async { ... });
-```
-
-## Test Organization
-
-```
-test/
-├── unit/
-│   ├── domain/
-│   │   └── usecases/
-│   └── data/
-│       └── repositories/
-├── widget/
-│   └── presentation/
-│       └── pages/
-└── golden/
-    └── widgets/
-
-integration_test/
-└── flows/
-    ├── login_flow_test.dart
-    └── checkout_flow_test.dart
-```
+`matchesGoldenFile`; update with `flutter test --update-goldens` intentionally.
 
 ## Coverage
 
-- Target 80%+ line coverage for business logic (domain + state managers)
-- All state transitions must have tests: loading → success, loading → error, retry
-- Run `flutter test --coverage` and inspect `lcov.info` with a coverage reporter
-- Coverage failures should block CI when below threshold
+~80% on domain + state machines; every loading/success/error path; CI threshold on `lcov.info`.
+
+Depth: `tron-flutter` skill; workflow: `tron-quality` skill.

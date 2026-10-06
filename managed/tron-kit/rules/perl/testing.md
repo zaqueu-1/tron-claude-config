@@ -8,47 +8,35 @@ paths:
 ---
 # Perl Testing
 
-> This file extends [common/testing.md](../common/testing.md) with Perl-specific content.
+> Builds on the shared rules in `../common/testing.md`.
 
 ## Framework
 
-Use **Test2::V0** for new projects (not Test::More):
+**Test2::V0** for new work.
 
 ```perl
 use Test2::V0;
-
-is($result, 42, 'answer is correct');
-
+is($got, 42, 'computation');
 done_testing;
 ```
 
 ## Runner
 
 ```bash
-prove -l t/              # adds lib/ to @INC
-prove -lr -j8 t/         # recursive, 8 parallel jobs
+prove -l t/
+prove -lr -j8 t/
 ```
 
-Always use `-l` to ensure `lib/` is on `@INC`.
+Always `-l` so `lib/` is on `@INC`.
 
 ## Coverage
 
-Use **Devel::Cover** — target 80%+:
+**Devel::Cover** — target ~80%: `cover -test`.
 
-```bash
-cover -test
-```
+## Mocks
 
-## Mocking
+Test::MockModule / Test::MockObject.
 
-- **Test::MockModule** — mock methods on existing modules
-- **Test::MockObject** — create test doubles from scratch
+End every file with `done_testing`.
 
-## Pitfalls
-
-- Always end test files with `done_testing`
-- Never forget the `-l` flag with `prove`
-
-## Reference
-
-See skill: `perl-testing` for detailed Perl TDD patterns with Test2::V0, prove, and Devel::Cover.
+Loop: `tron-quality` skill.

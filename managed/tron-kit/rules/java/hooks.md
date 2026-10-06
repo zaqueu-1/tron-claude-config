@@ -7,12 +7,12 @@ paths:
 ---
 # Java Hooks
 
-> This file extends [common/hooks.md](../common/hooks.md) with Java-specific content.
+> Builds on the shared rules in `../common/hooks.md`.
 
-## PostToolUse Hooks
+`TRON_HOOK_PROFILE` (`minimal` | `standard` | `strict`); `TRON_DISABLED_HOOKS` for opt-out ids.
 
-Configure in `~/.claude/settings.json`:
+## PostToolUse
 
-- **google-java-format**: Auto-format `.java` files after edit
-- **checkstyle**: Run style checks after editing Java files
-- **./mvnw compile** or **./gradlew compileJava**: Verify compilation after changes
+- **google-java-format** on edited `.java`
+- **checkstyle** when the project enables it
+- **`./mvnw compile`** or **`./gradlew compileJava`** after structural edits (strict profile)

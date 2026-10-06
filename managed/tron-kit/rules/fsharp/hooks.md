@@ -10,17 +10,16 @@ paths:
 ---
 # F# Hooks
 
-> This file extends [common/hooks.md](../common/hooks.md) with F#-specific content.
+> Builds on the shared rules in `../common/hooks.md`.
 
-## PostToolUse Hooks
+`TRON_HOOK_PROFILE` / `TRON_DISABLED_HOOKS`.
 
-Configure in `~/.claude/settings.json`:
+## PostToolUse
 
-- **fantomas**: Auto-format edited F# files
-- **dotnet build**: Verify the solution or project still compiles after edits
-- **dotnet test --no-build**: Re-run the nearest relevant test project after behavior changes
+- **fantomas**
+- **dotnet build**
+- **dotnet test --no-build** on behavior edits (standard/strict)
 
-## Stop Hooks
+## Stop
 
-- Run a final `dotnet build` before ending a session with broad F# changes
-- Warn on modified `appsettings*.json` files so secrets do not get committed
+Strict: final build; warn on `appsettings*.json` changes.

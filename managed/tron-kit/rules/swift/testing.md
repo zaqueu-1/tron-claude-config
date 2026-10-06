@@ -5,34 +5,19 @@ paths:
 ---
 # Swift Testing
 
-> This file extends [common/testing.md](../common/testing.md) with Swift specific content.
+> Builds on the shared rules in `../common/testing.md`.
 
 ## Framework
 
-Use **Swift Testing** (`import Testing`) for new tests. Use `@Test` and `#expect`:
+Swift Testing (`import Testing`) — `@Test`, `#expect`, `#require`.
 
-```swift
-@Test("User creation validates email")
-func userCreationValidatesEmail() throws {
-    #expect(throws: ValidationError.invalidEmail) {
-        try User(email: "not-an-email")
-    }
-}
-```
+## Isolation
 
-## Test Isolation
+Per-test setup in `init`/`deinit`; no shared mutable globals.
 
-Each test gets a fresh instance — set up in `init`, tear down in `deinit`. No shared mutable state between tests.
+## Parameterized
 
-## Parameterized Tests
-
-```swift
-@Test("Validates formats", arguments: ["json", "xml", "csv"])
-func validatesFormat(format: String) throws {
-    let parser = try Parser(format: format)
-    #expect(parser.isValid)
-}
-```
+`@Test(arguments: [...])` for matrix cases.
 
 ## Coverage
 
@@ -40,6 +25,4 @@ func validatesFormat(format: String) throws {
 swift test --enable-code-coverage
 ```
 
-## Reference
-
-See skill: `swift-protocol-di-testing` for protocol-based dependency injection and mock patterns with Swift Testing.
+Depth: `tron-swift` skill (DI and mocks with Swift Testing).

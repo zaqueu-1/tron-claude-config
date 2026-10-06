@@ -6,12 +6,12 @@ paths:
 ---
 # Go Hooks
 
-> This file extends [common/hooks.md](../common/hooks.md) with Go specific content.
+> Builds on the shared rules in `../common/hooks.md`.
 
-## PostToolUse Hooks
+`TRON_HOOK_PROFILE` (`minimal` | `standard` | `strict`); disable ids with `TRON_DISABLED_HOOKS`.
 
-Configure in `~/.claude/settings.json`:
+## PostToolUse
 
-- **gofmt/goimports**: Auto-format `.go` files after edit
-- **go vet**: Run static analysis after editing `.go` files
-- **staticcheck**: Run extended static checks on modified packages
+- **gofmt** / **goimports** on touched `.go`
+- **go vet** after edits
+- **staticcheck** on changed packages when profile is `standard` or `strict`

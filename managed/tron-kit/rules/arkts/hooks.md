@@ -7,129 +7,32 @@ paths:
 ---
 # HarmonyOS / ArkTS Hooks
 
-> This file extends [common/hooks.md](../common/hooks.md) with HarmonyOS-specific build and validation hooks.
+> Builds on the shared rules in `../common/hooks.md`.
 
-## Build Commands
+`TRON_HOOK_PROFILE` / `TRON_DISABLED_HOOKS` — async hvigor/ohpm steps usually `standard` or `strict` only.
 
-### HAP Package Build
+## Build
 
 ```bash
-# Build HAP package (global hvigor environment)
 hvigorw assembleHap -p product=default
-
-# Build with specific module
-hvigorw assembleHap -p module=entry -p product=default
-
-# Clean build
 hvigorw clean
-```
-
-### DevEco Studio CLI
-
-```bash
-# Check project structure
-hvigorw --version
-
-# Install dependencies
 ohpm install
-
-# Update dependencies
-ohpm update
 ```
 
-## Recommended PostToolUse Hooks
+## PostToolUse (standard/strict)
 
-### After Editing .ets/.ts Files
+After `.ets`/`.ts` edits: `hvigorw assembleHap -p product=default` (surface last errors).
 
-Run hvigor build to check for ArkTS compilation errors:
+After `module.json5`: verify permissions/abilities.
 
-```json
-{
-  "type": "PostToolUse",
-  "matcher": {
-    "tool": ["Edit", "Write"],
-    "filePath": ["**/*.ets", "**/*.ts"]
-  },
-  "hooks": [
-    {
-      "command": "hvigorw assembleHap -p product=default 2>&1 | tail -20",
-      "async": true,
-      "timeout": 60000
-    }
-  ]
-}
-```
+After `oh-package.json5`: `ohpm install`.
 
-### After Editing module.json5
+## Guard
 
-Validate permission and ability declarations:
+Warn on V1 state decorators (`@State`, `@Prop`, `@Link`, …) — use **V2** (`@ComponentV2`, `@Local`, `@Param`, …).
 
-```json
-{
-  "type": "PostToolUse",
-  "matcher": {
-    "tool": "Edit",
-    "filePath": "**/module.json5"
-  },
-  "hooks": [
-    {
-      "command": "echo '[HarmonyOS] module.json5 modified - verify permissions and abilities'",
-      "async": false
-    }
-  ]
-}
-```
+## Checklist
 
-### After Editing oh-package.json5
-
-Reinstall dependencies:
-
-```json
-{
-  "type": "PostToolUse",
-  "matcher": {
-    "tool": "Edit",
-    "filePath": "**/oh-package.json5"
-  },
-  "hooks": [
-    {
-      "command": "ohpm install 2>&1 | tail -10",
-      "async": true,
-      "timeout": 30000
-    }
-  ]
-}
-```
-
-## PreToolUse Hooks
-
-### V1 Decorator Guard
-
-Warn when code contains V1 state management decorators:
-
-```json
-{
-  "type": "PreToolUse",
-  "matcher": {
-    "tool": ["Write", "Edit"],
-    "filePath": "**/*.ets"
-  },
-  "hooks": [
-    {
-      "command": "echo '[HarmonyOS] Reminder: Use @ComponentV2 / @Local / @Param - V1 decorators (@State, @Prop, @Link) are prohibited'"
-    }
-  ]
-}
-```
-
-## Validation Checklist
-
-After each implementation cycle, verify:
-
-- [ ] `hvigorw assembleHap` completes without errors
-- [ ] No V1 decorators in new or modified `.ets` files
-- [ ] No `@ohos.router` imports in new or modified files
-- [ ] All API permissions declared in `module.json5`
-- [ ] All dependencies listed in `oh-package.json5`
-- [ ] Resource strings added to all i18n directories
-- [ ] Dark theme colors provided for new color resources
+- HAP builds clean
+- No `@ohos.router` in new code — use `Navigation` + `NavPathStack`
+- Permissions declared; deps in oh-package; i18n strings + dark theme colors for new resources

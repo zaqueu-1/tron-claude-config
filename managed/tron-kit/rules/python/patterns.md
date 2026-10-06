@@ -5,35 +5,33 @@ paths:
 ---
 # Python Patterns
 
-> This file extends [common/patterns.md](../common/patterns.md) with Python specific content.
+> Builds on the shared rules in `../common/patterns.md`.
 
-## Protocol (Duck Typing)
+## Structural typing
 
 ```python
 from typing import Protocol
 
-class Repository(Protocol):
-    def find_by_id(self, id: str) -> dict | None: ...
-    def save(self, entity: dict) -> dict: ...
+class ItemStore(Protocol):
+    def load(self, key: str) -> dict | None: ...
+    def persist(self, row: dict) -> dict: ...
 ```
 
-## Dataclasses as DTOs
+## Request DTOs
 
 ```python
 from dataclasses import dataclass
 
 @dataclass
-class CreateUserRequest:
-    name: str
-    email: str
-    age: int | None = None
+class RegisterPayload:
+    display_name: str
+    mailbox: str
+    years: int | None = None
 ```
 
-## Context Managers & Generators
+## Resources
 
-- Use context managers (`with` statement) for resource management
-- Use generators for lazy evaluation and memory-efficient iteration
+- `with` for acquire/release
+- Generators for lazy, memory-bounded iteration
 
-## Reference
-
-See skill: `python-patterns` for comprehensive patterns including decorators, concurrency, and package organization.
+Depth: `tron-python` skill.

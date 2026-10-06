@@ -5,16 +5,16 @@ paths:
 ---
 # Swift Hooks
 
-> This file extends [common/hooks.md](../common/hooks.md) with Swift specific content.
+> Builds on the shared rules in `../common/hooks.md`.
 
-## PostToolUse Hooks
+`TRON_HOOK_PROFILE` / `TRON_DISABLED_HOOKS`.
 
-Configure in `~/.claude/settings.json`:
+## PostToolUse
 
-- **SwiftFormat**: Auto-format `.swift` files after edit
-- **SwiftLint**: Run lint checks after editing `.swift` files
-- **swift build**: Type-check modified packages after edit
+- **SwiftFormat**
+- **SwiftLint**
+- **swift build** on package edits (standard/strict)
 
-## Warning
+## Warnings
 
-Flag `print()` statements — use `os.Logger` or structured logging instead for production code.
+Flag `print()` — prefer `os.Logger` or structured logging.

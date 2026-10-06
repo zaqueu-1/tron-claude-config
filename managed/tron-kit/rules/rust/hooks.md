@@ -5,12 +5,12 @@ paths:
 ---
 # Rust Hooks
 
-> This file extends [common/hooks.md](../common/hooks.md) with Rust-specific content.
+> Builds on the shared rules in `../common/hooks.md`.
 
-## PostToolUse Hooks
+`TRON_HOOK_PROFILE` / `TRON_DISABLED_HOOKS` gate automation.
 
-Configure in `~/.claude/settings.json`:
+## PostToolUse
 
-- **cargo fmt**: Auto-format `.rs` files after edit
-- **cargo clippy**: Run lint checks after editing Rust files
-- **cargo check**: Verify compilation after changes (faster than `cargo build`)
+- **cargo fmt**
+- **cargo clippy**
+- **cargo check** (strict: after non-trivial edits)

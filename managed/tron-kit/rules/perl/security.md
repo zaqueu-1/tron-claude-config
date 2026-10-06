@@ -8,62 +8,32 @@ paths:
 ---
 # Perl Security
 
-> This file extends [common/security.md](../common/security.md) with Perl-specific content.
+> Builds on the shared rules in `../common/security.md`.
 
-## Taint Mode
+## Taint
 
-- Use `-T` flag on all CGI/web-facing scripts
-- Sanitize `%ENV` (`$ENV{PATH}`, `$ENV{CDPATH}`, etc.) before any external command
+`-T` on internet-facing scripts; sanitize `%ENV` before external commands.
 
-## Input Validation
+## Input
 
-- Use allowlist regex for untainting — never `/(.*)/s`
-- Validate all user input with explicit patterns:
+Allowlist capture groups — never `/(.*)/s` untaint.
 
-```perl
-if ($input =~ /\A([a-zA-Z0-9_-]+)\z/) {
-    my $clean = $1;
-}
-```
+## Files
 
-## File I/O
+Three-arg `open`; **Cwd::realpath** + prefix check against allowed roots.
 
-- **Three-arg open only** — never two-arg open
-- Prevent path traversal with `Cwd::realpath`:
+## Processes
 
-```perl
-use Cwd 'realpath';
-my $safe_path = realpath($user_path);
-die "Path traversal" unless $safe_path =~ m{\A/allowed/directory/};
-```
+List-form `system(@args)`; **IPC::Run3** for captured output; no backticks with interpolation.
 
-## Process Execution
+## SQL
 
-- Use **list-form `system()`** — never single-string form
-- Use **IPC::Run3** for capturing output
-- Never use backticks with variable interpolation
+Placeholders only.
 
-```perl
-system('grep', '-r', $pattern, $directory);  # safe
-```
-
-## SQL Injection Prevention
-
-Always use DBI placeholders — never interpolate into SQL:
-
-```perl
-my $sth = $dbh->prepare('SELECT * FROM users WHERE email = ?');
-$sth->execute($email);
-```
-
-## Security Scanning
-
-Run **perlcritic** with the security theme at severity 4+:
+## Scan
 
 ```bash
 perlcritic --severity 4 --theme security lib/
 ```
 
-## Reference
-
-See skill: `perl-security` for comprehensive Perl security patterns, taint mode, and safe I/O.
+Review: `security-review` skill / `tron-security` agent.
