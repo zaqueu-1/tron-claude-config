@@ -3,7 +3,7 @@
 > Quick reference: what the harness installs, what it enforces, and how to operate it day to day.  
 > Consumer pitch + install story: [README.md](README.md) · Releases: [MAINTAINER.md](MAINTAINER.md)
 
-**Current package version:** `1.9.3`
+**Current package version:** `1.10.0`
 
 ---
 
@@ -58,7 +58,9 @@
 | frontend-skills rule | `~/.cursor/rules/frontend-skills.mdc` | Always synced from `managed/cursor/rules/`; encodes the design authority order |
 | session-handoff | `~/.claude/skills/session-handoff/` | always synced (`SKILL.md`, `config.example.json`); `config.json` stays per person; session notes go to a central Obsidian vault set in `config.json` |
 | issue-board | `~/.claude/skills/issue-board/` | always synced (`SKILL.md`, `board.mjs`, `render.py`, `config.example.json`); `config.json` and `data/` stay per person |
-| gsd | global `$PATH` | `npm install -g @opengsd/gsd-pi` (or bun/pnpm) |
+| gsd | `~/.claude/gsd-core/`, `~/.cursor/gsd-core/` | `npx -y @opengsd/gsd-core@latest --<claude\|cursor> --global --profile=standard` — re-run only when `~/.<runtime>/.gsd-profile` is not `standard`; the profile survives `gsd update` |
+| **tron agents (enforced)** | `~/.claude/agents/tron-*.md`, `~/.cursor/agents/tron-*.md`; guard + roster + role briefs in `~/.claude/tron/` | Always synced from `managed/agents/`; guard hook registered in `~/.claude/settings.json` (`PreToolUse` Task\|Agent, `SessionStart`) and `~/.cursor/hooks.json` (`preToolUse` Task, `subagentStart`, `sessionStart`); other agent files are moved to `~/.claude/tron/agent-roles/` |
+| agent-roster rule | `~/.claude/rules/agent-roster.md`, `~/.cursor/rules/agent-roster.mdc` | Always synced; roster table + orchestration protocol (security → architecture → model governance → quality → token economy → speed) |
 | doc | `~/.claude/skills/doc/` | always synced (`SKILL.md`, `doc.mjs`); no per-person state |
 | caveman skill/plugin | `~/.claude/skills/caveman/` (or plugin) | Official install script |
 | **Caveman rule (enforced)** | `~/.claude/rules/caveman.md` | Always overwritten from package — terse replies mandatory |
@@ -225,7 +227,7 @@ rm .git/hooks/pre-commit .git/hooks/pre-push
 
 ```
 tron-claude-config/
-├── package.json                              # v1.9.3
+├── package.json                              # v1.10.0
 ├── scripts/
 │   ├── postinstall.js                        # orchestrator
 │   ├── sync-tron-rules.js                    # tron-kit rules re-sync CLI

@@ -51,6 +51,7 @@ All agents in this repo have access to the full rule stack, applied in this prio
 | 2 | **Karpathy principles** | `~/.claude/rules/agent-isolation.md` | Behavior: simplicity, surgical changes, goal-driven execution |
 | 3 | **Harness enforcement** | `~/.claude/rules/harness-enforcement.md` | Workflow: commit gates, review gates, approval flow |
 | 4 | **Caveman** | `~/.claude/rules/caveman.md` | Communication: terse replies (always on) |
+| — | **Agent roster** | `~/.claude/rules/agent-roster.md` | Subagents: only the 12 `tron-*` agents; pillars: security → architecture → model governance → quality → token economy → speed |
 
 When rule layers conflict: higher priority wins.
 When skill layers conflict: Karpathy > tron-kit.

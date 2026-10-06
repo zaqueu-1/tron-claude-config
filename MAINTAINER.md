@@ -1,6 +1,6 @@
 # tron-claude-config — Maintainer Guide
 
-Owner playbook for the shared Claude enforcement harness (`@tron/claude-config` **v1.9.3**).
+Owner playbook for the shared Claude enforcement harness (`@tron/claude-config` **v1.10.0**).
 
 Consumer docs: [README.md](README.md) · Operator cheat sheet: [HARNESS-GUIDE.md](HARNESS-GUIDE.md)
 
@@ -14,7 +14,7 @@ On consumer `npm install` / `bun install` / `pnpm install`, `scripts/postinstall
 2. Copies `AGENTS.md` and `scripts/setup-claude-harness.sh`
 3. Installs git `pre-commit` / `pre-push` hooks (via `git rev-parse --git-path hooks`, respects `core.hooksPath`)
 4. Syncs **scoped** tron-kit rules into `.claude/rules/tron/` from the bundled snapshot (detect stack → copy matching folders → prune stale ones; no network)
-5. On developer machines (not CI): installs the `tron-kit@tron` Claude plugin (see [Syncing tron-kit from upstream](#syncing-tron-kit-from-upstream)) and removes the legacy upstream plugin, its marketplace and user-level rules; install-if-missing skills + Karpathy rules, gsd, caveman; **attempt** codebase-memory-mcp via `scripts/lib/ensure-codebase-memory.js` (retries + npm fallback on Windows/WSL; warns instead of aborting postinstall if still missing)
+5. On developer machines (not CI): installs the `tron-kit@tron` Claude plugin (see [Syncing tron-kit from upstream](#syncing-tron-kit-from-upstream)) and removes the legacy upstream plugin, its marketplace and user-level rules; installs the 12 tron agents + roster guard hooks (`scripts/lib/install-tron-agents.js`); GSD with the `standard` profile for Claude Code and Cursor; install-if-missing skills + Karpathy rules, caveman; **attempt** codebase-memory-mcp via `scripts/lib/ensure-codebase-memory.js` (retries + npm fallback on Windows/WSL; warns instead of aborting postinstall if still missing)
 6. On developer machines (not CI): installs the **frontend design skill harness** — the **Emil + Impeccable + Taste** combo (maximum DESIGN source of truth), with **tron-design-fallback** subordinate (charts, forms, web navigation, stack guidelines); removes leftover `ui-ux-pro-max` / `frontend-design` skill folders and disables the `frontend-design@claude-plugins-official` plugin (see [Frontend design skills](#frontend-design-skills-max-design-authority))
 7. Thereafter, `bootstrap-check.sh` self-updates the package about once per day
 
@@ -64,7 +64,7 @@ tron-claude-config/
 │   ├── AGENTS.md
 │   ├── setup-claude-harness.sh        # also re-syncs tron-kit rules on auto-update
 │   ├── tron-kit/                      # frozen tron-kit plugin snapshot → ~/.claude/tron-kit/
-│   ├── tron-kit.config.json           # snapshot pin, include/exclude, rewrites
+│   ├── tron-kit.config.json           # snapshot pin, allowlists, kept hooks, prune, rewrites
 │   ├── agents/                        # impeccable-* subagents → ~/.claude/agents/, ~/.cursor/agents/
 │   ├── cursor/rules/                  # frontend-skills.mdc → ~/.cursor/rules/
 │   ├── hooks/                         # cursor/ + github/ impeccable hook templates
@@ -225,8 +225,11 @@ npm run sync:tron-kit -- --ref <sha|branch> # sync a specific ref (resolved sha 
 Everything the sync does is driven by `managed/tron-kit.config.json`:
 
 - `upstream.repo` / `upstream.ref` — source and pinned sha
-- `include` — top-level upstream paths copied (no `node_modules`, docs, assets, tests or other harness dot-dirs)
-- `exclude` — globs never brought back. `save-session` is excluded because `/session-handoff` replaces it; the upstream self-installer (`configure-ecc`) and self-updater (`auto-update`) are excluded because they would reinstall upstream outside this snapshot; the upstream frontend design, motion and accessibility skills (`design-system`, `frontend-design-direction`, `motion-*`, `liquid-glass-design`, `accessibility`, `frontend-a11y`, `loop-design-check`, `inherit-legacy-style`) are excluded because they compete with the Emil + Impeccable + Taste combo. Implementation skills (`frontend-patterns`, `nuxt4-patterns`, `ui-to-vue`, `swiftui-patterns`, `frontend-slides`, `remotion-*`, `dashboard-builder`, …) stay
+- `include` — top-level upstream paths copied. Upstream `agents/` is not included: the 12 tron agents (`managed/agents/`) own the roster
+- `allow` — allowlists for `skills` and `commands`; everything else upstream stays out, including new upstream additions. Kept: technical skills that back a tron agent. Dropped: workflow commands/skills GSD already owns (plan, prp, orch, multi, epic, sessions, loops, learning), duplicates of tron skills (`code-review`, `security-review`, `pr`, `save-session`), the design/motion/a11y skills that compete with the Emil + Impeccable + Taste combo, and non-engineering domains. A listed name missing upstream aborts the sync
+- `exclude` — globs never brought back (stale hook docs, junk files)
+- `hooks.keep` / `hooks.derive` — only these hooks survive: `pre:bash:block-no-verify` (derived from the config-protection entry, so it runs without the upstream bash dispatcher), `pre:config-protection`, `post:edit:accumulate`, `stop-format-typecheck`, `check-console-log`. Telemetry, learning, compaction and session hooks are dropped (GSD covers context and sessions)
+- `prune` — directories (`scripts`, `config`, `schemas`, `manifests`, `mcp-configs`) reduced to files reachable from kept hooks, skills, commands and rules
 - `rewrites` — literal find/replace applied after copy. They retarget the hook/command root resolvers from the upstream plugin slugs to `tron-kit` / `tron-kit@tron` / `marketplaces/tron` / cache dir `tron`, and swap `/save-session` mentions for `/session-handoff`. Each rewrite asserts `minMatches`; the sync aborts with a clear error if upstream drifted — fix the rule, never loosen it blindly
 - `hooks.stripMatcherKeys` — keys removed from `hooks/hooks.json` matcher entries (matches how the plugin was installed before the migration)
 - `plugin` / `marketplace` — metadata for the generated `.claude-plugin/plugin.json` and `marketplace.json`

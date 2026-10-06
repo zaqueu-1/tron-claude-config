@@ -160,6 +160,103 @@ function applyRewrites(stageRoot, rewrites) {
   return results;
 }
 
+// Allowlisted top-level entries per dir (e.g. skills, commands): upstream additions stay out by default.
+function applyAllow(stageRoot, allow = {}) {
+  for (const [dir, names] of Object.entries(allow)) {
+    const root = path.join(stageRoot, dir);
+    const present = fs.readdirSync(root);
+    const stems = new Map(present.map((name) => [name.replace(/\.md$/, ''), name]));
+    const missing = names.filter((name) => !stems.has(name));
+    if (missing.length) throw new Error(`allow.${dir}: missing upstream: ${missing.join(', ')} — upstream drifted`);
+    for (const [stem, name] of stems) {
+      if (!names.includes(stem)) fs.rmSync(path.join(root, name), { recursive: true, force: true });
+    }
+  }
+}
+
+// Keeps only hooks whose command mentions a kept id; `derive` clones a kept entry for another script.
+function pruneHooks(stageRoot, hooksConfig) {
+  if (!hooksConfig?.keep) return;
+  const hooksPath = path.join(stageRoot, hooksConfig.file);
+  const hooksJson = JSON.parse(fs.readFileSync(hooksPath, 'utf8'));
+  const commandOf = (matcher) => matcher.hooks.map((h) => h.command).join('\n');
+  const all = Object.values(hooksJson.hooks).flat();
+
+  for (const { from, id, script, matcher, event } of hooksConfig.derive || []) {
+    const [source, sourceScript] = from;
+    const base = all.find((m) => commandOf(m).includes(source));
+    if (!base) throw new Error(`hooks.derive: ${source} not found upstream — upstream drifted`);
+    const clone = JSON.parse(JSON.stringify(base).split(source).join(id).split(sourceScript).join(script));
+    clone.matcher = matcher;
+    delete clone.id;
+    (hooksJson.hooks[event] ||= []).push(clone);
+  }
+
+  const found = new Set();
+  for (const [event, matchers] of Object.entries(hooksJson.hooks)) {
+    hooksJson.hooks[event] = matchers.filter((m) => {
+      const hit = hooksConfig.keep.find((id) => commandOf(m).includes(id));
+      if (hit) found.add(hit);
+      return Boolean(hit);
+    });
+    if (!hooksJson.hooks[event].length) delete hooksJson.hooks[event];
+  }
+  const missing = hooksConfig.keep.filter((id) => !found.has(id));
+  if (missing.length) throw new Error(`hooks.keep: ${missing.join(', ')} not found upstream — upstream drifted`);
+  fs.writeFileSync(hooksPath, `${JSON.stringify(hooksJson, null, 2)}\n`, 'utf8');
+}
+
+// Deletes files under `dir` that nothing kept can reach: roots are hooks.json + every kept .md/.json,
+// edges are relative require()/path literals in JS. Fails loudly if a reachable file is missing.
+function pruneUnreachable(stageRoot, dirs = []) {
+  if (!dirs.length) return [];
+  const files = listFiles(stageRoot);
+  const inPruned = (file) => dirs.some((d) => file.startsWith(`${d}/`));
+  const reachable = new Set();
+  const queue = files.filter((f) => !inPruned(f) && /\.(md|json)$/.test(f));
+  const literal = /['"`]((?:\.{1,2}\/|scripts\/)[\w./-]+)['"`]/g;
+  const barePath = /(?:^|[\s(=,])(scripts\/[\w./-]+\.(?:c?js|sh|py|json))/g;
+  const joined = /path\.(?:join|resolve)\(\s*__dirname\s*,([^)]*)\)/g;
+
+  const resolveTarget = (fromFile, spec) => {
+    const base = spec.startsWith('scripts/') ? spec : path.posix.join(path.posix.dirname(fromFile), spec);
+    for (const candidate of [base, `${base}.js`, `${base}.cjs`, `${base}/index.js`]) {
+      if (files.includes(candidate)) return candidate;
+    }
+    return null;
+  };
+
+  while (queue.length) {
+    const file = queue.shift();
+    const text = fs.readFileSync(path.join(stageRoot, file), 'utf8');
+    const specs = [...text.matchAll(literal), ...text.matchAll(barePath)].map((m) => m[1]);
+    for (const m of text.matchAll(joined)) {
+      const parts = [...m[1].matchAll(/['"]([^'"]+)['"]/g)].map((p) => p[1]);
+      if (parts.length) specs.push(`./${parts.join('/')}`);
+    }
+    for (const spec of specs) {
+      const target = resolveTarget(file, spec);
+      if (target && inPruned(target) && !reachable.has(target)) {
+        reachable.add(target);
+        if (/\.(c?js|sh|json)$/.test(target)) queue.push(target);
+      }
+    }
+  }
+
+  const removed = files.filter((f) => inPruned(f) && !reachable.has(f));
+  for (const file of removed) fs.rmSync(path.join(stageRoot, file));
+  for (const d of dirs) removeEmptyDirs(path.join(stageRoot, d));
+  return removed;
+}
+
+function removeEmptyDirs(dir) {
+  if (!fs.existsSync(dir)) return;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isDirectory()) removeEmptyDirs(path.join(dir, entry.name));
+  }
+  if (!fs.readdirSync(dir).length) fs.rmdirSync(dir);
+}
+
 function stripHookMatcherKeys(stageRoot, hooksConfig) {
   if (!hooksConfig || !hooksConfig.stripMatcherKeys?.length) return;
   const hooksPath = path.join(stageRoot, hooksConfig.file);
@@ -268,8 +365,11 @@ function main() {
       copyFiltered(upstreamRoot, entry, stageRoot, excludes, excluded);
     }
 
+    applyAllow(stageRoot, config.allow);
     const rewriteResults = applyRewrites(stageRoot, config.rewrites);
+    pruneHooks(stageRoot, config.hooks);
     stripHookMatcherKeys(stageRoot, config.hooks);
+    const pruned = pruneUnreachable(stageRoot, config.prune);
     writePluginManifests(upstreamRoot, stageRoot, config);
 
     const upstreamVersion = fs.existsSync(path.join(stageRoot, 'VERSION'))
@@ -286,6 +386,7 @@ function main() {
 
     const counts = countSnapshot(stageRoot);
     log(`upstream version ${upstreamVersion ?? '(unknown)'}`);
+    log(`pruned unreachable (${pruned.length}) under ${(config.prune || []).join(', ') || '(none)'}`);
     log(`skills=${counts.skills} agents=${counts.agents} commands=${counts.commands} hooks=${counts.hooks} [${counts.hookEvents.join(', ')}]`);
     log(`rule folders (${counts.ruleFolders.length}): ${counts.ruleFolders.join(', ')}`);
     log(`excluded (${excluded.length}): ${excluded.join(', ') || '(none)'}`);

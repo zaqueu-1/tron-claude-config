@@ -40,7 +40,7 @@ To install (both paths execute a remote script from a third-party repository, an
 globally — an operator decision, not an agent one):
 
 ```bash
-npm install -g @opengsd/gsd-pi
+npx -y @opengsd/gsd-core@latest --claude --global --profile=standard
 curl -fsSL https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.sh | bash
 ```
 
