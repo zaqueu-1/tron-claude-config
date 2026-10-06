@@ -62,7 +62,7 @@ function removeLegacyRules(projectRoot, { dryRun, emit }) {
 
 /**
  * Sync tron-kit rules into the consumer project based on detected scope.
- * Sources rules from the bundled managed/tron-kit snapshot — no network.
+ * Sources rules from the bundled managed/tron-kit/rules — no network.
  * @param {string} projectRoot
  * @param {{ dryRun?: boolean, silent?: boolean }} [options]
  */
@@ -116,7 +116,7 @@ function installTronRules(projectRoot, options = {}) {
   }
 
   if (missingFromKit.length > 0) {
-    emit(`WARN: tron-kit snapshot missing rule folders: ${missingFromKit.join(', ')}`);
+    emit(`WARN: tron-kit is missing rule folders: ${missingFromKit.join(', ')}`);
   }
 
   return { ok: true, scope: { ...scope, folders: toInstall }, dryRun };

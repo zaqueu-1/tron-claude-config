@@ -34,26 +34,9 @@ function parseArgs(argv) {
   return args;
 }
 
-function listFiles(dir) {
-  if (!fs.existsSync(dir)) return [];
-  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const full = path.join(dir, entry.name);
-    return entry.isDirectory() ? listFiles(full) : [full];
-  });
-}
-
 function watchPatterns(source) {
   const patterns = [...(source.watch || [])];
   for (const upstreamPath of Object.keys(source.map || {})) patterns.push(upstreamPath, `${upstreamPath}/**`);
-  if (source.watchFromConfig && source.config) {
-    const config = JSON.parse(fs.readFileSync(path.join(PACKAGE_ROOT, source.config), 'utf8'));
-    for (const name of config.allow?.skills || []) patterns.push(`skills/${name}/**`);
-    for (const name of config.allow?.commands || []) patterns.push(`commands/${name}.md`);
-  }
-  for (const dir of source.watchSnapshot || []) {
-    const snapshotRoot = path.join(PACKAGE_ROOT, source.tron);
-    for (const file of listFiles(path.join(snapshotRoot, dir))) patterns.push(path.relative(snapshotRoot, file));
-  }
   return patterns;
 }
 
@@ -137,9 +120,7 @@ function renderReport(source, result) {
     '',
     'Interpret relevant changes into the tron artifact in our own words (no verbatim copies), then run:',
     '',
-    source.id === 'tron-kit'
-      ? `\`npm run sync:tron-kit -- --ref ${result.latest}\``
-      : `\`npm run upstream:watch -- --accept ${source.id} --ref ${result.latest}\``,
+    `\`npm run upstream:watch -- --accept ${source.id} --ref ${result.latest}\``,
     '',
   ];
   return lines.join('\n');
@@ -154,9 +135,6 @@ function writeReport(source, result) {
 
 function accept(id, ref) {
   const source = getSource(id);
-  if (source.id === 'tron-kit') {
-    throw new Error('tron-kit pin moves only through `npm run sync:tron-kit -- --ref <sha>` (it rebuilds the snapshot)');
-  }
   const target = ref || mirror(source).latest;
   setSourceRef(id, target, { acceptedAt: new Date().toISOString().slice(0, 10) });
   log(`${id}: pin ${source.ref} → ${target}`);

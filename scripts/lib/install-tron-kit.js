@@ -120,7 +120,7 @@ function readInstalledHash(installPath) {
 
 function copyKit(version, { dryRun, log }) {
   if (!fs.existsSync(path.join(KIT_SRC, '.claude-plugin', 'plugin.json'))) {
-    throw new Error(`tron-kit snapshot missing at ${KIT_SRC} — package is incomplete`);
+    throw new Error(`tron-kit missing at ${KIT_SRC} — package is incomplete`);
   }
   const contentHash = hashKit(KIT_SRC);
   if (dryRun) {

@@ -10,20 +10,18 @@
     {
       "name": "tron-kit",
       "source": "./",
-      "description": "Tron engineering kit for Claude Code: skills, commands, hooks, language rules, agent role briefs and MCP conventions managed by @tron/claude-config",
+      "description": "Tron engineering kit for Claude Code: stack skills, commands, quality hooks and language rules managed by @tron/claude-config",
       "version": "1.12.0",
       "author": {
         "name": "tron"
       },
-      "license": "MIT",
       "keywords": [
         "claude-code",
         "skills",
         "hooks",
         "rules",
         "tdd",
-        "code-review",
-        "security",
+        "quality",
         "workflow"
       ],
       "category": "workflow",
