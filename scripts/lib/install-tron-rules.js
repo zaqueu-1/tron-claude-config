@@ -122,8 +122,4 @@ function installTronRules(projectRoot, options = {}) {
   return { ok: true, scope: { ...scope, folders: toInstall }, dryRun };
 }
 
-module.exports = {
-  MANAGED_FOLDERS,
-  installTronRules,
-  detectProjectScope,
-};
+module.exports = { installTronRules };

@@ -232,13 +232,7 @@ function ensureTronGraph(options = {}) {
   return { ok: false, attempts: MAX_ATTEMPTS };
 }
 
-module.exports = {
-  ensureTronGraph,
-  isTronGraphReady,
-  isRegisteredInMcpJson,
-  isBinaryOnPath,
-  normalizeRegistration,
-};
+module.exports = { ensureTronGraph };
 
 if (require.main === module) {
   const result = ensureTronGraph({ force: process.argv.includes('--force'), dryRun: process.argv.includes('--dry-run') });

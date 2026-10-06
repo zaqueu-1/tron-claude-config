@@ -356,7 +356,6 @@ function disablePlugin(id, options = {}) {
 }
 
 module.exports = {
-  PLUGIN_ID,
   installTronKitPlugin,
   removeLegacyEcc,
   disablePlugin,
