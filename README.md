@@ -100,7 +100,7 @@ Also installed:
 - Always-on rules under `~/.claude/rules/`: **engineering principles** (clarify → smallest change → touch only what's needed → prove done) and **terse mode** (fewer output tokens, same substance; code, commits and PRs stay normal prose)
 - **12 tron agents** (enforced) — see [Agents](#agents--12-enforced)
 - **Workflow engine** (`standard` profile) — the single plan loop for Claude Code and Cursor (discuss → plan → execute → verify)
-- **tron-kit** Claude Code plugin (`tron-kit@tron`, always synced) — lean technical library: 71 stack skills, 3 commands (`build-fix`, `test-coverage`, `refactor-clean`), 5 quality hooks and language rules, vendored as a frozen snapshot under `managed/tron-kit/` and installed at user scope via `claude plugin`. Replaces the former upstream plugin, which postinstall uninstalls automatically
+- **tron-kit** Claude Code plugin (`tron-kit@tron`, always synced) — lean technical library written and owned by tron: 21 stack skills (`tron-react`, `tron-vue`, `tron-services`, `tron-python`, `tron-databases`, `tron-ml`, `tron-quality`, `tron-delivery`, …; each a short router plus on-demand references), 3 commands (`build-fix`, `test-coverage`, `refactor-clean`), quality hooks (config guard, hook-bypass guard, format + type check + `console.log` check on stop) and language rules, under `managed/tron-kit/` and installed at user scope via `claude plugin`. Replaces the former upstream plugin, which postinstall uninstalls automatically
 - **tron design stack** — `tron-design`, `tron-motion`, `tron-native`, `tron-imagery` (primary DESIGN authority) + **tron-design-fallback** (subordinate: charts, forms, web navigation, stack guidelines) — mandatory on any UI task; see [Frontend design skills](#frontend-design-skills--max-design-authority) and `AGENTS.md`
 - **session-handoff** skill (always synced) — session notes in a central Obsidian vault, saved and resumed; see [Workflow skills](#workflow-skills)
 - **issue-board** skill (always synced) — open issues of any GitHub Project (v2) as terminal tables; see [Workflow skills](#workflow-skills)
@@ -171,7 +171,7 @@ On any frontend/UI task the harness enforces a two-level design stack:
 
 **On any conflict, the tron design stack always wins over tron-design-fallback.** Agents announce `Using tron-design for [purpose]`, naming each companion skill actually loaded. Full contract: [AGENTS.md](managed/AGENTS.md).
 
-The former secondary layer, **ui-ux-pro-max** and **frontend-design**, was removed: its direction-setting generator and style/color/font data competed with the stack. The only genuinely missing pieces were extracted into tron-design-fallback. For the same reason, tron-kit excludes the upstream design, motion and accessibility skills that overlap the stack.
+The former secondary layer, **ui-ux-pro-max** and **frontend-design**, was removed: its direction-setting generator and style/color/font data competed with the stack. The only genuinely missing pieces were extracted into tron-design-fallback. For the same reason, tron-kit has no design, motion or accessibility skills of its own; those belong to the stack.
 
 Where they land on the developer machine:
 
@@ -210,7 +210,7 @@ English headers (`Summary`, `Test plan`, …) are **rejected**. If a section doe
 On install and on harness setup/update, the package:
 
 1. Detects stack from `package.json` + project markers  
-2. Reads rule folders from the bundled `managed/tron-kit/rules/` snapshot (no network)  
+2. Reads rule folders from the bundled `managed/tron-kit/rules/` (no network)  
 3. Syncs **only** matching folders into `.claude/rules/tron/`  
 4. Removes managed folders that no longer match (and legacy rule folders from before tron-kit, if present)  
 
@@ -240,15 +240,9 @@ tron-kit > engineering principles on standards. Engineering principles > tron-ki
 
 ---
 
-## Emergency bypass
+## Emergency bypass (humans only)
 
-```bash
-git commit --no-verify -m "emergency only"
-git push --no-verify
-
-# Tear down gates in one repo:
-rm .git/hooks/pre-commit .git/hooks/pre-push
-```
+Agents never skip hooks: tron-kit refuses hook-skipping git commands, and an agent that hits a failing hook fixes the cause or stops and asks. If a person truly has to ship past a broken gate, they do it themselves in their own terminal, then fix the gate in a follow-up. Removing the harness from a repo means removing the dependency and its `.git/hooks/pre-commit` / `pre-push`, not editing them away.
 
 ---
 
@@ -292,7 +286,7 @@ tron-claude-config/
 ├── managed/
 │   ├── AGENTS.md
 │   ├── setup-claude-harness.sh
-│   ├── tron-kit/                # frozen tron-kit plugin snapshot (skills, commands, hooks, rules)
+│   ├── tron-kit/                # tron-kit plugin (stack skills, commands, hooks, rules)
 │   ├── agents/                  # 12 tron agents, roster.json, roster guard hook
 │   ├── claude/                  # settings, hooks, rules (terse, engineering principles, roster)
 │   ├── cursor/rules/            # frontend-skills.mdc (design authority)

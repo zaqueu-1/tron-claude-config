@@ -131,11 +131,24 @@ CRITICAL/HIGH findings from either review **block** the token. Do not create `.c
 
 **tron-kit wins on coding standards.** **Engineering principles win on how to approach the task.**
 
+### tron-kit quality hooks
+
+Installed with the `tron-kit@tron` plugin. They guard Claude Code sessions; Cursor also runs plugin hooks but rejects their output format, so under Cursor payloads the pre hooks answer `{}` and Cursor sessions rely on the repo's git hooks (`pre-commit`, `pre-push`) and the always-on rules instead:
+
+| Hook | When | Does |
+|---|---|---|
+| `pre:config-guard` | Write / Edit / MultiEdit | Blocks edits to existing lint/format configs and their ignore files (creating one is fine) |
+| `pre:bash:no-verify` | Bash | Blocks git commands that skip hooks: the skip-verification flag, `git commit -n`, `core.hooksPath` overrides (`-c`, `--config-env`, `GIT_CONFIG_*`, `git config`) |
+| `post:edit-tracker` | Edit / Write / MultiEdit | Records the files the session edited |
+| `stop:checks` | Stop | Formats edited JS/TS (Biome or Prettier, local binaries only), runs `tsc --noEmit` per tsconfig, flags leftover `console.log` — advisory, never blocks |
+
+Controls: `TRON_HOOK_PROFILE=minimal|standard|strict` (minimal turns them all off), `TRON_DISABLED_HOOKS=<id>,<id>`, `TRON_ALLOW_CONFIG_EDITS=1` when the user explicitly wants a config change.
+
 ### Scoped tron-kit rules sync
 
 `scripts/lib/detect-project-scope.js` + `scripts/lib/install-tron-rules.js`:
 
-- Source: the bundled `managed/tron-kit/rules/` snapshot — no network
+- Source: the bundled `managed/tron-kit/rules/` — no network
 - Always install `common`
 - Add language/framework folders only when the consumer stack matches
 - Prune managed folders that fall out of scope on the next sync
@@ -207,15 +220,9 @@ npm version minor   # new hook / skill / rule
 
 ---
 
-## Emergency bypass
+## Emergency bypass (humans only)
 
-```bash
-git commit --no-verify -m "message"
-git push --no-verify
-
-rm .git/hooks/pre-commit .git/hooks/pre-push
-# then remove the dependency and reinstall
-```
+Agents never skip hooks: tron-kit refuses hook-skipping git commands, and an agent that hits a failing hook fixes the cause or stops and asks. If a person truly has to ship past a broken gate, they do it themselves in their own terminal, then fix the gate in a follow-up. Removing the harness from a repo means removing the dependency and its `.git/hooks/pre-commit` / `pre-push`, not editing them away.
 
 ---
 
@@ -229,14 +236,14 @@ tron-claude-config/
 │   ├── sync-tron-rules.js                    # tron-kit rules re-sync CLI
 │   └── lib/
 │       ├── detect-project-scope.js           # stack → tron-kit rule folders
-│       ├── install-tron-rules.js             # copy / prune (local snapshot)
+│       ├── install-tron-rules.js             # copy / prune (bundled rules)
 │       ├── install-tron-kit.js               # user-scope plugin + legacy cleanup
 │       ├── ensure-tron-graph.js              # required code graph MCP (Win + Unix)
 │       └── ensure-tron-docs.js               # docs MCP registration
 ├── managed/
 │   ├── AGENTS.md
 │   ├── setup-claude-harness.sh
-│   ├── tron-kit/                             # frozen tron-kit plugin snapshot
+│   ├── tron-kit/                             # tron-kit plugin (skills, commands, hooks, rules)
 │   ├── agents/                               # 12 tron agents, roster, guard
 │   ├── cursor/rules/frontend-skills.mdc      # design authority rule
 │   ├── hooks/                                # cursor/ + github/ tron-design hook templates
