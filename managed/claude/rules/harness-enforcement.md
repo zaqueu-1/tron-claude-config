@@ -4,55 +4,12 @@
 
 | Layer | Higher priority | Lower priority |
 |-------|----------------|---------------|
-| **Rules** | tron-kit (`.claude/rules/tron/`) | Karpathy guidelines below |
-| **Skills** | `andrej-karpathy-skills:karpathy-guidelines` | tron-kit skills |
-| **Communication** | Caveman (`~/.claude/rules/caveman.md`) — always on | Verbose / filler replies |
+| **Rules** | tron-kit (`.claude/rules/tron/`) | Engineering principles |
+| **Behavior** | Engineering principles (`~/.claude/rules/engineering-principles.md`) — always on | tron-kit skills |
+| **Communication** | Terse mode (`~/.claude/rules/terse.md`) — always on | Verbose / filler replies |
 
 When rules conflict: follow tron-kit.
-When behavior/skill guidelines conflict: follow karpathy.
-**Communication style:** caveman is mandatory for conversational replies (see `caveman.md`). Code, commits, and PR bodies stay normal prose.
+When behavior/skill guidelines conflict: follow engineering principles.
+**Communication style:** terse mode is mandatory for conversational replies. Code, commits, and PR bodies stay normal prose.
 
----
-
-## Caveman — always active
-
-Reply terse. Substance stays. Fluff dies. Full rules: `~/.claude/rules/caveman.md` ([JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman)).
-
-Default level: **full**. User may switch with `/caveman lite|full|ultra|wenyan` or pause with `normal mode`. Auto-Clarity: drop caveman for security warnings, irreversible actions, or user confusion — then resume.
-
----
-
-## Karpathy Coding Principles — always active
-
-Apply all four principles to every write, edit, or refactor task. Skip only for pure read-only work (explain, search, answer).
-
-### 1. Think Before Coding
-
-Before touching any file:
-- State assumptions explicitly. If uncertain, surface it.
-- If multiple interpretations exist, present them — never pick silently.
-- If a simpler path exists, say so and push back.
-- If something is unclear, stop and name what's confusing.
-
-### 2. Simplicity First
-
-Minimum code that solves the problem. Nothing else.
-- No speculative features, abstractions, or configurability.
-- No error handling for scenarios that cannot happen.
-- If the same result fits in half the lines, rewrite it.
-
-### 3. Surgical Changes
-
-Touch only what the request requires.
-- Do not improve adjacent code, formatting, or comments.
-- Do not refactor things that aren't broken.
-- Match existing style exactly, even if you'd write it differently.
-- If your changes create unused imports/vars/functions, remove them.
-- If you notice pre-existing dead code, mention it — don't delete it.
-
-### 4. Goal-Driven Execution
-
-Before implementing, define what "done" looks like:
-- Frame tasks as verifiable outcomes: "write a test that fails, then make it pass."
-- For multi-step work, produce a brief numbered plan with a verify step per item.
-- Strong success criteria = ability to loop independently without clarification.
+Engineering principles apply to every write, edit, or refactor task (clarify → smallest change → touch only what's needed → prove done). Skip only for pure read-only work (explain, search, answer).

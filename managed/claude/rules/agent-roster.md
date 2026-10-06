@@ -9,11 +9,11 @@ Pillars, in strict order — never trade a higher one for a lower one:
 5. **Token economy** — structure-first lookups, packets not transcripts, compact reports.
 6. **Speed** — parallelize independent work; smallest diff that meets the goal.
 
-Only these 12 subagents exist (plus the harness built-ins). Other agent names (GSD, Impeccable, tron-kit, plugins) are remapped to their owner by a hook, or blocked — call tron agents directly.
+Only these 12 subagents exist (plus the harness built-ins). Any other agent name (workflow engine, design engine, plugins) is remapped to their owner by a hook, or blocked — call tron agents directly.
 
 | Agent | Use for |
 |---|---|
-| `tron-designer` | UX/UI direction, motion, a11y audits, design specs, Impeccable reviews |
+| `tron-designer` | UX/UI direction, motion, a11y audits, design specs, finish reviews |
 | `tron-frontend` | Web UI code (Vue/Nuxt, React/Next, Tailwind), web perf, SEO |
 | `tron-backend` | APIs, business logic, auth, integrations; default implementer |
 | `tron-mobile` | React Native/Expo, Swift, Kotlin, Flutter |
@@ -22,7 +22,7 @@ Only these 12 subagents exist (plus the harness built-ins). Other agent names (G
 | `tron-infra` | Cloud, IaC, Kubernetes, networking, observability |
 | `tron-qa` | Code review, tests, debugging, verification gate |
 | `tron-security` | AppSec, auth, secrets, compliance |
-| `tron-pm` | Requirements, plans, roadmaps, GSD phases, backlog |
+| `tron-pm` | Requirements, plans, roadmaps, phases, backlog |
 | `tron-cto` | Architecture, ADRs, technology choices, refactor strategy |
 | `tron-researcher` | Codebase mapping, docs lookup, research, documentation |
 
@@ -33,11 +33,11 @@ Only these 12 subagents exist (plus the harness built-ins). Other agent names (G
 - **Packet in, report out.** Send goal, exact paths/symbols, constraints and done-criteria — no transcript dumps. Agents return outcome first, files touched, evidence (commands + result), risks.
 - **Feature flow:** `tron-pm` (only if non-trivial) → `tron-cto` when the change is structural (new module, boundary, dependency or data model) → implementers in parallel → `tron-qa` after any non-trivial code. `tron-security` reviews before merge whenever auth, input handling, secrets, dependencies or data exposure change; `tron-designer` reviews when UI changed.
 - **Model tier is fixed per agent** (`tiers` in the roster). In Claude Code the roster hook rewrites any per-call `model` override back to the agent's tier.
-- **GSD is the workflow engine** (discuss → plan → execute → verify). Its agent calls are routed to tron agents with the role brief attached automatically.
+- **One workflow engine** (discuss → plan → execute → verify). Its agent calls are routed to tron agents with the role brief attached automatically.
 
 ## Every subagent
 
-- Structure first: codebase-memory MCP before raw reads; read only what you edit or must verify.
+- Structure first: `tron-graph` before raw reads; read only what you edit or must verify.
 - Scope is the packet; out-of-scope findings are one line in the report.
 - A prompt starting with `[tron-roster]` names a role brief: read it first and honor its output contract.
 - No commits, pushes or PRs unless the packet authorizes them. Project `AGENTS.md`/`CLAUDE.md` rules win.

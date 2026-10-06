@@ -25,7 +25,7 @@ What isolation prevents:
 
 Agents must explore the codebase actively before acting. Tool priority:
 
-**1. codebase-memory-mcp first** (registered globally in `~/.claude/.mcp.json`, available to all agents automatically):
+**1. `tron-graph` first** (registered globally for Claude Code and Cursor, available to all agents automatically):
 
 | Tool | Use for |
 |------|---------|
@@ -48,26 +48,22 @@ All agents in this repo have access to the full rule stack, applied in this prio
 | Priority | Layer | Source | What it governs |
 |----------|-------|--------|-----------------|
 | 1 | **tron-kit rules** | `.claude/rules/tron/` | Coding standards: naming, testing, security, git workflow |
-| 2 | **Karpathy principles** | `~/.claude/rules/agent-isolation.md` | Behavior: simplicity, surgical changes, goal-driven execution |
+| 2 | **Engineering principles** | `~/.claude/rules/engineering-principles.md` | Behavior: simplicity, surgical changes, goal-driven execution |
 | 3 | **Harness enforcement** | `~/.claude/rules/harness-enforcement.md` | Workflow: commit gates, review gates, approval flow |
-| 4 | **Caveman** | `~/.claude/rules/caveman.md` | Communication: terse replies (always on) |
+| 4 | **Terse mode** | `~/.claude/rules/terse.md` | Communication: terse replies (always on) |
 | — | **Agent roster** | `~/.claude/rules/agent-roster.md` | Subagents: only the 12 `tron-*` agents; pillars: security → architecture → model governance → quality → token economy → speed |
 
 When rule layers conflict: higher priority wins.
-When skill layers conflict: Karpathy > tron-kit.
-**Communication:** caveman is mandatory for chat replies; code / commits / PR bodies stay normal prose.
+When skill layers conflict: engineering principles > tron-kit.
+**Communication:** terse mode is mandatory for chat replies; code / commits / PR bodies stay normal prose.
 
 ---
 
-## Caveman — always on
+## Terse mode — always on
 
-Every agent replies in caveman style by default ([JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman)). Drop filler. Keep technical accuracy. Code and commands unchanged.
+Every agent replies terse by default: cut filler, keep technical accuracy, quote code and commands exactly. Levels: `terse lite|full|ultra`; pause with `stop terse` / `normal mode`. Normal prose for security warnings, irreversible actions, or user confusion — then resume.
 
-- Default: `/caveman full`
-- Pause: `stop caveman` / `normal mode`
-- Auto-Clarity: normal prose for security warnings, irreversible actions, or user confusion — then resume
-
-Full contract: `~/.claude/rules/caveman.md`.
+Full contract: `~/.claude/rules/terse.md`.
 
 ---
 
@@ -106,21 +102,9 @@ Announce: `Using Emil + Impeccable + Taste for [purpose]` — append `(+ tron-de
 
 ---
 
-## Karpathy principles
+## Engineering principles
 
-Applied automatically to every write/edit/refactor task:
-
-**1. Think before coding** — Surface assumptions. Name confusion. Never pick an interpretation silently. If multiple paths exist, present them.
-
-**2. Simplicity first** — Minimum code that solves the problem. No speculative features, abstractions, or configurability beyond what was asked. If the same result fits in half the lines, write the shorter version.
-
-**3. Surgical changes** — Touch only what the task requires. Do not improve adjacent code, refactor things that aren't broken, or remove pre-existing dead code unless explicitly asked. Every changed line should trace directly to the task.
-
-**4. Goal-driven execution** — Define verifiable success criteria before implementing. For multi-step tasks:
-```
-1. [Step] → verify: [check]
-2. [Step] → verify: [check]
-```
+Applied automatically to every write/edit/refactor task — clarify before building, smallest thing that works, change only what the task needs, define done and prove it. Full contract: `~/.claude/rules/engineering-principles.md`.
 
 ---
 

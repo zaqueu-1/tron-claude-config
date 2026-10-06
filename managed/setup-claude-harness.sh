@@ -88,19 +88,19 @@ log "🔍 Checking required tools..."
 MISSING=()
 
 if [ -d "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/gsd-core" ]; then
-  log "   ✓ gsd"
+  log "   ✓ workflow-engine"
 else
-  log "   ✗ gsd — MISSING"
-  MISSING+=("gsd")
+  log "   ✗ workflow-engine — MISSING"
+  MISSING+=("workflow-engine")
 fi
 
-ENSURE_CBM="$REPO_ROOT/node_modules/@tron/claude-config/scripts/lib/ensure-codebase-memory.js"
-if [ -f "$ENSURE_CBM" ]; then
-  if node "$ENSURE_CBM"; then
-    log "   ✓ codebase-memory-mcp"
+ENSURE_GRAPH="$REPO_ROOT/node_modules/@tron/claude-config/scripts/lib/ensure-tron-graph.js"
+if [ -f "$ENSURE_GRAPH" ]; then
+  if node "$ENSURE_GRAPH"; then
+    log "   ✓ tron-graph"
   else
-    log "   ✗ codebase-memory-mcp — install failed (required)"
-    MISSING+=("codebase-memory-mcp")
+    log "   ✗ tron-graph — install failed (required)"
+    MISSING+=("tron-graph")
   fi
 elif node -e "
   const fs = require('fs');
@@ -108,12 +108,12 @@ elif node -e "
   const p = require('path').join(os.homedir(), '.claude', '.mcp.json');
   if (!fs.existsSync(p)) process.exit(1);
   const d = JSON.parse(fs.readFileSync(p, 'utf8'));
-  if (!Object.keys(d.mcpServers||{}).some(k=>k.includes('codebase-memory'))) process.exit(1);
+  if (!(d.mcpServers || {})['tron-graph']) process.exit(1);
 " 2>/dev/null; then
-  log "   ✓ codebase-memory-mcp"
+  log "   ✓ tron-graph"
 else
-  log "   ✗ codebase-memory-mcp — NOT REGISTERED in ~/.claude/.mcp.json"
-  MISSING+=("codebase-memory-mcp")
+  log "   ✗ tron-graph — NOT REGISTERED in ~/.claude/.mcp.json"
+  MISSING+=("tron-graph")
 fi
 
 # 4. Print install instructions for missing tools
@@ -122,16 +122,11 @@ if [ ${#MISSING[@]} -gt 0 ]; then
   log "⚠️  Missing tools. Install instructions:"
   for tool in "${MISSING[@]}"; do
     case "$tool" in
-      gsd)
-        log "   gsd:  npx -y @opengsd/gsd-core@latest --claude --global --profile=standard"
+      workflow-engine)
+        log "   workflow-engine: npm rebuild @tron/claude-config (re-runs postinstall)"
         ;;
-      codebase-memory-mcp)
-        log "   codebase-memory-mcp (macOS/Linux):"
-        log "     curl -fsSL https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.sh | bash"
-        log "   codebase-memory-mcp (Windows PowerShell):"
-        log "     Invoke-WebRequest -Uri https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.ps1 -OutFile install.ps1"
-        log "     Unblock-File .\\install.ps1; .\\install.ps1"
-        log "   Or: node node_modules/@tron/claude-config/scripts/lib/ensure-codebase-memory.js"
+      tron-graph)
+        log "   tron-graph: node node_modules/@tron/claude-config/scripts/lib/ensure-tron-graph.js"
         ;;
     esac
   done

@@ -36,7 +36,7 @@
 | PR body | `gh pr create` blocked unless `--body-file .claude/.pr-body-draft.md` with PT-BR headers (no inline `--body`, no `## Summary`) |
 | Terminal `git commit` | Blocked by `pre-commit` without token |
 | Push to `main`/`master` | Blocked by `pre-push` |
-| Missing tools | `codebase-memory-mcp`: auto-ensure (hard fail on install/setup). `gsd`: warning in session |
+| Missing tools | `tron-graph`: auto-ensure (hard fail on setup). Workflow engine: warning in session |
 | Outdated package | Silent auto-update, once per 24h |
 
 ### Machine-level installs (developers only — skipped in CI)
@@ -47,9 +47,8 @@
 | `/code-review` | `~/.claude/commands/code-review.md` | Bundled skill, install-if-missing |
 | `/security-review` | `~/.claude/commands/security-review.md` | Bundled skill, install-if-missing |
 | `/make-pr` | `~/.claude/commands/make-pr.md` | Bundled skill, install-if-missing |
-| Karpathy enforcement rule | `~/.claude/rules/harness-enforcement.md` | Copied from package |
+| Harness enforcement rule | `~/.claude/rules/harness-enforcement.md` | Copied from package |
 | Agent isolation / harness patterns | `~/.claude/rules/` | Copied from package |
-| Karpathy skill | `~/.claude/skills/andrej-karpathy-skills/` | Copied from package |
 | Emil Kowalski skills | `~/.agents/skills/<name>/` (symlinked → `~/.claude/skills/`, `~/.cursor/skills/`) | Vendored from `managed/skills/emilkowalski/`; **primary DESIGN authority** |
 | Impeccable | `~/.claude/skills/impeccable/`, `~/.cursor/skills/impeccable/`, `~/.github/skills/impeccable/` (+ `impeccable-*` agents in `~/.claude/agents/`, `~/.cursor/agents/`) | Vendored from `managed/skills/impeccable/`; **primary DESIGN authority**; `darwin-arm64` binary in-tree, other platforms fetch checksum-verified binary on first run |
 | Taste (leonxlnx) skills | `~/.agents/skills/<name>/` (symlinked → `~/.claude/skills/`, `~/.cursor/skills/`) | Vendored from `managed/skills/leonxlnx/`; **primary DESIGN authority** |
@@ -58,29 +57,30 @@
 | frontend-skills rule | `~/.cursor/rules/frontend-skills.mdc` | Always synced from `managed/cursor/rules/`; encodes the design authority order |
 | session-handoff | `~/.claude/skills/session-handoff/` | always synced (`SKILL.md`, `config.example.json`); `config.json` stays per person; session notes go to a central Obsidian vault set in `config.json` |
 | issue-board | `~/.claude/skills/issue-board/` | always synced (`SKILL.md`, `board.mjs`, `render.py`, `config.example.json`); `config.json` and `data/` stay per person |
-| gsd | `~/.claude/gsd-core/`, `~/.cursor/gsd-core/` | `npx -y @opengsd/gsd-core@latest --<claude\|cursor> --global --profile=standard` — re-run only when `~/.<runtime>/.gsd-profile` is not `standard`; the profile survives `gsd update` |
+| Workflow engine | `~/.claude/`, `~/.cursor/` | `standard` profile; re-installed only when the runtime's profile marker is not `standard` (the profile survives engine updates) |
 | **tron agents (enforced)** | `~/.claude/agents/tron-*.md`, `~/.cursor/agents/tron-*.md`; guard + roster + role briefs in `~/.claude/tron/` | Always synced from `managed/agents/`; guard hook registered in `~/.claude/settings.json` (`PreToolUse` Task\|Agent, `SessionStart`) and `~/.cursor/hooks.json` (`preToolUse` Task, `subagentStart`, `sessionStart`); other agent files are moved to `~/.claude/tron/agent-roles/` |
 | agent-roster rule | `~/.claude/rules/agent-roster.md`, `~/.cursor/rules/agent-roster.mdc` | Always synced; roster table + orchestration protocol (security → architecture → model governance → quality → token economy → speed) |
 | doc | `~/.claude/skills/doc/` | always synced (`SKILL.md`, `doc.mjs`); no per-person state |
-| caveman skill/plugin | `~/.claude/skills/caveman/` (or plugin) | Official install script |
-| **Caveman rule (enforced)** | `~/.claude/rules/caveman.md` | Always overwritten from package — terse replies mandatory |
-| codebase-memory-mcp | `~/.claude/.mcp.json` | **Required** — `ensure-codebase-memory.js` (official install.sh / install.ps1 + Unblock-File on Windows; npm fallback; postinstall exits 1 if missing) |
+| **Core rules (enforced)** | `~/.claude/rules/terse.md`, `~/.claude/rules/engineering-principles.md` | Always overwritten from package; retired predecessors removed |
+| tron-graph | `~/.claude/.mcp.json`, `~/.claude.json`, `~/.cursor/mcp.json` | **Required** — `ensure-tron-graph.js` (platform installer + Unblock-File on Windows; npm fallback); registered under the `tron-graph` key |
+| tron-docs | `~/.claude.json`, `~/.cursor/mcp.json` | `ensure-tron-docs.js` — registered under the `tron-docs` key; an existing docs entry is migrated with its headers |
 
 ---
 
-## codebase-memory-mcp (required)
+## tron-graph (required)
 
 Referenced by `AGENTS.md` / `agent-isolation.md` as the first layer of codebase navigation. The harness **must** leave it registered in `~/.claude/.mcp.json`.
 
 | Step | Behavior |
 |------|----------|
-| Detect | Key containing `codebase-memory` in `~/.claude/.mcp.json` |
-| macOS / Linux | Official `install.sh` via curl |
-| Windows | Official `install.ps1` with `Unblock-File` + `ExecutionPolicy Bypass` |
+| Detect | `tron-graph` key in `~/.claude/.mcp.json` + engine binary present |
+| Normalize | Engine's own MCP keys renamed to `tron-graph` in every MCP config |
+| macOS / Linux | Engine `install.sh` via curl |
+| Windows | Engine `install.ps1` with `Unblock-File` + `ExecutionPolicy Bypass` |
 | Retry | Up to 3 attempts |
-| Fallback | `npm` / `pnpm` / `bun` global `codebase-memory-mcp` |
+| Fallback | `npm` / `pnpm` / `bun` global engine package |
 | Failure | `postinstall` → `process.exit(1)`; `setup-claude-harness.sh` → exit 1 |
-| Repair | `npm run ensure:codebase-memory` |
+| Repair | `npm run ensure:tron-graph` |
 
 Skipped only when `CI` / `GITHUB_ACTIONS` / `CONTINUOUS_INTEGRATION` is set.
 
@@ -130,10 +130,10 @@ CRITICAL/HIGH findings from either review **block** the token. Do not create `.c
 | Layer | Source | Priority | Scope |
 |-------|--------|----------|-------|
 | **tron-kit rules** | `.claude/rules/tron/` | Highest for rules | Naming, testing, security, git |
-| **Karpathy principles** | `~/.claude/rules/harness-enforcement.md` | Highest for behavior | Simplicity, surgical changes |
+| **Engineering principles** | `~/.claude/rules/engineering-principles.md` | Highest for behavior | Simplicity, surgical changes |
 | **Harness skills** | `~/.claude/commands/*` | Workflow | Commit / PR gates |
 
-**tron-kit wins on coding standards.** **Karpathy wins on how to approach the task.**
+**tron-kit wins on coding standards.** **Engineering principles win on how to approach the task.**
 
 ### Scoped tron-kit rules sync
 
@@ -178,7 +178,7 @@ npm install   # or bun / pnpm
 - Syncs scoped tron-kit rules into `.claude/rules/tron/`  
 - Copies `AGENTS.md`  
 - Adds token/draft paths plus `.cursor/` and `.omc/` (local harness/session state) to `.gitignore`  
-- On developer machines: installs skills, the `tron-kit@tron` Claude plugin (removing the legacy upstream plugin), Karpathy rules, gsd, caveman; **guarantees** codebase-memory-mcp (Win + macOS/Linux)  
+- On developer machines: installs skills, the `tron-kit@tron` Claude plugin (removing the legacy plugin), core rules (terse, engineering principles), the workflow engine; registers `tron-graph` and `tron-docs` (Win + macOS/Linux)  
 
 ---
 
@@ -231,18 +231,17 @@ tron-claude-config/
 ├── scripts/
 │   ├── postinstall.js                        # orchestrator
 │   ├── sync-tron-rules.js                    # tron-kit rules re-sync CLI
-│   ├── sync-tron-kit.js                      # maintainer-only snapshot refresh
 │   └── lib/
 │       ├── detect-project-scope.js           # stack → tron-kit rule folders
 │       ├── install-tron-rules.js             # copy / prune (local snapshot)
 │       ├── install-tron-kit.js               # user-scope plugin + legacy cleanup
-│       └── ensure-codebase-memory.js         # required MCP (Win + Unix)
+│       ├── ensure-tron-graph.js              # required code graph MCP (Win + Unix)
+│       └── ensure-tron-docs.js               # docs MCP registration
 ├── managed/
 │   ├── AGENTS.md
 │   ├── setup-claude-harness.sh
 │   ├── tron-kit/                             # frozen tron-kit plugin snapshot
-│   ├── tron-kit.config.json                  # snapshot pin, exclusions, rewrites
-│   ├── agents/                               # impeccable-* subagents
+│   ├── agents/                               # 12 tron agents, roster, guard, role briefs
 │   ├── cursor/rules/frontend-skills.mdc      # design authority rule
 │   ├── hooks/                                # cursor/ + github/ impeccable hook templates
 │   ├── claude/
@@ -254,7 +253,9 @@ tron-claude-config/
 │   │       ├── harness-enforcement.md
 │   │       ├── agent-isolation.md
 │   │       ├── harness-patterns.md
-│   │       └── caveman.md
+│   │       ├── agent-roster.md
+│   │       ├── terse.md
+│   │       └── engineering-principles.md
 │   ├── git-hooks/
 │   │   ├── pre-commit
 │   │   └── pre-push
@@ -268,8 +269,8 @@ tron-claude-config/
 │       ├── impeccable/{SKILL.md,reference/,scripts/}  # Impeccable — design authority
 │       ├── leonxlnx/<name>/SKILL.md          # Taste — design authority
 │       ├── tron-design-fallback/{SKILL.md,references/stacks/}  # subordinate to the combo
-│       ├── issue-board/{SKILL.md,board.mjs,render.py,config.example.json}
-│       └── andrej-karpathy-skills/.../SKILL.md
+│       └── issue-board/{SKILL.md,board.mjs,render.py,config.example.json}
+├── upstream/                                 # maintainer-only, not published
 ├── docs/assets/                              # README visuals
 ├── HARNESS-GUIDE.md
 ├── MAINTAINER.md

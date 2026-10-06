@@ -2,7 +2,7 @@
 // agent-roster-guard — enforces the 12 tron agents in Claude Code and Cursor.
 // Usage (hook command): node agent-roster-guard.js <claude|cursor>
 //   PreToolUse (Task/Agent) · Cursor subagentStart → allow roster/builtins, remap legacy names, deny the rest.
-//   SessionStart → move stray agent files (GSD updates, other plugins) out of ~/.claude/agents and ~/.cursor/agents
+//   SessionStart → move stray agent files (workflow-engine updates, other plugins) out of ~/.claude/agents and ~/.cursor/agents
 //   into ~/.claude/tron/agent-roles/, where tron agents load them as role briefs.
 // Fails open: a guard bug must never block the user's session.
 
