@@ -1,6 +1,6 @@
 # Next.js — high-severity implementation guidelines
 
-Subordinate to Emil + Impeccable + Taste. Implementation correctness only; never visual direction.
+Subordinate to the tron design stack (tron-design first). Implementation correctness only; never visual direction.
 
 ## Routing
 

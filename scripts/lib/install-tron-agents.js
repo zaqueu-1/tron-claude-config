@@ -1,7 +1,7 @@
 'use strict';
 
 // Installs the 12 tron agents and enforces them as the only roster (Claude Code + Cursor).
-// Agents → ~/.claude/agents, ~/.cursor/agents · guard + roster + role briefs → ~/.claude/tron/
+// Agents → ~/.claude/agents, ~/.cursor/agents · guard + roster → ~/.claude/tron/
 // Any other agent file is moved to ~/.claude/tron/agent-roles/ by the guard's sweep.
 
 const fs = require('fs');
@@ -12,16 +12,6 @@ const { execFileSync } = require('child_process');
 const PACKAGE_ROOT = path.resolve(__dirname, '..', '..');
 const SRC = path.join(PACKAGE_ROOT, 'managed', 'agents');
 const GUARD = 'agent-roster-guard.js';
-
-function copyDir(src, dest) {
-  fs.mkdirSync(dest, { recursive: true });
-  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
-    const from = path.join(src, entry.name);
-    const to = path.join(dest, entry.name);
-    if (entry.isDirectory()) copyDir(from, to);
-    else fs.copyFileSync(from, to);
-  }
-}
 
 // Cursor resolves models itself; Claude-only fields would pin a model Cursor may not offer.
 function toCursorAgent(content) {
@@ -77,7 +67,7 @@ function installTronAgents({ dryRun = false, log = () => {} } = {}) {
   const hasCursor = fs.existsSync(cursorDir);
 
   if (dryRun) {
-    log(`DRY: would install ${agentFiles.length} tron agents, roster guard and role briefs → ~/.claude/tron/`);
+    log(`DRY: would install ${agentFiles.length} tron agents and roster guard → ~/.claude/tron/`);
     return;
   }
 
@@ -85,9 +75,8 @@ function installTronAgents({ dryRun = false, log = () => {} } = {}) {
   fs.copyFileSync(path.join(SRC, GUARD), guardPath);
   fs.copyFileSync(path.join(SRC, 'roster.json'), path.join(tronDir, 'roster.json'));
 
-  // Sweep before copying so stale copies of shipped role briefs are replaced by ours.
   execFileSync(process.execPath, [guardPath, 'claude'], { input: '{"hook_event_name":"SessionStart"}', stdio: ['pipe', 'ignore', 'pipe'] });
-  copyDir(path.join(SRC, 'roles'), path.join(tronDir, 'agent-roles'));
+  fs.rmSync(path.join(tronDir, 'agent-roles', 'impeccable'), { recursive: true, force: true });
 
   for (const file of agentFiles) {
     const content = fs.readFileSync(path.join(SRC, 'tron', file), 'utf8');

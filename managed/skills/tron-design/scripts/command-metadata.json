@@ -1,0 +1,94 @@
+{
+  "craft": {
+    "description": "Legacy alias; treated as an ordinary new-work request.",
+    "argumentHint": "[feature description]"
+  },
+  "init": {
+    "description": "Capture product truth in PRODUCT.md through a short interview; offers DESIGN.md when code exists and pre-configures live mode. Run once per project.",
+    "argumentHint": ""
+  },
+  "document": {
+    "description": "Record the incumbent visual system as DESIGN.md (tokens, type, spacing, components) from the codebase, confirming tone words with the user.",
+    "argumentHint": ""
+  },
+  "extract": {
+    "description": "Consolidate repeated patterns and values into shared tokens and components to stop design drift.",
+    "argumentHint": "[target]"
+  },
+  "live": {
+    "description": "Browser variant mode: pick an element, choose an action, and review generated HTML+CSS alternatives hot-swapped into the running dev server.",
+    "argumentHint": ""
+  },
+  "adapt": {
+    "description": "Make a surface work across screen sizes, input types and platforms, including native conventions.",
+    "argumentHint": "[target] [context (mobile, tablet, print...)]"
+  },
+  "animate": {
+    "description": "Add purposeful motion and micro-interactions that clarify state and hierarchy.",
+    "argumentHint": "[target]"
+  },
+  "audit": {
+    "description": "Score technical quality — accessibility, performance, theming, responsiveness — with a prioritized fix list.",
+    "argumentHint": "[area (feature, page, component...)]"
+  },
+  "bolder": {
+    "description": "Push a timid or generic design toward a stronger, more distinctive point of view.",
+    "argumentHint": "[target]"
+  },
+  "clarify": {
+    "description": "Rewrite unclear labels, microcopy, errors and instructions so users know what to do.",
+    "argumentHint": "[target]"
+  },
+  "colorize": {
+    "description": "Introduce strategic color to flat or monochrome interfaces without hurting contrast.",
+    "argumentHint": "[target]"
+  },
+  "critique": {
+    "description": "Heuristic UX review combining design judgment with detector and browser evidence; ranked issues and next steps.",
+    "argumentHint": "[area (feature, page, component...)]"
+  },
+  "delight": {
+    "description": "Add tasteful personality and memorable moments where they serve the experience.",
+    "argumentHint": "[target]"
+  },
+  "distill": {
+    "description": "Remove everything that does not earn its place; simplify structure, choices and decoration.",
+    "argumentHint": "[target]"
+  },
+  "harden": {
+    "description": "Production readiness: error, empty and loading states, long content, i18n and edge cases.",
+    "argumentHint": "[target]"
+  },
+  "onboard": {
+    "description": "Design first-run, empty states and activation paths that get users to value quickly.",
+    "argumentHint": "[target]"
+  },
+  "layout": {
+    "description": "Fix spacing, rhythm, alignment and visual hierarchy.",
+    "argumentHint": "[target]"
+  },
+  "optimize": {
+    "description": "Diagnose and fix UI performance — rendering, assets, layout shift, interaction latency.",
+    "argumentHint": "[target]"
+  },
+  "overdrive": {
+    "description": "Go beyond conventional limits with ambitious, technically demanding visual work.",
+    "argumentHint": "[target]"
+  },
+  "polish": {
+    "description": "Final pre-ship pass on details, consistency and craft.",
+    "argumentHint": "[target]"
+  },
+  "quieter": {
+    "description": "Calm an overstimulating design: reduce noise, intensity and competing emphasis.",
+    "argumentHint": "[target]"
+  },
+  "shape": {
+    "description": "Plan the UX and UI of a feature before writing code.",
+    "argumentHint": "[feature to shape]"
+  },
+  "typeset": {
+    "description": "Improve type choices, scale, hierarchy and readability.",
+    "argumentHint": "[target]"
+  }
+}

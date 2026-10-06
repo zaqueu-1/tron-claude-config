@@ -1,5 +1,20 @@
 {
   "$comment": "MAINTAINER ONLY — never shipped (package.json `files`). Provenance + pins for every upstream this package interprets. `watch` = paths we consume (diffs here are relevant); `discover` = dirs where new upstream items appear (reported as adoption candidates). Update pins only after porting: `npm run upstream:watch -- --accept <id>` (tron-kit: `npm run sync:tron-kit -- --ref <sha>`).",
+  "brandTerms": [
+    "\\bimpeccable\\b",
+    "\\bemil\\b",
+    "kowalski",
+    "leonxlnx",
+    "taste-?skill",
+    "\\bstitch\\b",
+    "karpathy",
+    "\\bcaveman\\b",
+    "\\bgsd\\b",
+    "pbakaus",
+    "\\behmo\\b",
+    "platform-design-skills",
+    "everything-claude-code"
+  ],
   "sources": [
     {
       "id": "tron-kit",
@@ -32,27 +47,36 @@
       "ref": "e8a175de22ae1e49370fc144c1f3bb9aeedf988d",
       "license": "MIT",
       "kind": "content",
-      "status": "vendored",
+      "status": "rewritten",
       "phase": 2,
-      "tron": "managed/skills/emilkowalski/",
+      "tron": "managed/skills/tron-motion/ + managed/skills/tron-native/",
       "map": {
-        "skills/animate": "animate",
-        "skills/animate-expo": "animate-expo",
-        "skills/animation-vocabulary": "animation-vocabulary",
-        "skills/apple-design": "apple-design",
-        "skills/ask-sonner": "ask-sonner",
-        "skills/emil-design-eng": "emil-design-eng",
-        "skills/find-animation-opportunities": "find-animation-opportunities",
-        "skills/improve-animations": "improve-animations",
-        "skills/mobile-native": "mobile-native",
-        "skills/pick-ui-library": "pick-ui-library",
-        "skills/prototype": "prototype",
-        "skills/review-animations": "review-animations",
-        "skills/write-swift": "write-swift"
+        "skills/animate": "tron-motion/reference/web.md",
+        "skills/animate-expo": "tron-motion/reference/expo.md",
+        "skills/animation-vocabulary": "tron-motion/reference/vocabulary.md",
+        "skills/apple-design": "tron-native/reference/apple.md",
+        "skills/ask-sonner": "tron-motion/reference/toasts.md",
+        "skills/emil-design-eng": "tron-motion/SKILL.md",
+        "skills/find-animation-opportunities": "tron-motion/reference/opportunities.md",
+        "skills/improve-animations": "tron-motion/reference/review.md",
+        "skills/mobile-native": "tron-native/reference/mobile-feel.md",
+        "skills/pick-ui-library": "tron-motion/reference/ui-libraries.md",
+        "skills/prototype": "tron-motion/reference/prototype.md",
+        "skills/review-animations": "tron-motion/reference/review.md",
+        "skills/write-swift": "tron-native/reference/swift.md"
       },
       "discover": [
         "skills"
-      ]
+      ],
+      "originality": {
+        "upstream": [
+          "skills/**/*.md"
+        ],
+        "tron": [
+          "managed/skills/tron-motion",
+          "managed/skills/tron-native"
+        ]
+      }
     },
     {
       "id": "tron-taste",
@@ -60,27 +84,36 @@
       "ref": "ce26fc25c0e5e8cab638f883de62d9a86ee5e45b",
       "license": "MIT",
       "kind": "content",
-      "status": "vendored",
+      "status": "rewritten",
       "phase": 2,
-      "tron": "managed/skills/leonxlnx/",
+      "tron": "managed/skills/tron-design/reference/styles/ + managed/skills/tron-imagery/",
       "map": {
-        "skills/taste-skill": "design-taste-frontend",
-        "skills/taste-skill-v1": "design-taste-frontend-v1",
-        "skills/brandkit": "brandkit",
-        "skills/output-skill": "full-output-enforcement",
-        "skills/gpt-tasteskill": "gpt-taste",
-        "skills/soft-skill": "high-end-visual-design",
-        "skills/image-to-code-skill": "image-to-code",
-        "skills/imagegen-frontend-mobile": "imagegen-frontend-mobile",
-        "skills/imagegen-frontend-web": "imagegen-frontend-web",
-        "skills/brutalist-skill": "industrial-brutalist-ui",
-        "skills/minimalist-skill": "minimalist-ui",
-        "skills/redesign-skill": "redesign-existing-projects",
-        "skills/stitch-skill": "stitch-design-taste"
+        "skills/taste-skill": "tron-design/reference/styles/direction.md",
+        "skills/taste-skill-v1": "tron-design/reference/styles/direction.md",
+        "skills/brandkit": "tron-imagery/reference/brandkit.md",
+        "skills/output-skill": "tron-design/reference/styles/full-output.md",
+        "skills/gpt-tasteskill": "tron-design/reference/styles/direction.md",
+        "skills/soft-skill": "tron-design/reference/styles/premium.md",
+        "skills/image-to-code-skill": "tron-imagery/reference/image-to-code.md",
+        "skills/imagegen-frontend-mobile": "tron-imagery/reference/mobile-comps.md",
+        "skills/imagegen-frontend-web": "tron-imagery/reference/web-comps.md",
+        "skills/brutalist-skill": "tron-design/reference/styles/brutalist.md",
+        "skills/minimalist-skill": "tron-design/reference/styles/minimalist.md",
+        "skills/redesign-skill": "tron-design/reference/styles/redesign.md",
+        "skills/stitch-skill": "tron-design/reference/styles/design-md.md"
       },
       "discover": [
         "skills"
-      ]
+      ],
+      "originality": {
+        "upstream": [
+          "skills/**/*.md"
+        ],
+        "tron": [
+          "managed/skills/tron-design/reference/styles",
+          "managed/skills/tron-imagery"
+        ]
+      }
     },
     {
       "id": "tron-design",
@@ -89,9 +122,9 @@
       "version": "skill-v4.3.1",
       "license": "Apache-2.0",
       "kind": "content+runtime",
-      "status": "vendored",
+      "status": "rewritten+wrapped",
       "phase": 2,
-      "tron": "managed/skills/impeccable/ + managed/agents/roles/impeccable/ + managed/hooks/",
+      "tron": "managed/skills/tron-design/ + managed/hooks/",
       "watch": [
         ".claude/skills/impeccable/**",
         ".claude/agents/**",
@@ -103,7 +136,26 @@
         ".claude/skills",
         ".claude/agents"
       ],
-      "notes": "Ships a compiled engine binary (signed bundle download). Wrapped behind tron-design in phase 2."
+      "notes": "Skill text and reference/ are tron rewrites. The compiled engine (scripts/impeccable launcher, scripts/bin/, live-browser assets, data/) stays vendored and runs only through scripts/tron-design (no telemetry, no self-update, rebranded output). Port engine bumps by replacing those files and checking the reference/ filenames the binary names (new-work, init, live, visualize, ios, android).",
+      "originality": {
+        "upstream": [
+          ".claude/skills/impeccable/**/*.md",
+          ".claude/agents/*.md"
+        ],
+        "tron": [
+          "managed/skills/tron-design"
+        ],
+        "exclude": [
+          "managed/skills/tron-design/scripts"
+        ],
+        "protocol": {
+          "verbs": "scripts/impeccable(?:\\.cmd)? ([a-z][a-z-]+)",
+          "flags": true,
+          "ignore": [
+            "craft"
+          ]
+        }
+      }
     },
     {
       "id": "tron-principles",
@@ -119,7 +171,15 @@
       ],
       "discover": [
         "skills"
-      ]
+      ],
+      "originality": {
+        "upstream": [
+          "skills/karpathy-guidelines/**/*.md"
+        ],
+        "tron": [
+          "managed/claude/rules/engineering-principles.md"
+        ]
+      }
     },
     {
       "id": "tron-terse",
@@ -136,7 +196,16 @@
       ],
       "discover": [
         "skills"
-      ]
+      ],
+      "originality": {
+        "upstream": [
+          "skills/caveman/**/*.md",
+          "src/rules/caveman-activate.md"
+        ],
+        "tron": [
+          "managed/claude/rules/terse.md"
+        ]
+      }
     },
     {
       "id": "tron-flow",

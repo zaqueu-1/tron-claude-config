@@ -3,7 +3,7 @@
 > Quick reference: what the harness installs, what it enforces, and how to operate it day to day.  
 > Consumer pitch + install story: [README.md](README.md) · Releases: [MAINTAINER.md](MAINTAINER.md)
 
-**Current package version:** `1.11.0`
+**Current package version:** `1.12.0`
 
 ---
 
@@ -49,11 +49,9 @@
 | `/make-pr` | `~/.claude/commands/make-pr.md` | Bundled skill, install-if-missing |
 | Harness enforcement rule | `~/.claude/rules/harness-enforcement.md` | Copied from package |
 | Agent isolation / harness patterns | `~/.claude/rules/` | Copied from package |
-| Emil Kowalski skills | `~/.agents/skills/<name>/` (symlinked → `~/.claude/skills/`, `~/.cursor/skills/`) | Vendored from `managed/skills/emilkowalski/`; **primary DESIGN authority** |
-| Impeccable | `~/.claude/skills/impeccable/`, `~/.cursor/skills/impeccable/`, `~/.github/skills/impeccable/` (+ `impeccable-*` agents in `~/.claude/agents/`, `~/.cursor/agents/`) | Vendored from `managed/skills/impeccable/`; **primary DESIGN authority**; `darwin-arm64` binary in-tree, other platforms fetch checksum-verified binary on first run |
-| Taste (leonxlnx) skills | `~/.agents/skills/<name>/` (symlinked → `~/.claude/skills/`, `~/.cursor/skills/`) | Vendored from `managed/skills/leonxlnx/`; **primary DESIGN authority** |
-| tron-design-fallback | `~/.claude/skills/tron-design-fallback/`, `~/.cursor/skills/tron-design-fallback/` | Always synced (overwritten) from `managed/skills/tron-design-fallback/`; **subordinate** to the combo — charts, forms, web navigation, stack guidelines only |
-| Legacy design cleanup | `~/.{claude,cursor,agents,github}/skills/{ui-ux-pro-max,frontend-design}` | Removed on every run if present (symlinks unlinked); `frontend-design@claude-plugins-official` plugin disabled via `claude plugin disable` (fallback: `enabledPlugins[...] = false` in `~/.claude/settings.json`) |
+| tron design stack | `~/.agents/skills/tron-{design,motion,native,imagery}/` (symlinked → `~/.claude/skills/`, `~/.cursor/skills/`, `~/.github/skills/`) | Synced fresh from `managed/skills/tron-*/`; **primary DESIGN authority**; engine runs only via `tron-design/scripts/tron-design` (no telemetry, no self-update); `darwin-arm64` binary in-tree, other platforms fetch the pinned binary on first run |
+| tron-design-fallback | `~/.claude/skills/tron-design-fallback/`, `~/.cursor/skills/tron-design-fallback/` | Always synced (overwritten) from `managed/skills/tron-design-fallback/`; **subordinate** to the stack — charts, forms, web navigation, stack guidelines only |
+| Legacy design cleanup | `~/.{claude,cursor,agents,github}/skills/` — `ui-ux-pro-max`, `frontend-design` and the 27 skill names the stack replaced | Removed on every run if present (symlinks unlinked); `frontend-design@claude-plugins-official` plugin disabled via `claude plugin disable` (fallback: `enabledPlugins[...] = false` in `~/.claude/settings.json`) |
 | frontend-skills rule | `~/.cursor/rules/frontend-skills.mdc` | Always synced from `managed/cursor/rules/`; encodes the design authority order |
 | session-handoff | `~/.claude/skills/session-handoff/` | always synced (`SKILL.md`, `config.example.json`); `config.json` stays per person; session notes go to a central Obsidian vault set in `config.json` |
 | issue-board | `~/.claude/skills/issue-board/` | always synced (`SKILL.md`, `board.mjs`, `render.py`, `config.example.json`); `config.json` and `data/` stay per person |
@@ -92,26 +90,24 @@ On ANY frontend/UI task, the harness enforces a two-level design stack (full con
 
 | Priority | Layer | Role |
 |----------|-------|------|
-| 1 | **Emil Kowalski + Impeccable + Taste** | **Maximum source of truth for DESIGN.** Emil = interaction/animation craft; Impeccable = direction, quality bar, hook-enforced edit discipline; Taste = high-end visual / landing / redesign direction |
-| 2 | **tron-design-fallback** | **Subordinate** — consulted only *after* the combo sets direction, and only for charts/data viz, form UX, web navigation patterns, and stack guidelines (Vue, Nuxt, React, Next.js, React Native, shadcn/ui, Tailwind); includes a pre-delivery add-on |
+| 1 | **tron design stack** | **Maximum source of truth for DESIGN.** `tron-design` (always first) = direction, modes, critique/audit, refine, live iteration, style modules, hook-enforced detector; `tron-motion` = animation and interaction feel; `tron-native` = native platforms and Swift; `tron-imagery` = comps, image-to-code, brand kits |
+| 2 | **tron-design-fallback** | **Subordinate** — consulted only *after* the stack sets direction, and only for charts/data viz, form UX, web navigation patterns, and stack guidelines (Vue, Nuxt, React, Next.js, React Native, shadcn/ui, Tailwind); includes a pre-delivery add-on |
 
-**Conflict rule:** when tron-design-fallback disagrees with the Emil + Impeccable + Taste combo, **the combo always wins.**
+**Conflict rule:** when tron-design-fallback disagrees with the tron design stack, **the stack always wins.**
 
-**Announce on every UI task:** `Using Emil + Impeccable + Taste for [purpose]` — append `(+ tron-design-fallback)` only when it was consulted.
+**Announce on every UI task:** `Using tron-design for [purpose]` — name each companion skill actually loaded.
 
-The former ui-ux-pro-max and frontend-design layer was removed (direction-setting data that competed with the combo, the rest already covered); postinstall deletes their leftover skill folders and disables the `frontend-design@claude-plugins-official` plugin.
+The former ui-ux-pro-max and frontend-design layer was removed (direction-setting data that competed with the stack, the rest already covered); postinstall deletes their leftover skill folders and disables the `frontend-design@claude-plugins-official` plugin.
 
 ### Where the skills are vendored and installed
 
 | Skill set | Vendored under | Installed to |
 |-----------|----------------|--------------|
-| Emil Kowalski | `managed/skills/emilkowalski/` | `~/.agents/skills/<name>/`, symlinked into `~/.claude/skills/` and `~/.cursor/skills/` |
-| Taste (leonxlnx) | `managed/skills/leonxlnx/` | `~/.agents/skills/<name>/`, symlinked into `~/.claude/skills/` and `~/.cursor/skills/` |
-| Impeccable | `managed/skills/impeccable/` (+ `managed/agents/impeccable-*.md`, `managed/hooks/{cursor,github}/`) | `~/.claude/skills/impeccable/`, `~/.cursor/skills/impeccable/`, `~/.github/skills/impeccable/`; `impeccable-*` agents → `~/.claude/agents/` + `~/.cursor/agents/`; hooks → consumer `.cursor/hooks.json` + `.github/hooks/impeccable.json` |
+| tron design stack | `managed/skills/tron-{design,motion,native,imagery}/` (+ `managed/hooks/{cursor,github}/`) | `~/.agents/skills/<name>/`, symlinked into `~/.claude/skills/`, `~/.cursor/skills/`, `~/.github/skills/`; hooks merged into consumer `.cursor/hooks.json` + `.github/hooks/tron-design.json` |
 | tron-design-fallback | `managed/skills/tron-design-fallback/` (`SKILL.md` + `references/stacks/*.md`) | `~/.claude/skills/tron-design-fallback/` + `~/.cursor/skills/tron-design-fallback/` (always synced) |
 | frontend-skills rule | `managed/cursor/rules/frontend-skills.mdc` | `~/.cursor/rules/frontend-skills.mdc` (always synced) |
 
-Emil and Taste land in `~/.agents/skills/` first, then symlink into the Claude and Cursor skill dirs (falling back to a copy when symlinks are unavailable). Impeccable is copied directly into all three tool dirs. Its engine ships as a vendored `darwin-arm64` binary under `scripts/bin/`; on other platforms the launcher downloads the pinned, checksum-verified binary on first run and caches it under `~/.impeccable/bin/<version>/`.
+The stack lands in `~/.agents/skills/` first (stale files removed on every sync), then symlinks into the Claude, Cursor and GitHub skill dirs (falling back to a copy when symlinks are unavailable). The design engine ships as a vendored `darwin-arm64` binary under `tron-design/scripts/bin/`; other platforms download the pinned binary on first run. Agents and hooks call it only through `scripts/tron-design`.
 
 ---
 
@@ -227,7 +223,7 @@ rm .git/hooks/pre-commit .git/hooks/pre-push
 
 ```
 tron-claude-config/
-├── package.json                              # v1.11.0
+├── package.json                              # v1.12.0
 ├── scripts/
 │   ├── postinstall.js                        # orchestrator
 │   ├── sync-tron-rules.js                    # tron-kit rules re-sync CLI
@@ -241,9 +237,9 @@ tron-claude-config/
 │   ├── AGENTS.md
 │   ├── setup-claude-harness.sh
 │   ├── tron-kit/                             # frozen tron-kit plugin snapshot
-│   ├── agents/                               # 12 tron agents, roster, guard, role briefs
+│   ├── agents/                               # 12 tron agents, roster, guard
 │   ├── cursor/rules/frontend-skills.mdc      # design authority rule
-│   ├── hooks/                                # cursor/ + github/ impeccable hook templates
+│   ├── hooks/                                # cursor/ + github/ tron-design hook templates
 │   ├── claude/
 │   │   ├── settings.json
 │   │   ├── hooks/
@@ -265,10 +261,11 @@ tron-claude-config/
 │       ├── code-review/SKILL.md
 │       ├── security-review/SKILL.md
 │       ├── make-pr/SKILL.md
-│       ├── emilkowalski/<name>/SKILL.md      # Emil — design authority
-│       ├── impeccable/{SKILL.md,reference/,scripts/}  # Impeccable — design authority
-│       ├── leonxlnx/<name>/SKILL.md          # Taste — design authority
-│       ├── tron-design-fallback/{SKILL.md,references/stacks/}  # subordinate to the combo
+│       ├── tron-design/{SKILL.md,reference/,scripts/}  # design authority + engine wrapper
+│       ├── tron-motion/{SKILL.md,reference/}  # motion and interaction craft
+│       ├── tron-native/{SKILL.md,reference/}  # native platform craft
+│       ├── tron-imagery/{SKILL.md,reference/} # comps, image-to-code, brand kits
+│       ├── tron-design-fallback/{SKILL.md,references/stacks/}  # subordinate to the stack
 │       └── issue-board/{SKILL.md,board.mjs,render.py,config.example.json}
 ├── upstream/                                 # maintainer-only, not published
 ├── docs/assets/                              # README visuals

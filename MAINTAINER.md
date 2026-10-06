@@ -1,6 +1,6 @@
 # tron-claude-config — Maintainer Guide
 
-Owner playbook for the shared Claude enforcement harness (`@tron/claude-config` **v1.11.0**).
+Owner playbook for the shared Claude enforcement harness (`@tron/claude-config` **v1.12.0**).
 
 Consumer docs: [README.md](README.md) · Operator cheat sheet: [HARNESS-GUIDE.md](HARNESS-GUIDE.md)
 
@@ -15,7 +15,7 @@ On consumer `npm install` / `bun install` / `pnpm install`, `scripts/postinstall
 3. Installs git `pre-commit` / `pre-push` hooks (via `git rev-parse --git-path hooks`, respects `core.hooksPath`)
 4. Syncs **scoped** tron-kit rules into `.claude/rules/tron/` from the bundled snapshot (detect stack → copy matching folders → prune stale ones; no network)
 5. On developer machines (not CI): installs the `tron-kit@tron` Claude plugin (see [Syncing tron-kit from upstream](#syncing-tron-kit-from-upstream)) and removes the legacy upstream plugin, its marketplace and user-level rules; installs the 12 tron agents + roster guard hooks (`scripts/lib/install-tron-agents.js`); the workflow engine with the `standard` profile for Claude Code and Cursor; install-if-missing skills; always-overwritten core rules (`terse.md`, `engineering-principles.md`, removing their retired predecessors); **attempt** `tron-graph` via `scripts/lib/ensure-tron-graph.js` (retries + npm fallback on Windows/WSL; renames the engine's own MCP keys to `tron-graph`; warns instead of aborting postinstall if still missing) and registers `tron-docs` via `scripts/lib/ensure-tron-docs.js`
-6. On developer machines (not CI): installs the **frontend design skill harness** — the **Emil + Impeccable + Taste** combo (maximum DESIGN source of truth), with **tron-design-fallback** subordinate (charts, forms, web navigation, stack guidelines); removes leftover `ui-ux-pro-max` / `frontend-design` skill folders and disables the `frontend-design@claude-plugins-official` plugin (see [Frontend design skills](#frontend-design-skills-max-design-authority))
+6. On developer machines (not CI): installs the **frontend design skill harness** — the **tron design stack** (`tron-design`, `tron-motion`, `tron-native`, `tron-imagery` — maximum DESIGN source of truth), with **tron-design-fallback** subordinate (charts, forms, web navigation, stack guidelines); removes leftover `ui-ux-pro-max` / `frontend-design` and retired design skill folders and disables the `frontend-design@claude-plugins-official` plugin (see [Frontend design skills](#frontend-design-skills-max-design-authority))
 7. Thereafter, `bootstrap-check.sh` self-updates the package about once per day
 
 Non-technical users get gates without extra setup. Engineers get them on install.
@@ -26,23 +26,21 @@ Non-technical users get gates without extra setup. Engineers get them on install
 
 The harness ships a full frontend design stack, vendored in-repo and installed on developer machines. Authority order (enforced by `managed/AGENTS.md` and `managed/cursor/rules/frontend-skills.mdc`):
 
-1. **Emil Kowalski + Impeccable + Taste** — the **maximum source of truth for DESIGN**.
-2. **tron-design-fallback** — **subordinate**; consulted only after the combo sets direction, and only for charts/data viz, form UX, web navigation patterns and stack guidelines (Vue, Nuxt, React, Next.js, React Native, shadcn/ui, Tailwind).
+1. **tron design stack** — `tron-design` (always first), `tron-motion`, `tron-native`, `tron-imagery` — the **maximum source of truth for DESIGN**.
+2. **tron-design-fallback** — **subordinate**; consulted only after the stack sets direction, and only for charts/data viz, form UX, web navigation patterns and stack guidelines (Vue, Nuxt, React, Next.js, React Native, shadcn/ui, Tailwind).
 
-**On conflict, the Emil + Impeccable + Taste combo always wins.** Do not weaken this rule when editing skill docs. Agents announce `Using Emil + Impeccable + Taste for [purpose]`, appending `(+ tron-design-fallback)` only when it was consulted.
+**On conflict, the tron design stack always wins.** Do not weaken this rule when editing skill docs. Agents announce `Using tron-design for [purpose]`, naming each companion skill actually loaded.
 
-The former ui-ux-pro-max and frontend-design layer was removed: its direction-setting data competed with the combo and the rest was already covered. Only the missing pieces were extracted into `tron-design-fallback` (attribution line kept in its `SKILL.md`). Do not re-add a second direction-setting layer.
+The former ui-ux-pro-max and frontend-design layer was removed: its direction-setting data competed with the stack and the rest was already covered. Only the missing pieces were extracted into `tron-design-fallback` (attribution line kept in its `SKILL.md`). Do not re-add a second direction-setting layer.
 
 | Skill set | Vendored under | Install behavior |
 |-----------|----------------|------------------|
-| Emil Kowalski | `managed/skills/emilkowalski/` | `installEmilSkills()` → `~/.agents/skills/<name>/` + symlinks into `~/.claude/skills/` and `~/.cursor/skills/` (copy fallback) |
-| Taste (leonxlnx) | `managed/skills/leonxlnx/` | `installTasteSkills()` → `~/.agents/skills/<name>/` + symlinks into `~/.claude/skills/` and `~/.cursor/skills/` (copy fallback) |
-| Impeccable | `managed/skills/impeccable/` (+ `managed/agents/impeccable-*.md`, `managed/hooks/{cursor,github}/`) | `installImpeccable()` copies into `~/.claude/skills/`, `~/.cursor/skills/`, `~/.github/skills/impeccable/`; `impeccable-*` agents → `~/.claude/agents/` + `~/.cursor/agents/`. `installImpeccableHooks()` templates hooks into consumer `.cursor/hooks.json` + `.github/hooks/impeccable.json`. The `darwin-arm64` engine binary is vendored under `scripts/bin/`; other platforms download the pinned, checksum-verified binary on first run |
+| tron design stack | `managed/skills/tron-{design,motion,native,imagery}/` (+ `managed/hooks/{cursor,github}/`) | `installTronDesignStack()` syncs each skill fresh into `~/.agents/skills/<name>/` + symlinks into `~/.claude/skills/`, `~/.cursor/skills/`, `~/.github/skills/` (copy fallback). `installTronDesignHooks()` merges the detector hook into consumer `.cursor/hooks.json` + `.github/hooks/tron-design.json`, keeping existing hooks and migrating the legacy launcher path. The engine runs only through `tron-design/scripts/tron-design` (telemetry and self-update off, agent-facing output rebranded); the `darwin-arm64` binary is vendored under `scripts/bin/`, other platforms download the pinned binary on first run |
 | tron-design-fallback | `managed/skills/tron-design-fallback/` (`SKILL.md` + `references/stacks/*.md`) | `installTronDesignFallback()` → `~/.claude/skills/tron-design-fallback/` + `~/.cursor/skills/tron-design-fallback/` (always synced, overwritten) |
-| Legacy design cleanup | — | `removeLegacyDesignSkills()` deletes `ui-ux-pro-max` / `frontend-design` from `~/.{claude,cursor,agents,github}/skills/` (symlinks unlinked, not followed) and calls `disablePlugin('frontend-design@claude-plugins-official')` from `scripts/lib/install-tron-kit.js` (`claude plugin disable --scope <scope>` when installed + enabled; settings.json `enabledPlugins[...] = false` fallback) |
+| Legacy design cleanup | — | `removeLegacyDesignSkills()` deletes `ui-ux-pro-max`, `frontend-design` and the 27 retired design skill names from `~/.{claude,cursor,agents,github}/skills/` (symlinks unlinked, not followed) and calls `disablePlugin('frontend-design@claude-plugins-official')` from `scripts/lib/install-tron-kit.js` (`claude plugin disable --scope <scope>` when installed + enabled; settings.json `enabledPlugins[...] = false` fallback) |
 | frontend-skills rule | `managed/cursor/rules/frontend-skills.mdc` | `installFrontendSkillsRule()` → `~/.cursor/rules/frontend-skills.mdc` (always synced) |
 
-To add or update a design skill, edit the vendored source under `managed/skills/{emilkowalski,leonxlnx,impeccable,tron-design-fallback}/`, keep the install function in `postinstall.js` in sync, and bump the version (`minor` for a new skill). The stack references in `tron-design-fallback/references/stacks/` are hand-maintained (High-severity rules only); keep them terse.
+To add or update a design skill, edit the source under `managed/skills/{tron-design,tron-motion,tron-native,tron-imagery,tron-design-fallback}/`, keep the install function in `postinstall.js` in sync, and bump the version (`minor` for a new skill). The stack references in `tron-design-fallback/references/stacks/` are hand-maintained (High-severity rules only); keep them terse.
 
 ---
 
@@ -64,9 +62,9 @@ tron-claude-config/
 │   ├── AGENTS.md
 │   ├── setup-claude-harness.sh        # also re-syncs tron-kit rules on auto-update
 │   ├── tron-kit/                      # frozen tron-kit plugin snapshot → ~/.claude/tron-kit/
-│   ├── agents/                        # 12 tron agents, roster.json, guard, role briefs
+│   ├── agents/                        # 12 tron agents, roster.json, guard
 │   ├── cursor/rules/                  # frontend-skills.mdc → ~/.cursor/rules/
-│   ├── hooks/                         # cursor/ + github/ impeccable hook templates
+│   ├── hooks/                         # cursor/ + github/ tron-design hook templates
 │   ├── claude/
 │   │   ├── settings.json
 │   │   ├── hooks/
@@ -87,13 +85,16 @@ tron-claude-config/
 │       ├── code-review/SKILL.md       # → ~/.claude/commands/code-review.md
 │       ├── security-review/SKILL.md   # → ~/.claude/commands/security-review.md
 │       ├── make-pr/SKILL.md           # → ~/.claude/commands/make-pr.md
-│       ├── emilkowalski/<name>/       # Emil — → ~/.agents/skills/ (+ symlinks)
-│       ├── impeccable/                # Impeccable — → ~/.claude, ~/.cursor, ~/.github + agents + hooks
-│       ├── leonxlnx/<name>/           # Taste — → ~/.agents/skills/ (+ symlinks)
+│       ├── tron-design/               # design authority + engine wrapper → ~/.agents/skills/ (+ symlinks, hooks)
+│       ├── tron-motion/               # motion craft → ~/.agents/skills/ (+ symlinks)
+│       ├── tron-native/               # native craft → ~/.agents/skills/ (+ symlinks)
+│       ├── tron-imagery/              # comps, image-to-code, brand kits → ~/.agents/skills/ (+ symlinks)
 │       └── tron-design-fallback/      # → ~/.claude + ~/.cursor skills (subordinate)
 ├── upstream/                          # MAINTAINER ONLY — never published (package.json `files`)
 │   ├── sources.json                   # provenance + pins for every upstream we interpret
 │   ├── watch.js                       # relevant-change tracker → reports/
+│   ├── originality.js                 # ownership gate: no upstream prose or names in rewrites
+│   ├── lib/                           # sources registry + git mirror helpers
 │   ├── sync-tron-kit.js               # refresh managed/tron-kit/ from its upstream
 │   ├── tron-kit.config.json           # allowlists, kept hooks, prune, rewrites
 │   ├── state/tron-kit.json            # last sync record
@@ -119,10 +120,9 @@ tron-claude-config/
 | `~/.claude/commands/code-review.md` | **Package** (install-if-missing) | Required by `/commit-changes` |
 | `~/.claude/commands/security-review.md` | **Package** (install-if-missing) | Required by `/commit-changes` |
 | `~/.claude/commands/make-pr.md` | **Package** (always synced) | PT-BR PR template; overwrites stale English skills |
-| `~/.agents/skills/<emil/taste>/` + `~/.claude` + `~/.cursor` symlinks | **Package** (vendored, symlink/copy) | Emil + Taste = primary DESIGN authority |
-| `~/.claude` + `~/.cursor` + `~/.github/skills/impeccable/` (+ agents + repo hooks) | **Package** (vendored, copied) | Impeccable = primary DESIGN authority; darwin-arm64 binary in-tree, others fetch on first run |
-| `~/.claude` + `~/.cursor/skills/tron-design-fallback/` | **Package** (always synced) | Subordinate to the combo |
-| `~/.{claude,cursor,agents,github}/skills/{ui-ux-pro-max,frontend-design}` | **Package** (removed if present) | Legacy design layer; plugin `frontend-design@claude-plugins-official` disabled |
+| `~/.agents/skills/tron-{design,motion,native,imagery}/` + `~/.claude`, `~/.cursor`, `~/.github` symlinks (+ repo hooks) | **Package** (always synced) | tron design stack = primary DESIGN authority; darwin-arm64 engine in-tree, others fetch on first run |
+| `~/.claude` + `~/.cursor/skills/tron-design-fallback/` | **Package** (always synced) | Subordinate to the stack |
+| `~/.{claude,cursor,agents,github}/skills/` legacy + retired design skills | **Package** (removed if present) | Legacy design layer and the 27 names the stack replaced; plugin `frontend-design@claude-plugins-official` disabled |
 | `~/.cursor/rules/frontend-skills.mdc` | **Package** (always synced) | Encodes the design authority order |
 | `~/.claude/tron-kit/` + plugin `tron-kit@tron` | **Package** (always synced) | Version stamped from `package.json`; installed via `claude plugin`, settings.json fallback |
 | `~/.claude/rules/{terse,engineering-principles}.md` | **Package** (always overwrite) | Core rules — mandatory every session |
@@ -232,7 +232,7 @@ npm run sync:tron-kit -- --ref <sha|branch> # sync a specific ref (resolved sha 
 Repo and pin live in `upstream/sources.json` (id `tron-kit`); everything else the sync does is driven by `upstream/tron-kit.config.json`:
 
 - `include` — top-level upstream paths copied. Upstream `agents/` is not included: the 12 tron agents (`managed/agents/`) own the roster
-- `allow` — allowlists for `skills` and `commands`; everything else upstream stays out, including new upstream additions. Kept: technical skills that back a tron agent. Dropped: workflow commands/skills GSD already owns (plan, prp, orch, multi, epic, sessions, loops, learning), duplicates of tron skills (`code-review`, `security-review`, `pr`, `save-session`), the design/motion/a11y skills that compete with the Emil + Impeccable + Taste combo, and non-engineering domains. A listed name missing upstream aborts the sync
+- `allow` — allowlists for `skills` and `commands`; everything else upstream stays out, including new upstream additions. Kept: technical skills that back a tron agent. Dropped: workflow commands/skills GSD already owns (plan, prp, orch, multi, epic, sessions, loops, learning), duplicates of tron skills (`code-review`, `security-review`, `pr`, `save-session`), the design/motion/a11y skills that compete with the tron design stack, and non-engineering domains. A listed name missing upstream aborts the sync
 - `exclude` — globs never brought back (stale hook docs, junk files)
 - `hooks.keep` / `hooks.derive` — only these hooks survive: `pre:bash:block-no-verify` (derived from the config-protection entry, so it runs without the upstream bash dispatcher), `pre:config-protection`, `post:edit:accumulate`, `stop-format-typecheck`, `check-console-log`. Telemetry, learning, compaction and session hooks are dropped (GSD covers context and sessions)
 - `prune` — directories (`scripts`, `config`, `schemas`, `manifests`, `mcp-configs`) reduced to files reachable from kept hooks, skills, commands and rules
@@ -251,10 +251,11 @@ Everything this package ships is a **tron interpretation** of an upstream. Shipp
 - `upstream/sources.json` — one entry per upstream: `repo`, pinned `ref`, `license`, `kind` (content / runtime), `status` (vendored → rewritten; runtime: wrapped → replaced), `phase`, the tron artifact it feeds, `watch` (paths we consume; `map` pairs upstream dirs to renamed tron skills) and `discover` (dirs where new upstream items appear).
 - `npm run upstream:watch [-- <id>...]` — mirrors each repo (blobless, cached in `upstream/.cache/`), diffs pinned → upstream HEAD restricted to the watched paths, lists commits touching them and new upstream items not adopted, and writes `upstream/reports/<date>-<id>.md`. Sources with nothing relevant just report "nothing relevant".
 - Porting: read the report, **re-express** relevant changes in the tron artifact in our own words (no verbatim copies), then `npm run upstream:watch -- --accept <id> [--ref <sha>]` to move the pin. `tron-kit` moves only via `npm run sync:tron-kit`.
-- Runtime tools are wrapped behind tron names until replaced: code graph → `tron-graph`, docs → `tron-docs` (MCP keys renamed on install).
-- Licenses: MIT / Apache-2.0 notices stay inside still-vendored trees (`managed/tron-kit/LICENSE`, vendored skill folders) until each tree is rewritten; a rewritten artifact carries no upstream text, so no notice is needed.
+- `npm run upstream:originality [-- <id>...]` — the ownership gate. For each source with an `originality` block it compares the tron files' prose (code stripped) against the upstream files at the pin using 8-word runs, and scans them for upstream names (`brandTerms`); engine-owned literals (`.impeccable/` state paths, `IMPECCABLE_*` env names) are exempt. Exit 1 on any hit — run it after every port and before every release.
+- Runtime tools are wrapped behind tron names until replaced: code graph → `tron-graph`, docs → `tron-docs` (MCP keys renamed on install), design engine → `tron-design/scripts/tron-design` (the engine's own launcher and binary stay untouched next to it; the wrapper refuses `update`/`install`, disables telemetry and rebrands agent-facing output).
+- Licenses: MIT / Apache-2.0 notices stay with still-vendored code (`managed/tron-kit/LICENSE`; the wrapped design engine ships `scripts/ENGINE-LICENSE`) until it is rewritten or replaced; a rewritten artifact carries no upstream text, so no notice is needed.
 
-Ownership phases: 1) foundation — tracker, provenance, wrappers, core rules (done); 2) design stack → tron-design; 3) tron-kit skills and hooks rewritten; 4) tron-flow replaces the workflow engine.
+Ownership phases: 1) foundation — tracker, provenance, wrappers, core rules (done); 2) design stack → tron-design (done: content rewritten, engine wrapped); 3) tron-kit skills and hooks rewritten; 4) tron-flow replaces the workflow engine.
 
 ---
 
@@ -268,6 +269,8 @@ node --check scripts/lib/install-tron-rules.js
 node --check scripts/lib/install-tron-kit.js
 node --check upstream/sync-tron-kit.js
 node --check upstream/watch.js
+node --check upstream/originality.js
+npm run upstream:originality
 node --check scripts/lib/ensure-tron-graph.js
 node --check scripts/lib/ensure-tron-docs.js
 node scripts/lib/pr-template-validate.test.js
