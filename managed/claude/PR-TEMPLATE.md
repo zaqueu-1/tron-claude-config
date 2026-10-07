@@ -1,5 +1,4 @@
-<!-- CANONICAL PR BODY — PT-BR only. Copy into .claude/.pr-body-draft.md before gh pr create.
-     Enforcement: bypass-check.sh + validate-pr-body.cjs. Do NOT use ## Summary or English headers. -->
+<!-- PR body template (PT-BR). Hook checks the 5 titles below; max 25 changed files per PR. -->
 
 ## Resumo
 

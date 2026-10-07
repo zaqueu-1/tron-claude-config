@@ -15,5 +15,5 @@ if (!result.ok) {
   process.exit(1);
 }
 
-process.stdout.write('PR body OK — all 5 PT-BR sections present, no forbidden English headers.\n');
+process.stdout.write('PR body OK — all 5 template titles present.\n');
 process.exit(0);

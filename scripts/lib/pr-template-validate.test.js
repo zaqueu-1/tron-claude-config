@@ -5,11 +5,10 @@ const assert = require('assert');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const { execFileSync } = require('child_process');
 const {
   validateBodyContent,
   validateGhPrCreateCommand,
-  hasInlineBodyFlag,
-  extractBodyFilePath,
 } = require(path.join(__dirname, '../../managed/claude/hooks/lib/pr-template-validate.cjs'));
 
 const VALID_BODY = `## Resumo
@@ -29,47 +28,40 @@ _N/A — não aplicável a esta mudança_
 `;
 
 assert.strictEqual(validateBodyContent(VALID_BODY).ok, true);
+assert.strictEqual(validateBodyContent(VALID_BODY.replace(/## /g, '### ')).ok, true, 'any heading level');
+assert.strictEqual(validateBodyContent(`${VALID_BODY}\n## Summary\nextra`).ok, true, 'extra sections allowed');
+assert.strictEqual(validateBodyContent(VALID_BODY.replace('## Roteiro de teste\n', '')).ok, false);
+assert.strictEqual(validateBodyContent('').ok, false);
 
-const english = VALID_BODY.replace('## Resumo', '## Summary');
-assert.strictEqual(validateBodyContent(english).ok, false);
-
-const missing = VALID_BODY.replace('## Roteiro de teste\n', '');
-assert.strictEqual(validateBodyContent(missing).ok, false);
-
-assert.strictEqual(hasInlineBodyFlag('gh pr create --body "foo"'), true);
-assert.strictEqual(
-  hasInlineBodyFlag('gh pr create --body-file .claude/.pr-body-draft.md'),
-  false,
-);
-
-assert.strictEqual(
-  extractBodyFilePath('gh pr create --body-file .claude/.pr-body-draft.md --title x'),
-  '.claude/.pr-body-draft.md',
-);
-
+const run = (cmd, cwd) => execFileSync('git', cmd, { cwd, stdio: 'ignore' });
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'pr-body-'));
-const bodyPath = path.join(tmp, '.claude', '.pr-body-draft.md');
-fs.mkdirSync(path.dirname(bodyPath), { recursive: true });
-fs.writeFileSync(bodyPath, VALID_BODY);
+const remote = path.join(tmp, 'remote.git');
+const repo = path.join(tmp, 'repo');
+run(['init', '-q', '--bare', '-b', 'main', remote], tmp);
+run(['init', '-q', '-b', 'main', repo], tmp);
+const commit = (msg) => run(['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '--no-gpg-sign', '-m', msg], repo);
+fs.writeFileSync(path.join(repo, 'a.txt'), 'a');
+run(['add', '.'], repo);
+commit('init');
+run(['remote', 'add', 'origin', remote], repo);
+run(['push', '-q', 'origin', 'main'], repo);
+run(['fetch', '-q', 'origin'], repo);
+run(['checkout', '-q', '-b', 'feat/x'], repo);
 
-const cwd = tmp;
-assert.strictEqual(
-  validateGhPrCreateCommand(
-    'gh pr create --base main --body-file .claude/.pr-body-draft.md',
-    cwd,
-  ).ok,
-  true,
-);
+fs.mkdirSync(path.join(repo, '.claude'));
+fs.writeFileSync(path.join(repo, '.claude', 'body.md'), VALID_BODY);
+const ok = (cmd) => validateGhPrCreateCommand(cmd, repo).ok;
 
-assert.strictEqual(
-  validateGhPrCreateCommand('gh pr create --body "## Summary"', cwd).ok,
-  false,
-);
+assert.strictEqual(ok('gh pr create --base main --body-file .claude/body.md'), true, 'any body file path');
+assert.strictEqual(ok(`gh pr create --base main --body "${VALID_BODY}"`), true, 'inline body');
+assert.strictEqual(ok('gh pr create --base main --body "fix stuff"'), false, 'inline body without titles');
+assert.strictEqual(ok('gh pr create --base main --fill'), false, 'no body');
 
-assert.strictEqual(
-  validateGhPrCreateCommand('gh pr create --body-file /other/path.md', cwd).ok,
-  false,
-);
+for (let i = 0; i < 26; i += 1) fs.writeFileSync(path.join(repo, `f${i}.txt`), String(i));
+run(['add', '.'], repo);
+commit('big');
+assert.strictEqual(ok('gh pr create --base main --body-file .claude/body.md'), false, '26+ files blocked');
+assert.strictEqual(ok('gh pr create --base missing-branch --body-file .claude/body.md'), true, 'unknown base never blocks');
 
 fs.rmSync(tmp, { recursive: true, force: true });
 

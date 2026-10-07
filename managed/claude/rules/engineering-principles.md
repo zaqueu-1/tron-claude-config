@@ -18,7 +18,7 @@ Enforced by `@tron/claude-config`. How every agent writes, edits and reviews cod
 
 ## 3. Change only what the task needs
 
-- Leave neighboring code, comments and formatting alone; match the existing style.
+- Leave neighboring code, comments and formatting alone; match the existing style. Only exception: the comment cleanup in §5.
 - Don't refactor what isn't broken. Spot unrelated dead code → mention it, don't delete it.
 - Clean up only what **your** change orphaned (imports, variables, helpers).
 - Test: every changed line traces back to the request.
@@ -34,3 +34,11 @@ Turn the task into a check you can run:
 | Refactor | Tests pass before and after, behavior unchanged |
 
 For multi-step work, write the plan with a check per step (`step → verify: check`) and loop until each check passes. Vague goals ("make it work") mean asking, not guessing.
+
+## 5. Comments
+
+- Default is no comment: names and structure carry the meaning.
+- Write one only for a relevant business rule.
+- One line, terse-mode style — fragments, no filler, straight to the point: `// refund window 90d — BCB rule`.
+- Editing a file that has a comment longer than 2 lines → cut it to one terse line, in the same change.
+- Out of scope (machine-read): tool directives (`eslint-disable`, `@ts-expect-error`, `# noqa`), JSDoc type annotations the type checker reads, shebangs, license headers, generated code.

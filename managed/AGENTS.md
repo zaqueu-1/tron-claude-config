@@ -107,6 +107,8 @@ Announce: `Using tron-design for [purpose]` — name each companion actually loa
 
 Applied automatically to every write/edit/refactor task — clarify before building, smallest thing that works, change only what the task needs, define done and prove it. Full contract: `~/.claude/rules/engineering-principles.md`.
 
+**Code comments:** avoid them. Only a relevant business rule earns one — a single terse line. Any comment longer than 2 lines in a file you are editing gets cut to one terse line.
+
 ---
 
 ## Permitted operations
@@ -143,11 +145,11 @@ agent wants to commit
     → git commit (hook reads token, permits, deletes token)
 
 agent wants to open PR
-  → writes .claude/.pr-body-draft.md (PT-BR template — see .claude/PR-TEMPLATE.md)
-  → validates: node .claude/hooks/lib/validate-pr-body.cjs .claude/.pr-body-draft.md
-  → creates .claude/.pr-authorized
   → runs /make-pr skill
-    → gh pr create --body-file .claude/.pr-body-draft.md (hook validates command + body; blocks --body inline and ## Summary)
+    → branch over 25 changed files? split into smaller cohesive PRs first
+    → writes .claude/.pr-body-draft.md from .claude/PR-TEMPLATE.md
+    → validates: node .claude/hooks/lib/validate-pr-body.cjs .claude/.pr-body-draft.md
+    → gh pr create --body-file .claude/.pr-body-draft.md (hook checks the 5 titles + max 25 files)
 ```
 
-Direct `git commit` or `gh pr create` without the token is blocked by the git hooks.
+Direct `git commit` without the token is blocked by the hooks. `gh pr create` is blocked when the body lacks a template title or the PR exceeds 25 changed files.

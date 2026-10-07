@@ -3,7 +3,7 @@
 > Quick reference: what the harness installs, what it enforces, and how to operate it day to day.  
 > Consumer pitch + install story: [README.md](README.md) · Releases: [MAINTAINER.md](MAINTAINER.md)
 
-**Current package version:** `1.14.0`
+**Current package version:** `1.15.0`
 
 ---
 
@@ -13,8 +13,8 @@
 
 | File | Purpose |
 |------|---------|
-| `.claude/settings.json` | Claude Code hooks — blocks direct `git commit` / `gh pr create`, runs bootstrap on every prompt |
-| `.claude/hooks/bypass-check.sh` | Token gate (`.claude/.commit-authorized` / `.claude/.pr-authorized`). For `pr`, also requires all 5 PR section headers in `.claude/.pr-body-draft.md` |
+| `.claude/settings.json` | Claude Code hooks — gates `git commit` and `gh pr create`, runs bootstrap on every prompt |
+| `.claude/hooks/bypass-check.sh` | `commit`: requires the one-shot token `.claude/.commit-authorized`. `pr`: body must contain the 5 template titles; PR capped at 25 changed files |
 | `.claude/hooks/bootstrap-check.sh` | Every prompt: tool warnings. Daily: silent package auto-update + re-run setup |
 | `.claude/rules/tron/` | Scoped tron-kit coding rules (`common` + stack-matched folders) |
 | `.claude/.tron-scope.json` | Last detected tron-kit scope (folders + signals) |
@@ -33,7 +33,9 @@
 | `/code-review` | Required quality gate. Bundled, synced on every install. |
 | `/security-review` | Required security gate. Bundled, synced on every install. |
 | `/make-pr` | Only official PR path. Bundled, synced on every install. |
-| PR body | `gh pr create` blocked unless `--body-file .claude/.pr-body-draft.md` with PT-BR headers (no inline `--body`, no `## Summary`) |
+| PR body | `gh pr create` blocked unless the body (`--body-file` or `--body`) contains the 5 titles of `.claude/PR-TEMPLATE.md` |
+| PR size | `gh pr create` blocked above 25 changed files versus `--base` — split into smaller cohesive PRs |
+| Code comments | Rule, not hook: business rules only, one terse line; comments over 2 lines in edited files get cut to one |
 | Terminal `git commit` | Blocked by `pre-commit` without token |
 | Push to `main`/`master` | Blocked by `pre-push` |
 | Missing tools | `tron-graph`: auto-ensure (hard fail on setup). Workflow engine: warning in session |
@@ -230,7 +232,7 @@ Agents never skip hooks: tron-kit refuses hook-skipping git commands, and an age
 
 ```
 tron-claude-config/
-├── package.json                              # v1.14.0
+├── package.json                              # v1.15.0
 ├── scripts/
 │   ├── postinstall.js                        # orchestrator
 │   ├── sync-tron-rules.js                    # tron-kit rules re-sync CLI

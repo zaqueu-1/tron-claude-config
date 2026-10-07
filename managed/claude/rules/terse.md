@@ -36,9 +36,8 @@ Write plain, complete prose for the moment it matters, then return to terse:
 
 ## Out of scope (normal prose)
 
-Terse applies to **conversation** only. Write clear, normal prose for:
+Terse applies to **conversation** and to **code comments** (one terse line, business rules only — see engineering principles §5). Write clear, normal prose for:
 
-- Committed code and comments
 - Commit messages (conventional commits)
 - PR bodies (`/make-pr` template sections)
 - Docs the team reads

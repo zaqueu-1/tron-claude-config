@@ -1,7 +1,5 @@
 #!/usr/bin/env node
-// postinstall.js — installs Claude enforcement harness into consumer repo
-// Runs automatically on: npm install @tron/claude-config
-// Idempotent: safe to run multiple times
+// Harness installer, runs on npm install; idempotent.
 
 'use strict';
 
@@ -52,7 +50,6 @@ const GIT_HOOKS = [
 // Entries to add to .gitignore if not already present
 const GITIGNORE_ENTRIES = [
   '.claude/.commit-authorized',
-  '.claude/.pr-authorized',
   '.claude/.pr-body-draft.md',
   '.claude/.harness-last-update',
   '.cursor/',
@@ -100,10 +97,7 @@ function removeRetiredConsumerFiles() {
   }
 }
 
-// ── Machine-level file ledger ────────────────────────────────────────────────
-// Every single file the package writes under $HOME is recorded with the hash of what was written.
-// On upgrade, files the previous version wrote but this one no longer ships are deleted —
-// unless the user edited them since, in which case they are kept and reported.
+// Home-file ledger: hash per written file; upgrade deletes files no longer shipped, keeps user-edited.
 
 const LEDGER_PATH = path.join(os.homedir(), '.claude', 'tron', 'installed.json');
 const ledger = { previous: readLedger(), current: {}, complete: true };
@@ -432,17 +426,7 @@ function git(...args) {
   }).trim();
 }
 
-// Resolve the directory git actually reads hooks from.
-//
-// `<root>/.git/hooks` is only valid in a primary checkout. In a linked worktree
-// `.git` is a file pointing at the real gitdir, so hardcoding that path makes
-// mkdir fail with ENOTDIR. `git rev-parse --git-path` returns the correct
-// location in both layouts.
-//
-// Returns null when core.hooksPath is set: hooks are owned by another tool
-// (husky, lefthook, ...) and git ignores .git/hooks entirely. Writing there
-// would be dead code, and writing into the managed directory would clobber
-// that tool's hooks.
+// --git-path works in worktrees; core.hooksPath set → another tool owns hooks → null.
 function resolveGitHooksDir() {
   try {
     if (git('config', '--get', 'core.hooksPath')) return null;
@@ -528,9 +512,7 @@ function installGsd() {
 }
 
 function installTronGraph() {
-  // Required by agent-isolation / AGENTS.md — registered as `tron-graph` in every MCP config.
-  // Non-fatal here: a failed MCP install must not block copying hooks into consumer repos
-  // (especially on Windows/WSL where PowerShell/curl installers often fail on first run).
+  // Non-fatal: MCP install failure (often Windows/WSL) must not block repo hooks.
   const result = ensureTronGraph({ dryRun: DRY });
   if (result.alreadyReady) {
     log('tron-graph already registered');

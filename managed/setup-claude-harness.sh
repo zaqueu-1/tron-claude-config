@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-# setup-claude-harness.sh — Install Claude enforcement harness
-# Run after cloning or any package install (npm/pnpm/bun). Idempotent.
-# Usage: bash scripts/setup-claude-harness.sh [--silent]
+# Harness setup, idempotent. Usage: bash scripts/setup-claude-harness.sh [--silent]
 
 SILENT="${1:-}"
 log() { [ "$SILENT" != "--silent" ] && echo "$@"; }
@@ -74,7 +72,7 @@ fi
 
 # 2. Ensure .claude directory and token files are gitignored
 GITIGNORE="$REPO_ROOT/.gitignore"
-for entry in ".claude/.commit-authorized" ".claude/.pr-authorized" ".claude/.pr-body-draft.md" ".claude/.harness-last-update" ".cursor/" ".omc/"; do
+for entry in ".claude/.commit-authorized" ".claude/.pr-body-draft.md" ".claude/.harness-last-update" ".cursor/" ".omc/"; do
   if ! grep -qF "$entry" "$GITIGNORE" 2>/dev/null; then
     echo "$entry" >> "$GITIGNORE"
     log "   ✓ Added $entry to .gitignore"
