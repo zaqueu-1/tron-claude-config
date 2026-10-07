@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img alt="version" src="https://img.shields.io/badge/version-1.14.0-0F766E?style=for-the-badge"/>
+  <img alt="version" src="https://img.shields.io/badge/version-1.15.0-0F766E?style=for-the-badge"/>
   <img alt="node" src="https://img.shields.io/badge/node-%3E%3D18-38BDF8?style=for-the-badge&logo=node.js&logoColor=white"/>
   <img alt="pm" src="https://img.shields.io/badge/npm%20%7C%20pnpm%20%7C%20bun-ready-A78BFA?style=for-the-badge"/>
   <img alt="license" src="https://img.shields.io/badge/private-Tron-1E293B?style=for-the-badge"/>
@@ -30,7 +30,9 @@ Add it to any repo and `npm install` does the rest: reviewed-only commits, compl
 | Without the harness | With the harness |
 |---------------------|------------------|
 | Anyone — or any model — can `git commit` raw | Commits only through `/commit-changes`, **after a security review and a code review** |
-| PRs that say "fix stuff" | Every PR body has **5 mandatory sections**, validated before `gh pr create` runs |
+| PRs that say "fix stuff" | Every PR body follows a **5-section template**, checked before `gh pr create` runs |
+| 80-file PRs nobody can review | **Max 25 changed files per PR** — bigger work is split into cohesive PRs |
+| Paragraph-long comments that rot | **Comments only for business rules**, one terse line |
 | Rules copied by hand, or forgotten | **Coding rules synced to the detected stack** (Vue, React, TypeScript, Python, Go, …) |
 | 100+ overlapping agents, random model choices | **12 agents**, one per domain, with the model tier **fixed per phase** |
 | Generic, inconsistent UI output | A **design authority** that loads on every UI task, with a hook-enforced detector |
@@ -132,7 +134,7 @@ These skills were written for a Portuguese-speaking team, so their trigger phras
 ### 7. Always-on behavior rules
 
 - **Engineering principles** — clarify, make the smallest change, touch only what's needed, prove it's done.
-- **Terse mode** — fewer output tokens, same substance; code, commits and PRs stay in normal prose.
+- **Terse mode** — fewer output tokens, same substance; code comments are terse too, while commits and PRs stay in normal prose.
 - **Harness enforcement and agent isolation** — the contract every agent follows inside the harness.
 
 ---
@@ -148,12 +150,15 @@ These skills were written for a Portuguese-speaking team, so their trigger phras
 
 ### PR path
 
-1. `/make-pr` writes `.claude/.pr-body-draft.md` from `.claude/PR-TEMPLATE.md`
-2. Validates it with `node .claude/hooks/lib/validate-pr-body.cjs`
-3. Creates the one-shot token `.claude/.pr-authorized`
-4. `gh pr create --body-file .claude/.pr-body-draft.md` — the hook checks the token, the command and the headers
+1. `/make-pr` checks the branch size: over **25 changed files**, it proposes splitting the work into smaller PRs, each with one cohesive goal (stacked when dependent)
+2. Writes `.claude/.pr-body-draft.md` from `.claude/PR-TEMPLATE.md` and validates it with `node .claude/hooks/lib/validate-pr-body.cjs`
+3. `gh pr create --body-file .claude/.pr-body-draft.md` — the hook checks only two things: the five template titles appear in the body, and the PR has at most 25 changed files
 
-The template's five headers are enforced literally and are in Portuguese: **Resumo** (summary), **Principais mudanças** (key changes), **Arquitetura & implementação** (architecture & implementation), **Antes → Agora** (before → after) and **Roteiro de teste** (test plan). Inline `--body` and English headers are rejected; a section that doesn't apply keeps its header with an N/A line.
+The five titles are in Portuguese: **Resumo** (summary), **Principais mudanças** (key changes), **Arquitetura & implementação** (architecture & implementation), **Antes → Agora** (before → after) and **Roteiro de teste** (test plan). A section that doesn't apply keeps its title with an N/A line.
+
+### Code comments
+
+A rule every agent follows: no comment unless it states a relevant business rule, and then a single terse line. Any comment longer than 2 lines in a file being edited is cut down to one terse line in the same change.
 
 ### Scoped rules
 
@@ -197,7 +202,7 @@ your-project/
 │   ├── rules/tron/             ← tron-kit rules (common + stack-matched folders)
 │   ├── .tron-scope.json        ← last detected scope (audit trail)
 │   └── hooks/
-│       ├── bypass-check.sh     ← token + PR template gate
+│       ├── bypass-check.sh     ← commit token + PR titles/size gate
 │       ├── bootstrap-check.sh  ← tool check + daily self-update
 │       └── lib/*.cjs           ← PR body and command validators
 ├── .git/hooks/
@@ -244,7 +249,7 @@ npm uninstall @tron/claude-config
 
 ```
 tron-claude-config/
-├── package.json                  # v1.14.0 · postinstall entry
+├── package.json                  # v1.15.0 · postinstall entry
 ├── scripts/
 │   ├── postinstall.js            # install orchestrator + home-file ledger
 │   ├── sync-tron-rules.js        # manual rules re-sync CLI

@@ -1,6 +1,6 @@
 # tron-claude-config — Maintainer Guide
 
-Owner playbook for the shared Claude enforcement harness (`@tron/claude-config` **v1.14.0**).
+Owner playbook for the shared Claude enforcement harness (`@tron/claude-config` **v1.15.0**).
 
 Consumer docs: [README.md](README.md) · Operator cheat sheet: [HARNESS-GUIDE.md](HARNESS-GUIDE.md)
 
@@ -68,7 +68,7 @@ tron-claude-config/
 │   ├── claude/
 │   │   ├── settings.json
 │   │   ├── hooks/
-│   │   │   ├── bypass-check.sh        # commit/pr tokens + PR template headers
+│   │   │   ├── bypass-check.sh        # commit token + PR titles/size gate
 │   │   │   └── bootstrap-check.sh     # tools + daily update
 │   │   └── rules/
 │   │       ├── harness-enforcement.md
@@ -116,7 +116,7 @@ tron-claude-config/
 | `~/.claude/commands/commit-changes.md` | **Package** (always synced; edits saved to `.bak` once) | Must run `/security-review` + `/code-review` before token |
 | `~/.claude/commands/code-review.md` | **Package** (always synced; edits saved to `.bak` once) | Required by `/commit-changes` |
 | `~/.claude/commands/security-review.md` | **Package** (always synced; edits saved to `.bak` once) | Required by `/commit-changes` |
-| `~/.claude/commands/make-pr.md` | **Package** (always synced) | PT-BR PR template; overwrites stale English skills |
+| `~/.claude/commands/make-pr.md` | **Package** (always synced) | PT-BR PR template + 25-file split rule |
 | `~/.claude/tron/installed.json` | **Package** (rewritten each install) | Hash ledger of every home-level file the package wrote; drives stale-file removal on upgrade |
 | `~/.agents/skills/tron-{design,motion,native,imagery}/` + `~/.claude`, `~/.cursor`, `~/.github` symlinks (+ repo hooks) | **Package** (always synced) | tron design stack = primary DESIGN authority; darwin-arm64 engine in-tree, others fetch on first run |
 | `~/.claude` + `~/.cursor/skills/tron-design-fallback/` | **Package** (always synced) | Subordinate to the stack |
@@ -128,7 +128,7 @@ tron-claude-config/
 | `.claude/PR-TEMPLATE.md` | **Package** | Canonical PT-BR PR body scaffold |
 | `.claude/hooks/lib/pr-template-validate.cjs` | **Package** | PR body + `gh pr create` command validation |
 | `.claude/.pr-body-draft.md` | **Ephemeral** (gitignored) | Written by `/make-pr`, validated by hook |
-| `.claude/.commit-authorized` / `.pr-authorized` | **Ephemeral** (gitignored) | One-shot bypass tokens |
+| `.claude/.commit-authorized` | **Ephemeral** (gitignored) | One-shot commit token |
 | `.claude/.harness-last-update` | **Ephemeral** (gitignored) | Last harness sync timestamp |
 | `.cursor/` | **Ephemeral** (gitignored) | Machine-local Cursor hooks (`.cursor/hooks.json`); team-shared hooks stay under `.github/hooks/` |
 | `.omc/` | **Ephemeral** (gitignored) | OMC session/runtime state (`.omc/state/`, handoffs, notepad, etc.) |
@@ -150,7 +150,7 @@ tron-claude-config/
 4. `git commit` (hook consumes token)  
 5. Push (pre-push accepts commit or PR token)
 
-When editing `managed/skills/commit-changes/SKILL.md`, keep that order. When editing PR section headers, keep them in sync with `bypass-check.sh`.
+When editing `managed/skills/commit-changes/SKILL.md`, keep that order. When editing PR section titles, keep `PR-TEMPLATE.md`, `make-pr/SKILL.md` and `REQUIRED_SECTIONS` in `hooks/lib/pr-template-validate.cjs` in sync; the 25-file cap is `MAX_CHANGED_FILES` there.
 
 ---
 
