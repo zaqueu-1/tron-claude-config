@@ -5,11 +5,7 @@ model: sonnet
 
 Commit the current changes with semantic commits, scan for leaks, do a quick review, then push.
 
-<!-- CANONICAL COMMIT FLOW — keep in sync with .claude/hooks/bypass-check.sh (mode: commit)
-     and .git/hooks/pre-commit. The bypass token `.claude/.commit-authorized` is the only
-     path through both hooks. Create it immediately before `git commit`; the git
-     pre-commit hook deletes it after allowing the commit through, and pre-push deletes
-     any token left before a push. -->
+<!-- Token `.claude/.commit-authorized` = only path through bypass-check.sh, pre-commit and pre-push; one-shot. -->
 
 Steps:
 1. Run `git status --short` and `git branch --show-current`. If there is nothing to commit and nothing unpushed, say so and stop.
@@ -24,7 +20,7 @@ Steps:
    - **Required:** invoke `/security-review` on the staged (or branch) diff. Do not skip. If it reports CRITICAL or HIGH findings, fix them before continuing — do not create the bypass token yet.
    - Verify no real `.env*` file is staged (only `*.env.example`/template files with placeholder values are allowed) and that no tokens, API keys, credentials, private certs, or PII appear in the diff.
    - If anything leaks, STOP, unstage/amend as needed, and report — do not push.
-6. **Mandatory cleanup (before push):** Remove all comments, logs and debuggers from all modified files before pushing.
+6. **Mandatory cleanup (before push):** in every modified file, remove logs and debuggers, and remove comments that don't state a relevant business rule. Comments that stay are one terse line; any comment longer than 2 lines gets cut to one (engineering principles §5).
 7. **Quick code review (before push):** **Required:** invoke `/code-review` on the staged (or branch) diff. Do not skip. Fix CRITICAL/HIGH findings before continuing; surface MEDIUM/LOW to the user. Do not create the bypass token until `/code-review` passes (no unresolved CRITICAL/HIGH).
 8. **Create the bypass token before each commit:** `touch .claude/.commit-authorized` (or write via the Write tool). Without this file, both the Claude Code PreToolUse hook and the git `pre-commit` hook block `git commit`. Only create this token **after** `/security-review` and `/code-review` have passed.
 9. Commit with a HEREDOC message:
@@ -33,7 +29,7 @@ Steps:
    `EOF`
    `)"`
    - Create a fresh `.claude/.commit-authorized` before **each** commit in a multi-commit run (the git pre-commit hook deletes the token after allowing one commit through).
-10. **Push:** create the bypass token again for push, since the commit consumed it (`touch .claude/.commit-authorized` — the `pre-push` hook accepts either commit or PR token), then `git push -u origin <current-branch>`. Never force-push and never push directly to `main`/`master`.
+10. **Push:** create the bypass token again for push, since the commit consumed it (`touch .claude/.commit-authorized` — the `pre-push` hook consumes it), then `git push -u origin <current-branch>`. Never force-push and never push directly to `main`/`master`.
 11. Report: branch used, the commits created (hashes + subjects), leak-scan result, review summary, and push status.
 
 Notes:
