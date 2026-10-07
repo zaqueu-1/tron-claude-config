@@ -211,7 +211,11 @@ function copyTree(srcAbs, destAbs, { exclude = ['__pycache__', '.DS_Store'] } = 
 }
 
 const TRON_DESIGN_SKILLS = ['tron-design', 'tron-motion', 'tron-native', 'tron-imagery'];
-const TRON_DESIGN_BIN = path.join(os.homedir(), '.agents', 'skills', 'tron-design', 'scripts', 'tron-design');
+// POSIX separators: the value is spliced into JSON hook templates and into sh commands,
+// where Windows backslashes would be invalid JSON escapes.
+const TRON_DESIGN_BIN = path
+  .join(os.homedir(), '.agents', 'skills', 'tron-design', 'scripts', 'tron-design')
+  .replaceAll('\\', '/');
 
 function ensureSymlinkOrCopy(targetAbs, linkAbs) {
   if (fs.existsSync(linkAbs)) {
