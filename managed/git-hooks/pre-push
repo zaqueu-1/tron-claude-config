@@ -1,16 +1,10 @@
 #!/usr/bin/env bash
-# pre-push git hook — enforces use of Claude /make-pr skill
-# Installed by scripts/setup-claude-harness.sh to .git/hooks/pre-push
-# Bypass (emergency only): git push --no-verify
+# pre-push: only /commit-changes pushes (one-shot token); main/master always blocked.
 
-TOKEN=".claude/.pr-authorized"
 COMMIT_TOKEN=".claude/.commit-authorized"
 
-# Allow if either skill token is present (commit-changes pushes at end).
-# One-shot: consume both, so a token left over from an earlier commit or PR
-# cannot authorize a later push (tron-charts-backend#1232).
-if [ -f "$TOKEN" ] || [ -f "$COMMIT_TOKEN" ]; then
-  rm -f "$TOKEN" "$COMMIT_TOKEN"
+if [ -f "$COMMIT_TOKEN" ]; then
+  rm -f "$COMMIT_TOKEN"
   exit 0
 fi
 
